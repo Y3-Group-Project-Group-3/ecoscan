@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>hardware-monitor</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <javafx.version>21.0.8</javafx.version>
+        <oshi.version>7.7.1</oshi.version>
+    </properties>
+
+    <dependencies>
+
+        <!-- JavaFX user interface controls -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+
+        <!-- Hardware and operating system information -->
+        <dependency>
+            <groupId>com.github.oshi</groupId>
+            <artifactId>oshi-core</artifactId>
+            <version>${oshi.version}</version>
+        </dependency>
+
+
+        <!-- More reliable  sensor coverage        -->
+<!--        Old Unpatched version that triggers Windows Security Alert. Kill Project. Big Bad. RIP Module. We all work in McDonalds for the rest of our lives etc etc-->
+<!--        <dependency>-->
+<!--            <groupId>io.github.pandalxb</groupId>-->
+<!--            <artifactId>jLibreHardwareMonitor</artifactId>-->
+<!--            <version>1.0.6</version>-->
+<!--        </dependency>-->
+
+
+<!--        Vibecoded to all hell chatGPT patched version that saves the day-->
+        <dependency>
+            <groupId>io.github.pandalxb</groupId>
+            <artifactId>jLibreHardwareMonitor</artifactId>
+            <version>1.0.6-patched</version>
+        </dependency>
+
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!-- Run the JavaFX application through Maven -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>
+                        com.example.monitortest.Main
+                    </mainClass>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>ecoscan-local-repository</id>
+            <name>EcoScan Project Repository</name>
+            <url>file://${project.basedir}/maven-repo</url>
+        </repository>
+    </repositories>
+
+</project>
