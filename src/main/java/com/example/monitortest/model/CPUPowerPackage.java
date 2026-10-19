@@ -7,10 +7,6 @@ import io.github.pandalxb.jlibrehardwaremonitor.model.Sensor;
 
 public class CPUPowerPackage{
 
-    public double thing;
-
-
-
     public double getCPUPackagePower() {
 
         String operatingSystem = System.getProperty("os.name");
@@ -20,9 +16,7 @@ public class CPUPowerPackage{
         }
 
 
-        Computer computer = LibreHardwareManager.createInstance(
-                ComputerConfig.getInstance().setCpuEnabled(true)
-        ).getComputer();
+        Computer computer = LibreHardwareManager.createInstance( ComputerConfig.getInstance().setCpuEnabled(true) ).getComputer();
 
         if (computer.getHardware() == null) {
             System.out.println("No hardware information retrieved.");
@@ -38,13 +32,8 @@ public class CPUPowerPackage{
 
             for (Sensor sensor : hardware.getSensors()) {
 
-                boolean isPowerSensor = sensor.getSensorType()
-                        .toString()
-                        .equalsIgnoreCase("Power");
-
-                boolean isPackageSensor = sensor.getName()
-                        .equalsIgnoreCase("Package");
-
+                boolean isPowerSensor = sensor.getSensorType().toString().equalsIgnoreCase("Power");
+                boolean isPackageSensor = sensor.getName().equalsIgnoreCase("Package");
                 if (isPowerSensor && isPackageSensor) {
 
                     double value = sensor.getValue();
@@ -61,95 +50,4 @@ public class CPUPowerPackage{
         System.out.println("CPU package power sensor not found.");
         return Double.NaN;
     }
-
-
-//    public double getCPUPackagePower() {
-//        Computer computer = LibreHardwareManager.createInstance(
-//                ComputerConfig.getInstance().setCpuEnabled(true)
-//        ).getComputer();
-//
-//        System.out.println("Computer object: " + computer);
-//        System.out.println("Hardware list: " + computer.getHardware());
-//
-//        if (computer.getHardware() != null) {
-//            for (Hardware hardware : computer.getHardware()) {
-//                System.out.println("Hardware: " + hardware.getName());
-//                System.out.println("Type: " + hardware.getHardwareType());
-//
-//                for (Sensor sensor : hardware.getSensors()) {
-//                    System.out.println(
-//                            sensor.getName() + " | " +
-//                                    sensor.getSensorType() + " | " +
-//                                    sensor.getValue()
-//                    );
-//                }
-//            }
-//        }
-//
-//        return thing;
-//    }
-
-//    public double getCPUPackagePower() {
-//        System.out.println("CPUPowerPackage: " + thing);
-//
-//        Computer computer = LibreHardwareManager.createInstance( ComputerConfig.getInstance().setCpuEnabled(true)).getComputer();
-//        System.out.println(computer);
-//
-//
-////        Debugging
-//
-//
-//        for (Hardware hardware : computer.getHardware()) {
-//
-//            if (!hardware.getHardwareType().toString()
-//                    .equalsIgnoreCase("Cpu")) {
-//                continue;
-//            }
-//
-//            System.out.println("CPU: " + hardware);
-//
-//            for (Sensor sensor : hardware.getSensors()) {
-//
-//                System.out.println(
-//                        "Name: " + sensor.getName()
-//                                + " | Type: " + sensor.getSensorType()
-//                                + " | Value: " + sensor.getValue()
-//                );
-//            }
-//        }
-
-
-//        for (Hardware hardware : computer.getHardware()) {
-//
-//                // Only inspect CPU hardware.
-//                if (!hardware.getHardwareType().toString()
-//                        .equalsIgnoreCase("Cpu")) {
-//                    continue;
-//                }
-//
-//                // Search the CPU's sensors for package power.
-//                for (Sensor sensor : hardware.getSensors()) {
-//
-//                    boolean isPowerSensor =
-//                            sensor.getSensorType().toString()
-//                                    .equalsIgnoreCase("Power");
-//
-//                    boolean isPackageSensor =
-//                            sensor.getName().toLowerCase()
-//                                    .contains("package");
-//
-//                    if (isPowerSensor && isPackageSensor) {
-//
-//                        float value = (float) sensor.getValue();
-//
-//                        if (Float.isFinite(value) && value >= 0) {
-////                          return (double) value;
-//                            System.out.println(value);
-//                            thing = value;
-//                        }
-//                    }
-//                }
-//            }
-//    return thing;
-//    }
 }
