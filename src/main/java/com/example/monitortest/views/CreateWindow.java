@@ -8,6 +8,8 @@ import java.awt.*;
 
 public class CreateWindow {
 
+   // card borders
+
     public void createAndShowGUI() {
         JFrame frame = new JFrame("EcoScan");
 
@@ -15,7 +17,8 @@ public class CreateWindow {
         JPanel mainPanel = new JPanel(cardLayout);
 
         // Create the two separate panels.
-        HomePanel homePanel = new HomePanel();
+//        HomePanel homePanel = new HomePanel();
+        HomePanelNew homePanel = new HomePanelNew();
         ResultsPanel resultsPanel = new ResultsPanel();
         LoadingPanel loadingPanel = new LoadingPanel();
 
@@ -23,10 +26,6 @@ public class CreateWindow {
         mainPanel.add(homePanel, "home");
         mainPanel.add(resultsPanel, "results");
         mainPanel.add(loadingPanel, "loading");
-
-        homePanel.getScanButton().addActionListener(e ->{
-            cardLayout.show(mainPanel, "results");
-        });
 
         // Create the hardware service.
         ScanHardware hardwareInfoService = new ScanHardware();
@@ -39,6 +38,9 @@ public class CreateWindow {
                 resultsPanel,
                 hardwareInfoService
         );
+
+        // Connect the Home page Scan Computer button
+        homePanel.getScanButton().addActionListener(scanEventListener);
 
         // register the scan button listener
         resultsPanel.getRefreshButton().addActionListener(scanEventListener);

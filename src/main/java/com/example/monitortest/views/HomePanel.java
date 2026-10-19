@@ -8,6 +8,7 @@ import java.awt.*;
 import static java.awt.AWTEventMulticaster.add;
 
 public class HomePanel extends JPanel {
+
     private final JLabel mainText;
 
     private final JButton viewScanPageButton;
