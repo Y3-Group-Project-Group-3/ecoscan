@@ -32,8 +32,20 @@ public class ResultsPanel extends JPanel {
     }
 
     public void updateHardwareInfo(HardwareInfo info) {
+
         cpuLabel.setText("CPU: " + info.getCpuName());
-        cpuPowerLabel.setText(String.format("CPU Power: %.2f w", info.getCpuPower()));
+
+
+//        cpuPowerLabel.setText(String.format("CPU Power: %.2f w", info.getCpuPower()));
+        if (Double.isNaN(info.getCpuPower())) {
+            cpuPowerLabel.setText("CPU Power: Not supported");
+        } else {
+            cpuPowerLabel.setText(
+                    String.format("CPU Power: %.1f W", info.getCpuPower())
+            );
+        }
         memoryLabel.setText( String.format( "Total Memory: %.2f GB", info.getTotalMemory() / (1024.0 * 1024 * 1024) ) );
+
+
     }
 }

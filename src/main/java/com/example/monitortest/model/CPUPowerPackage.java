@@ -13,6 +13,13 @@ public class CPUPowerPackage{
 
     public double getCPUPackagePower() {
 
+        String operatingSystem = System.getProperty("os.name");
+
+        if (!operatingSystem.toLowerCase().contains("win")) {
+            return Double.NaN;
+        }
+
+
         Computer computer = LibreHardwareManager.createInstance(
                 ComputerConfig.getInstance().setCpuEnabled(true)
         ).getComputer();
