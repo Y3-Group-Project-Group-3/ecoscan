@@ -27,6 +27,8 @@ public class ResultsPanel extends JPanel {
         add(memoryLabel);
     }
 
+
+
     public JButton getRefreshButton() {
         return refreshButton;
     }

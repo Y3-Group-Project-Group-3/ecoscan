@@ -1,6 +1,7 @@
 package com.example.monitortest.model;
 
 import com.example.monitortest.views.ResultsPanel;
+import com.example.monitortest.views.ResultsPanelNew;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,14 +13,14 @@ public class ScanEventListener implements ActionListener {
     private final JFrame frame;
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
-    private final ResultsPanel resultsPanel;
+    private final ResultsPanelNew resultsPanel;
     private final ScanHardware hardwareInfoService;
 
     public ScanEventListener(
             JFrame frame,
             CardLayout cardLayout,
             JPanel mainPanel,
-            ResultsPanel resultsPanel,
+            ResultsPanelNew resultsPanel,
             ScanHardware hardwareInfoService) {
 
         this.frame = frame;
@@ -49,6 +50,7 @@ public class ScanEventListener implements ActionListener {
                     protected void done() {
                         try {
                             HardwareInfo info = get();
+                            // TODO:: Link this to the Refresh hardware button on the new results page
                             resultsPanel.updateHardwareInfo(info);
 
                         } catch (Exception exception) {

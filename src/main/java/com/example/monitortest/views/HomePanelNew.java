@@ -44,6 +44,9 @@ public class HomePanelNew extends JPanel {
     private JButton scanButton;
     private String selectedUse = "Home";
 
+    // temp history page button
+    private JButton historyButton;
+
     public HomePanelNew() {
         setLayout(new BorderLayout());
         setBackground(new Color(0xF4F6F9));
@@ -125,10 +128,11 @@ public class HomePanelNew extends JPanel {
         column.add(privacy);
 
         // ---- "View scan history ->" link ----
-//        column.add(Box.createVerticalStrut(8));
-//        LinkButton historyLink = new LinkButton("View scan history", new LineIcon("ARROW_RIGHT", 12, GREEN));
-//        historyLink.addActionListener(e -> showHistory());
-//        column.add(historyLink);
+        historyButton = new JButton("View Scan History");
+        historyButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        column.add(Box.createVerticalStrut(15));
+        column.add(historyButton);
 
         // Place the column at the top-centre of the page
         GridBagConstraints c = new GridBagConstraints();
@@ -594,6 +598,10 @@ public class HomePanelNew extends JPanel {
         scroll.getViewport().setBackground(BG_COLOR);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         return scroll;
+    }
+
+    public JButton getHistoryButton() {
+        return historyButton;
     }
 
 
