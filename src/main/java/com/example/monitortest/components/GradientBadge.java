@@ -12,7 +12,7 @@ public class GradientBadge extends JComponent {
     private final int size, iconSize, radius;
     private final String iconName;
 
-    GradientBadge(int size, String iconName, int iconSize, int radius) {
+    public GradientBadge(int size, String iconName, int iconSize, int radius) {
         this.size = size;
         this.iconName = iconName;
         this.iconSize = iconSize;

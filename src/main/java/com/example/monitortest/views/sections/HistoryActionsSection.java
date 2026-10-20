@@ -1,11 +1,8 @@
 package com.example.monitortest.views.sections;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 
-import static com.example.monitortest.theme.AppTheme.*;
 import static com.example.monitortest.theme.UIUtility.createPillButton;
 
 public class HistoryActionsSection extends JPanel {

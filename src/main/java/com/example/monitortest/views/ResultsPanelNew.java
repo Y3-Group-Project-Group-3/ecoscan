@@ -18,9 +18,6 @@ import static com.example.monitortest.views.sections.ScoreRecommendationSection.
 // EcoScan - Results page (view only, test data for now)
 public class ResultsPanelNew extends JPanel {
 
-    // temp back button
-    private JButton backButton;
-
     public ResultsPanelNew() {
         setLayout(new BorderLayout());
         setBackground(BG_COLOR);
@@ -33,10 +30,6 @@ public class ResultsPanelNew extends JPanel {
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
         );
         scroll.getVerticalScrollBar().setUnitIncrement(16);
-
-        // temp back button
-        backButton = new JButton("Back to Home");
-        add(backButton, BorderLayout.SOUTH);
 
         add(scroll, BorderLayout.CENTER);
     }
@@ -67,10 +60,6 @@ public class ResultsPanelNew extends JPanel {
 
     public JButton getRefreshButton() {
         return refreshButton;
-    }
-
-    public JButton getBackButton() {
-        return backButton;
     }
 
 }

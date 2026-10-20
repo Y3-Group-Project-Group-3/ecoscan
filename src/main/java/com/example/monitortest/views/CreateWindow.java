@@ -3,21 +3,19 @@ package com.example.monitortest.views;
 import com.example.monitortest.model.ScanEventListener;
 import com.example.monitortest.model.ScanHardware;
 
+import com.example.monitortest.views.home.components.NavBar;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class CreateWindow {
 
-   // card borders
-
     public void createAndShowGUI() {
         JFrame frame = new JFrame("EcoScan");
-
         CardLayout cardLayout = new CardLayout();
         JPanel mainPanel = new JPanel(cardLayout);
 
         // Create the two separate panels.
-//        HomePanel homePanel = new HomePanel();
         HomePanelNew homePanel = new HomePanelNew();
         ResultsPanelNew resultsPanel = new ResultsPanelNew();
         LoadingPanel loadingPanel = new LoadingPanel();
@@ -28,6 +26,26 @@ public class CreateWindow {
         mainPanel.add(resultsPanel, "results");
         mainPanel.add(loadingPanel, "loading");
         mainPanel.add(historyPanel, "history");
+
+        final NavBar[] navRef = new NavBar[1];
+
+        java.util.function.Consumer<String> navigate = page -> {
+            cardLayout.show(mainPanel, page);
+            navRef[0].setActivePage(page);
+        };
+
+        NavBar navBar = new NavBar(navigate);
+        navRef[0] = navBar;
+        // Main window container
+        JPanel rootPanel = new JPanel(new BorderLayout());
+
+        // Sidebar stays on the left
+        rootPanel.add(navBar, BorderLayout.WEST);
+
+        // Pages switch within the centre
+        rootPanel.add(mainPanel, BorderLayout.CENTER);
+
+
 
         // Create the hardware service.
         ScanHardware hardwareInfoService = new ScanHardware();
@@ -47,26 +65,15 @@ public class CreateWindow {
         // register the scan button listener
         resultsPanel.getRefreshButton().addActionListener(scanEventListener);
 
-        // Connect the Home Page to History Page button
-        homePanel.getHistoryButton().addActionListener(e -> {
-            cardLayout.show(mainPanel, "history");
-        });
-
-        // Temp Back button
-        historyPanel.getBackButton().addActionListener(e -> {
-            cardLayout.show(mainPanel, "home");
-        });
-        // Temp Back button
-        resultsPanel.getBackButton().addActionListener(e -> {
-            cardLayout.show(mainPanel, "home");
-        });
+        homePanel.getHistoryButton().addActionListener(e -> navigate.accept("history"));
 
         // Start on the home screen
-        cardLayout.show(mainPanel, "home");
+        navigate.accept("home");
 
         // Setup the main window
         // TODO:: Can be in its own class
-        frame.setContentPane(mainPanel);
+        frame.setContentPane(rootPanel);
+        navigate.accept("home");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1280, 760);
         frame.setLocationRelativeTo(null);
@@ -74,3 +81,4 @@ public class CreateWindow {
     }
 
 }
+

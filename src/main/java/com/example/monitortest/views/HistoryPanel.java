@@ -16,18 +16,11 @@ public class HistoryPanel extends JPanel {
     private static final Color TEXT_MAIN = new Color(0x1E1E1E);
     private static final Color BORDER_COLOR = new Color(0xE1E1E1);
 
-    // temp back button
-    private JButton backButton;
-
     public HistoryPanel() {
         setLayout(new BorderLayout());
         setBackground(BG_COLOR);
 
         add(createMainContentPanel(), BorderLayout.CENTER);
-
-        // temp back button
-        backButton = new JButton("Back to Home");
-        add(backButton, BorderLayout.SOUTH);
     }
 
 
@@ -56,7 +49,4 @@ public class HistoryPanel extends JPanel {
         return main;
     }
 
-    public JButton getBackButton() {
-        return backButton;
-    }
 }
