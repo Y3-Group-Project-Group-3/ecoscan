@@ -67,27 +67,26 @@ public class CPUPowerPackage{
     public double getCPUPackagePower() {
 
 
-        // Windows Debugging Test
-//        ComputerConfig config =
-//                ComputerConfig.getInstance().setCpuEnabled(true);
-
-//        String rawJson =
-//                PowerShellOperations.GET.getComputerJsonData(config);
-//
-//        System.out.println("=== RAW POWERSHELL OUTPUT ===");
-//        System.out.println(rawJson == null
-//                ? "NULL"
-//                : rawJson.isBlank()
-//                ? "EMPTY"
-//                : rawJson);
-//        System.out.println("=============================");
-
         String operatingSystem = System.getProperty("os.name");
 
         if (!operatingSystem.toLowerCase().contains("win")) {
             return Double.NaN;
         }
 
+        // Windows Debugging Test
+        ComputerConfig config =
+                ComputerConfig.getInstance().setCpuEnabled(true);
+
+        String rawJson =
+                PowerShellOperations.GET.getComputerJsonData(config);
+
+        System.out.println("=== RAW POWERSHELL OUTPUT ===");
+        System.out.println(rawJson == null
+                ? "NULL"
+                : rawJson.isBlank()
+                ? "EMPTY"
+                : rawJson);
+        System.out.println("=============================");
 
         Computer computer = LibreHardwareManager.createInstance( ComputerConfig.getInstance().setCpuEnabled(true) ).getComputer();
 
