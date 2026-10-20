@@ -66,19 +66,21 @@ public class CPUPowerPackage{
 
     public double getCPUPackagePower() {
 
-        ComputerConfig config =
-                ComputerConfig.getInstance().setCpuEnabled(true);
 
-        String rawJson =
-                PowerShellOperations.GET.getComputerJsonData(config);
+        // Windows Debugging Test
+//        ComputerConfig config =
+//                ComputerConfig.getInstance().setCpuEnabled(true);
 
-        System.out.println("=== RAW POWERSHELL OUTPUT ===");
-        System.out.println(rawJson == null
-                ? "NULL"
-                : rawJson.isBlank()
-                ? "EMPTY"
-                : rawJson);
-        System.out.println("=============================");
+//        String rawJson =
+//                PowerShellOperations.GET.getComputerJsonData(config);
+//
+//        System.out.println("=== RAW POWERSHELL OUTPUT ===");
+//        System.out.println(rawJson == null
+//                ? "NULL"
+//                : rawJson.isBlank()
+//                ? "EMPTY"
+//                : rawJson);
+//        System.out.println("=============================");
 
         String operatingSystem = System.getProperty("os.name");
 
