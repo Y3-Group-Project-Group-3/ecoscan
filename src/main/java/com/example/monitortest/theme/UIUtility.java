@@ -1,8 +1,13 @@
 package com.example.monitortest.theme;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.util.Map;
+
+import static com.example.monitortest.theme.AppTheme.*;
+import static java.awt.Component.LEFT_ALIGNMENT;
 
 public final class UIUtility {
     private UIUtility(){}
@@ -31,14 +36,52 @@ public final class UIUtility {
 //    label()
 
 
+    /*******
+     * These will need to be standardised and merge at some point
+     * I think its just the alignment thats different so that should be simple to have as a parameter
+     */
     /** A JLabel with the given font and colour, centred when used in a vertical BoxLayout. */
-    public static JLabel label(String text, int style, float size, Color color) {
+    public static JLabel label(
+            String text,
+            int style,
+            float size,
+            Color color)
+    {
         JLabel l = new JLabel(text);
         l.setFont(font(style, size));
         l.setForeground(color);
-        l.setAlignmentX(Component.CENTER_ALIGNMENT);
         return l;
     }
+
+    // Overload that sets the alignment
+    // you just add
+    // e.g :
+    // label("Left", Font.BOLD, 14, TEXT_MAIN, Component.LEFT_ALIGNMENT);
+    // label("Center", Font.BOLD, 14, TEXT_MAIN, Component.CENTER_ALIGNMENT);
+    // label("Right", Font.BOLD, 14, TEXT_MAIN, Component.RIGHT_ALIGNMENT)
+    //
+
+    public static JLabel label(
+            String text,
+            int style,
+            float size,
+            Color color,
+            float alignment)
+    {
+        JLabel label = label(text, style, size, color);
+        label.setAlignmentX(alignment);
+
+        return label;
+    }
+//
+//    public static JLabel resultsLabel(String text, int size, int style, Color color) {
+//        JLabel l = new JLabel(text);
+//        l.setFont(new Font(AppTheme.FONT_FAMILY, style, size));
+//        l.setForeground(color);
+//        l.setAlignmentX(LEFT_ALIGNMENT);
+//        return l;
+//    }
+
 
 
 //    scrollable()
@@ -51,4 +94,116 @@ public final class UIUtility {
 //        scroll.getVerticalScrollBar().setUnitIncrement(16);
 //        return scroll;
 //    }
+
+
+    // RESULTS PANEL
+    public static JPanel column() {
+        JPanel p = new JPanel();
+        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+        p.setOpaque(false);
+        p.setAlignmentX(LEFT_ALIGNMENT);
+        return p;
+    }
+
+    public static JPanel card() {
+        JPanel p = new JPanel();
+        p.setBackground(CARD_BG);
+        p.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(BORDER_COLOR, 1, true), new EmptyBorder(20, 22, 20, 22)));
+        return p;
+    }
+
+    public static JPanel row() {
+        JPanel p = new JPanel(new BorderLayout());
+        p.setOpaque(false);
+        p.setAlignmentX(LEFT_ALIGNMENT);
+        return p;
+    }
+
+    // keeps small things (like the tab buttons) at their normal height
+    public static JPanel wrap(JComponent c) {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        p.setOpaque(false);
+        p.add(c);
+        return p;
+    }
+
+    // loads an icon from the icons folder (exported from figma) and resizes it
+    public static ImageIcon loadIcon(String path, int size) {
+        ImageIcon icon = new ImageIcon(path);
+        if (icon.getIconWidth() <= 0) {
+            System.out.println("Icon not found: " + path);
+            return null;
+        }
+        return new ImageIcon(icon.getImage().getScaledInstance(size, size, Image.SCALE_SMOOTH));
+    }
+
+    public static String format(double v) {
+        if (v >= 100) return String.format("%.0f", v);
+        if (v >= 10) return String.format("%.1f", v);
+        if (v >= 0.1) return String.format("%.2f", v);
+        return String.format("%.4f", v);
+    }
+
+
+    public static JPanel wrapBottom(JComponent c) {
+        JPanel p = new JPanel(new BorderLayout());
+        p.setOpaque(false);
+        p.add(c, BorderLayout.SOUTH);
+        return p;
+    }
+
+
+    // Useful Helpers
+    public static JPanel alignComponent(JComponent component, int alignment) {
+
+        JPanel panel = new JPanel( new FlowLayout(alignment, 0, 0) );
+
+        panel.setOpaque(false);
+        panel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        panel.add(component);
+
+        return panel;
+    }
+
+    // History Panel
+    public static JButton createPillButton(String text) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("SansSerif", Font.BOLD, 12));
+        btn.setForeground(TEXT_MAIN);
+        btn.setBackground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(BORDER_COLOR, 1, true),
+                new EmptyBorder(8, 16, 8, 16)
+        ));
+        return btn;
+    }
+
+    public static void showDebugBorders(Container container) {
+        for (Component component : container.getComponents()) {
+
+            if (component instanceof JComponent jc) {
+                Color color;
+
+                if (jc instanceof JLabel) {
+                    color = Color.RED;
+                } else if (jc instanceof JButton) {
+                    color = Color.BLUE;
+                } else if (jc instanceof JPanel) {
+                    color = Color.GREEN;
+                } else {
+                    color = Color.ORANGE;
+                }
+
+                jc.setBorder(BorderFactory.createLineBorder(color, 1));
+            }
+
+            if (component instanceof Container child) {
+                showDebugBorders(child);
+            }
+        }
+    }
 }

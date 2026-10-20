@@ -35,20 +35,31 @@ public class HomePanelNew extends JPanel {
         JPanel column = new JPanel();
         column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
         column.setOpaque(false);
+        //Debugging
+        column.setBackground(AppTheme.TEXT_MAIN);
 
         // ---- Heading block ----
-        column.add(UIUtility.label("HARDWARE ASSESSMENT", Font.BOLD, 10, AppTheme.GREEN));
+        // --- hardware assessment label
+        JLabel infoLabel = UIUtility.label("HARDWARE ASSESSMENT", Font.BOLD, 10, AppTheme.GREEN);
+        column.add(UIUtility.alignComponent(infoLabel, FlowLayout.CENTER));
+
+        // --- Scan yo computer label
         column.add(Box.createVerticalStrut(8));
-        column.add(UIUtility.label("Scan your computer", Font.BOLD, 30, AppTheme.TEXT_MAIN));
+        JLabel pageTitle = UIUtility.label("Scan your computer", Font.BOLD, 30, AppTheme.TEXT_MAIN);
+        column.add(UIUtility.alignComponent(pageTitle, FlowLayout.CENTER));
+
+        // --- paragraph text
         column.add(Box.createVerticalStrut(12));
         // HTML lets the text wrap and centre inside a fixed width
-        column.add(UIUtility.label("<html><div style='width:440px; text-align:center;'>EcoScan finds your hardware for you, "
+        JLabel paragraphLabel =  UIUtility.label("<html><div style='width:440px; text-align:center;'>EcoScan finds your hardware for you, "
                 + "nothing to type in. It analyses your computer's environmental impact and tells you whether "
-                + "to keep, upgrade or replace it.</div></html>", Font.PLAIN, 12.5f, AppTheme.TEXT_MUTED));
+                + "to keep, upgrade or replace it.</div></html>", Font.PLAIN, 12.5f, AppTheme.TEXT_MUTED);
+        column.add(UIUtility.alignComponent(paragraphLabel, FlowLayout.CENTER));
 
         // ---- "What do you use it for?" cards ----
         column.add(Box.createVerticalStrut(32));
-        column.add(UIUtility.label("What do you use it for?", Font.BOLD, 12, AppTheme.TEXT_MAIN));
+        JLabel questionLabel = UIUtility.label("What do you use it for?", Font.BOLD, 12, AppTheme.TEXT_MAIN);
+        column.add(UIUtility.alignComponent(questionLabel, FlowLayout.CENTER));
         column.add(Box.createVerticalStrut(12));
 
         String[][] options = {
@@ -72,24 +83,18 @@ public class HomePanelNew extends JPanel {
         // ---- Main action ----
         column.add(Box.createVerticalStrut(24));
         scanButton = new PrimaryButton("Scan Computer", new LineIcon("SCAN", 15, Color.WHITE));
-        scanButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-//        scanButton.addActionListener(e -> showScan());
-        column.add(scanButton);
+        column.add(UIUtility.alignComponent(scanButton, FlowLayout.CENTER));
 
         // ---- Privacy note ----
         column.add(Box.createVerticalStrut(14));
-        JLabel privacy = UIUtility.label("Only hardware and system information is read. No personal files are accessed.",
-                Font.PLAIN, 10.5f, AppTheme.TEXT_MUTED);
+        JLabel privacy = UIUtility.label("Only hardware and system information is read. No personal files are accessed.", Font.PLAIN, 10.5f, AppTheme.TEXT_MUTED);
         privacy.setIcon(new LineIcon("SHIELD", 13, AppTheme.GREEN));
         privacy.setIconTextGap(6);
-        column.add(privacy);
+        column.add(UIUtility.alignComponent(privacy,FlowLayout.CENTER));
 
         // ---- "View scan history ->" link ----
         historyButton = new JButton("View Scan History");
-        historyButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        column.add(Box.createVerticalStrut(15));
-        column.add(historyButton);
+        column.add(UIUtility.alignComponent(historyButton, FlowLayout.CENTER));
 
         // Place the column at the top-centre of the page
         GridBagConstraints c = new GridBagConstraints();
@@ -98,6 +103,11 @@ public class HomePanelNew extends JPanel {
         c.weighty = 1;
         c.insets = new Insets(56, 32, 32, 32);
         page.add(column, c);
+
+
+        // Debugging - shows every element with border, useful for alignment
+//        UIUtility.showDebugBorders(page);
+
         return page;
     }
 

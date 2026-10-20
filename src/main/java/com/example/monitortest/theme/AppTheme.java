@@ -25,6 +25,18 @@ public class AppTheme {
     public static final Color TEXT_MUTED = new Color(0x64748B);        // descriptions
     public static final Color TEXT_FAINT = new Color(0x94A3B8);        // footnotes, "WAITING"
     public static final Color BORDER_COLOR = new Color(0xE3E8EF);
+
+//    private static final Color BG_COLOR = new Color(0xF4F6F8);
+    public static final Color CARD_BG = Color.WHITE;
+//    private static final Color BORDER_COLOR = new Color(0xE3E7EB);
+//    private static final Color GREEN = new Color(0x2E7D4F);
+//    private static final Color GREEN_LIGHT = new Color(0xEAF5EE);
+//    private static final Color TEXT_MAIN = new Color(0x111827);
+//    private static final Color TEXT_MUTED = new Color(0x6B7280);
+    public static final Color TRACK = new Color(0xE5E7EB);
+    public static final Color GREY_BAR = new Color(0xA3ABB8);
     public static final String FONT_FAMILY = "Segoe UI";
+
+
 
 }

@@ -68,7 +68,7 @@ public class CreateWindow {
         // TODO:: Can be in its own class
         frame.setContentPane(mainPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 400);
+        frame.setSize(1280, 760);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
