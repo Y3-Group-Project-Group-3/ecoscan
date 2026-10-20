@@ -18,7 +18,6 @@ public class HomePanelNew extends JPanel {
     // temp history page button
     private JButton historyButton;
 
-
     public HomePanelNew() {
         setLayout(new BorderLayout());
         setBackground(new Color(0xF4F6F9));
