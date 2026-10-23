@@ -13,7 +13,7 @@
 ## Updating Branches
  ### Updating feature branches: 
  When a feature requires functionality that has been merged into its parent development branch,
- developers should fetch the latest remote changes and merge the parent branch into their feature branch. 
+ you should fetch the latest remote changes and merge the parent branch into their feature branch. 
 
 
  
