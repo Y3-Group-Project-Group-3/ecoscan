@@ -50,6 +50,7 @@ You then create a GitHub pull request [Guide to Creating a Pull Request](https:/
 - First check the trello
 - then if its not clear ask in Discord
 - *Don't assume anything has been done*
+<br/><br/>
 
 3.1 Check the current branch
 
@@ -58,20 +59,24 @@ You then create a GitHub pull request [Guide to Creating a Pull Request](https:/
 This should result in something like ` feature/history-delete-scans `
 > you should know what your current active branch is but it's important to double check
 
+<br/><br/>
 3.1.1 If you're on the wrong branch then:
 
 > ` git switch name-of-the-correct-branch ` 
 
+<br/><br/>
 3.2 Check for uncommitted changes ( you should have 0, otherwise commit them or undo them and proceed )
 
 > ` git status `
 
 
+<br/><br/>
 3.3 Next, get the latest version of the project (this downloads info about all remote branches, including views-history)
 
 > ` git fetch origin `
 
 
+<br/><br/>
 3.4 Merge the updated parent branch (with the import-scans code)
 - This incorporates the latest views-history changes into feature/history-view-scan
 - If there are conflicting changes, Git might ask you to resolve them before completing the merge.
@@ -79,12 +84,15 @@ This should result in something like ` feature/history-delete-scans `
 
 > `git merge origin/views-history`
 
+<br/><br/>
 3.5 You should now be able to work on the delete-scans function with the import-scans function included in views-history
 
+<br/><br/>
 3.6 You can then push your work to github and continue working on the delete-scans branch.
 
 > ` git push origin feature/history-view-scan ` 
 
+<br/><br/>
 End: Then once you're happy that the work is done you create a pull request like above
 
 
