@@ -21,14 +21,13 @@ public class CPUPowerPackage {
 
         // STEP 1: Identify the operating system.
 
-        // Retrieve the name of the operating system currently running the Java application.
-        String operatingSystem = System.getProperty("os.name");
+        // Identify the current operating system.
+        String operatingSystem = System.getProperty("os.name", "");
 
-        // LibreHardwareMonitor's PowerShell integration is Windows-specific, so do not attempt to use it
-        // on other operating systems.
-        //
-        // Double.NaN indicates that no valid numerical reading is available.
-        if (!operatingSystem.toLowerCase().contains("win")) {
+        // LibreHardwareMonitor's PowerShell integration is Windows-only.
+        // On macOS and Linux, report the sensor as unavailable.
+        if (!operatingSystem.toLowerCase(java.util.Locale.ROOT).startsWith("windows")) {
+            System.out.println("CPU package power unavailable: non-Windows operating system.");
             return Double.NaN;
         }
 
@@ -155,11 +154,8 @@ public class CPUPowerPackage {
 
         // STEP 11: Handle unavailable CPU package power.
 
-        // Execution reaches this point if no matching sensor
-        // produced an accepted reading.
-        //
-        // This may mean the sensor is missing, unsupported,
-        // or returning an invalid value.
+        // Execution reaches this point if no matching sensor produced an accepted reading.
+        // This may mean the sensor is missing, unsupported or returning an invalid value.
         System.out.println( "CPU package power sensor not found." );
 
         // Return NaN so the rest of EcoScan can recognise
@@ -167,71 +163,3 @@ public class CPUPowerPackage {
         return Double.NaN;
     }
 }
-
-//package com.example.monitortest.model;
-//import io.github.pandalxb.jlibrehardwaremonitor.config.ComputerConfig;
-//import io.github.pandalxb.jlibrehardwaremonitor.manager.LibreHardwareManager;
-//import io.github.pandalxb.jlibrehardwaremonitor.model.Computer;
-//import io.github.pandalxb.jlibrehardwaremonitor.model.Hardware;
-//import io.github.pandalxb.jlibrehardwaremonitor.model.Sensor;
-//
-//import io.github.pandalxb.jlibrehardwaremonitor.config.ComputerConfig;
-//import io.github.pandalxb.jlibrehardwaremonitor.manager.powershell.PowerShellOperations;
-//
-//public class CPUPowerPackage{
-//
-//    public double getCPUPackagePower() {
-//
-//        String operatingSystem = System.getProperty("os.name");
-//
-//        // Only proceed if it's a windows machine
-//        if (!operatingSystem.toLowerCase().contains("win")) { return Double.NaN; }
-//
-//        // Windows Debugging Test
-//        ComputerConfig config = ComputerConfig.getInstance().setCpuEnabled(true);
-//
-//        // Checking
-//        String rawJson = PowerShellOperations.GET.getComputerJsonData(config);
-//        System.out.println("=== RAW POWERSHELL OUTPUT ===");
-//        System.out.println(rawJson == null ? "NULL" : rawJson.isBlank() ? "EMPTY" : rawJson);
-//        System.out.println("=============================");
-//        Computer computer = LibreHardwareManager.createInstance( ComputerConfig.getInstance().setCpuEnabled(true) ).getComputer();
-//
-//        if (computer.getHardware() == null) {
-//            System.out.println("No hardware information retrieved.");
-//            return Double.NaN;
-//        }
-//
-//        for (Hardware hardware : computer.getHardware()) {
-//
-//            if (!hardware.getHardwareType().toString().equalsIgnoreCase("Cpu")) {
-//                continue;
-//            }
-//
-//            for (Sensor sensor : hardware.getSensors()) {
-//                // Debugging
-//                System.out.println(
-//                        "Sensor: " + sensor.getName()
-//                                + " | Type: " + sensor.getSensorType()
-//                                + " | Value: " + sensor.getValue()
-//                );
-//
-//                boolean isPowerSensor = sensor.getSensorType().toString() .equalsIgnoreCase("Power");
-//                boolean isPackageSensor = sensor.getName().equalsIgnoreCase("Package") || sensor.getName().equalsIgnoreCase("CPU Package");
-//                if (isPowerSensor && isPackageSensor) {
-//
-//                    double value = sensor.getValue();
-//
-//                    System.out.println("CPU Package Power: " + value);
-//
-//                    if (Double.isFinite(value) && value >= 0) {
-//                        return value;
-//                    }
-//                }
-//            }
-//        }
-//
-//        System.out.println("CPU package power sensor not found.");
-//        return Double.NaN;
-//    }
-//}
