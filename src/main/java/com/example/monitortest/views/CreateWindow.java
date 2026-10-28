@@ -2,7 +2,6 @@ package com.example.monitortest.views;
 
 import com.example.monitortest.model.ScanEventListener;
 import com.example.monitortest.model.ScanHardware;
-import com.example.monitortest.model.services.PawnIOManager;
 import com.example.monitortest.model.services.PawnIOService;
 
 import javax.swing.*;
