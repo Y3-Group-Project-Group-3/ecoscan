@@ -2,6 +2,8 @@ package com.example.monitortest.views;
 
 import com.example.monitortest.model.ScanEventListener;
 import com.example.monitortest.model.ScanHardware;
+import com.example.monitortest.model.services.PawnIOManager;
+import com.example.monitortest.model.services.PawnIOService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,6 +44,18 @@ public class CreateWindow {
 
         // register the scan button listener
         resultsPanel.getRefreshButton().addActionListener(scanEventListener);
+
+
+//        Testing the backend - Old
+//        PawnIOManager pawnIOManager = new PawnIOManager();
+//        System.out.println(
+//                "PawnIO Status: " + pawnIOManager.checkPawnIOStatus()
+//        );
+
+
+//        Testing the backend - New
+        PawnIOService pawnIOService = new PawnIOService();
+        System.out.println( "PawnIO Status: " + pawnIOService.checkPawnIOStatus());
 
         // Start on the home screen
         cardLayout.show(mainPanel, "home");
