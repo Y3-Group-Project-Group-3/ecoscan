@@ -22,6 +22,7 @@ For example:
 - Merge completed features into their parent branch through a GitHub pull request.
 - Do not merge unfinished feature branches into one another unless agreed with the team.
 - If your feature depends on another feature, wait until the required feature has been merged into the parent branch before incorporating it.
+- The existing current branches are a guide, if a branch doesn't exist then you're totally fine with making it yourself. Just try and follow the above naming pattern
 
 ---
 
