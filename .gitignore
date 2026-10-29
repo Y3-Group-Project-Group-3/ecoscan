@@ -46,3 +46,13 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Local development backups
+/backups/
+
+# Experimental LibreHardwareMonitor builds and source
+/jlibre-build/
+/jlibre-source/
+
+# Generated application packaging files
+/jpackage-build/
