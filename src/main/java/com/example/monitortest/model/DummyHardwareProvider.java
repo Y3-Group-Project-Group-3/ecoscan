@@ -3,6 +3,8 @@ package com.example.monitortest.model;
 import oshi.SystemInfo;
 import com.google.gson.JsonObject;
 
+import java.util.List;
+
 /**
  * Provides simulated hardware information for development and testing on platforms without supported sensors.
  * All values returned by this class are dummy data.
@@ -49,14 +51,26 @@ public class DummyHardwareProvider {
         }
 
 
-
         return new HardwareInfo(
                 cpuName,
                 cpuTemperature,
                 cpuPower,
                 totalMemory,
-                true // CPU power is simulated on macOS.
+                true,
+                "Not detected",
+                "Unknown",
+                0L,
+                Double.NaN,
+                Double.NaN,
+                "Not detected",
+                "Unknown",
+                "Unknown",
+                // Storage detection will be added to the macOS provider later.
+                List.of(),  // Storage devices
+                List.of()   // RAM modules
         );
+
+
 
     }
 }

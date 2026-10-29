@@ -33,7 +33,11 @@ public class HardwareSnapshotProvider {
         ComputerConfig config = ComputerConfig.getInstance()
                 .setCpuEnabled(true)
                 .setGpuEnabled(true)
-                .setMemoryEnabled(false);
+                .setMotherboardEnabled(true)
+                .setPsuEnabled(true)
+                .setMemoryEnabled(false)
+                .setStorageEnabled(false);
+
                 // this is where we turn on the sensors so we can read them...
 
         // Retrieve the hardware snapshot.

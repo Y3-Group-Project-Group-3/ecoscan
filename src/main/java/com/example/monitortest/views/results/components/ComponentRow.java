@@ -48,10 +48,13 @@ public class ComponentRow {
         details.setBackground(new Color(0xF8FAF9));
         details.setBorder(new EmptyBorder(12, 18, 14, 18));
 
-        details.add(label("Detected spec", Font.PLAIN, 11, TEXT_MUTED));
-        details.add(label("Efficiency / impact", Font.PLAIN, 11, TEXT_MUTED));
-        details.add(label("Age / lifespan", Font.PLAIN, 11, TEXT_MUTED));
-        details.add(label("Assessment", Font.PLAIN, 11, TEXT_MUTED));
+
+        // Display hardware specifications and power measurements.
+        details.add(label("Detected specifications", Font.PLAIN, 11, TEXT_MUTED));
+        details.add(label("Power at scan", Font.PLAIN, 11, TEXT_MUTED));
+        details.add(label("Additional information", Font.PLAIN, 11, TEXT_MUTED));
+        details.add(label("Share of measured power", Font.PLAIN, 11, TEXT_MUTED));
+
 
         details.add(label(spec, Font.BOLD, 13, TEXT_MAIN));
         details.add(label(impact, Font.BOLD, 13, TEXT_MAIN)); // data: power use (W) of this part

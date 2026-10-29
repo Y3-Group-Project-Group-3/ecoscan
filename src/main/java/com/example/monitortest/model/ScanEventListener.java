@@ -2,6 +2,7 @@ package com.example.monitortest.model;
 
 import com.example.monitortest.views.ResultsPanel;
 import com.example.monitortest.views.ResultsPanelNew;
+import com.example.monitortest.views.sections.ComponentSection;
 import com.example.monitortest.views.sections.HardwareInfoSection;
 
 import javax.swing.*;
@@ -51,8 +52,10 @@ public class ScanEventListener implements ActionListener {
                     protected void done() {
                         try {
                             HardwareInfo info = get();
-                            // TODO:: Link this to the Refresh hardware button on the new results page
+
+                            // Update both sections using the same completed scan.
                             HardwareInfoSection.updateHardwareInfo(info);
+                            ComponentSection.updateComponentSection(info);
 
                         } catch (Exception exception) {
                             exception.printStackTrace();
