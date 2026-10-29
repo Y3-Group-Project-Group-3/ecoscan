@@ -2,24 +2,17 @@
 
 ## 1. Branch Structure
 
-Each part of EcoScan has its own development branch. New features should be created from the relevant development branch and merged back into that same branch when complete.
-
-| Feature branch | Created from | Merges into |
-|---|---|---|
-| `feature/home-*` | `views-home` | `views-home` |
-| `feature/loading-*` | `views-loading` | `views-loading` |
-| `feature/results-*` | `views-results` | `views-results` |
-| `feature/history-*` | `views-history` | `views-history` |
+Each part of EcoScan has its own development branch.
 
 For example:
 
-`feature/results-recommendation-component` → `views-results`
+`feature/results-recommendation-component`
 
 **Important rules:**
 
-- Work on your own feature branch, not directly on the shared development branch.
+- Work on your own feature branch, not directly on the shared development branch(views).
 - Keep each feature branch focused on one task.
-- Merge completed features into their parent branch through a GitHub pull request.
+- Merge completed features into views through a GitHub pull request.
 - Do not merge unfinished feature branches into one another unless agreed with the team.
 - If your feature depends on another feature, wait until the required feature has been merged into the parent branch before incorporating it.
 - The existing current branches are a guide, if a branch doesn't exist then you're totally fine with making it yourself. Just try and follow the above naming pattern
@@ -40,7 +33,7 @@ Create your feature branch from the appropriate parent branch:
 git switch -c feature/history-delete-scans origin/views-history
 ```
 
-This ensures your new branch starts with the latest version of `views-history`.
+This ensures your new branch starts with the latest version of `views`.
 
 When you're ready to publish the branch:
 
@@ -77,7 +70,7 @@ git push origin feature/history-import-scans
 
 They then create a GitHub pull request:
 
-- **Base:** `views-history`
+- **Base:** `views`
 - **Compare:** `feature/history-import-scans`
 
 [GitHub guide to creating pull requests](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-a-pull-request)
@@ -139,12 +132,12 @@ This retrieves the latest information about remote branches without modifying yo
 While still on `feature/history-delete-scans`, run:
 
 ```bash
-git merge origin/views-history
+git merge origin/views
 ```
 
-This brings the latest completed History functionality, including CSV imports, into your feature branch.
+This brings the latest completed functionality, including CSV imports, into your feature branch.
 
-It does not merge your unfinished delete-scans functionality into `views-history`.
+It does not merge your unfinished delete-scans functionality into `views`.
 
 **If a merge conflict occurs:**
 
@@ -170,7 +163,7 @@ git push origin feature/history-delete-scans
 
 When your feature is finished and tested, create a pull request:
 
-- **Base:** `views-history`
+- **Base:** `views`
 - **Compare:** `feature/history-delete-scans`
 
 ---
@@ -183,7 +176,7 @@ Make sure:
 - [ ] The project compiles successfully.
 - [ ] Your changes work as expected.
 - [ ] You haven't accidentally included unrelated changes.
-- [ ] Your branch includes any required completed work from its parent branch.
+- [ ] Your branch includes any required completed work another branch
 - [ ] All changes are committed and pushed.
 
 Your pull request should briefly explain what you changed and how you tested it.
