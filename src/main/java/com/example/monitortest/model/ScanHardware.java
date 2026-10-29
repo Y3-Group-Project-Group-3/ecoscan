@@ -18,6 +18,16 @@ public class ScanHardware {
      */
     public HardwareInfo getHardwareInfo() {
 
+
+        // Use simulated hardware information when running on macOS.
+        String operatingSystem = System.getProperty("os.name").toLowerCase();
+
+        if (operatingSystem.contains("mac")) {
+            DummyHardwareProvider dummyProvider = new DummyHardwareProvider();
+            return dummyProvider.getHardwareInfo();
+        }
+
+
         // STEP 1: Retrieve hardware specifications using OSHI.
         SystemInfo systemInfo = new SystemInfo();
 
@@ -51,7 +61,8 @@ public class ScanHardware {
                 cpuName,
                 cpuTemperature,
                 cpuPower,
-                totalMemory
+                totalMemory,
+                false // CPU power comes from a real sensor, not dummy data.
         );
     }
 }

@@ -66,6 +66,15 @@
         </dependency>
 
 
+        <!-- Gson: Reads and parses JSON hardware profiles. -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.13.2</version>
+        </dependency>
+
+
+
     </dependencies>
 
     <build>
