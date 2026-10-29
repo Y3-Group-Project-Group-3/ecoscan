@@ -10,21 +10,27 @@ The results represent a snapshot of the hardware at the time of scanning.
 
 ## 1. Accessing HardwareInfo
 
-After a hardware scan completes, the application receives a `HardwareInfo` object.
+After a hardware scan completes, EcoScan passes a HardwareInfo object to the results interface.
 
-For example, inside the existing scan completion workflow:
+UI components should receive and reuse this object rather than initiating additional hardware scans.
+
+For example, a component could expose an update method:
 
 ```java
-HardwareInfo info = hardwareInfoService.getHardwareInfo();
-
-ComponentSection.updateComponentSection(info);
+import com.example.monitortest.hardware.model.HardwareInfo;
+import com.example.monitortest.hardware.model.MemoryModule;
+import com.example.monitortest.hardware.model.StorageDevice;
 ```
 
 Other UI components can receive the same object:
 
 ```java
-EnergyUsageSection.updateEnergyUsage(info);
-ApplianceComparisonSection.updateComparison(info);
+public void updateHardwareInformation(HardwareInfo info) {
+    String cpuName = info.getCpuName();
+    double cpuPower = info.getCpuPower();
+
+    // Update the component's UI using these values.
+}
 ```
 
 The latter two are examples of possible integration methods, not existing EcoScan methods.
@@ -122,6 +128,11 @@ if (Double.isFinite(combinedPower)) {
 
 **Important:** These values represent component-level power subtotals, not total electricity consumption measured at the wall socket.
 
+#### MacOS Info
+On macOS, EcoScan supplies fabricated CPU and GPU power readings for front-end development. These values participate in getTotalMeasuredPower() and getCombinedComponentPower() just like numerical readings obtained from Windows sensors.
+
+Consequently, the term "measured" in these method names refers to the application's power-data category, not necessarily to a physical sensor measurement.
+
 ## 8. Power Data Completeness
 
 | Method | Description |
@@ -136,14 +147,15 @@ These methods describe data coverage, not measurement accuracy.
 
 EcoScan currently uses fixed baseline estimates:
 
-| Component | Estimated power |
-|---|---:|
-| DDR2 module | 4.0 W |
-| DDR3 module | 3.0 W |
-| DDR4 module | 2.5 W |
-| DDR5 module | 3.5 W |
-| SSD | 2.5 W |
-| HDD | 5.0 W |
+| Component           | Estimated power |
+|---------------------|----------------:|
+| DDR2 module         |           4.0 W |
+| DDR3 module         |           3.0 W |
+| DDR4 module         |           2.5 W |
+| DDR5 module         |           3.5 W |
+| LPDDR5 Module (mac) |           2.0 W |
+| SSD                 |           2.5 W |
+| HDD                 |           5.0 W |
 
 The values are defined in `PowerEstimates.java`.
 
@@ -169,12 +181,43 @@ The application should distinguish unavailable data from a genuine reading of ze
 
 ## 11. Platform Support
 
-**Windows:** Hardware information is retrieved using OSHI, LibreHardwareMonitor integration and Windows-specific storage detection.
+### Windows
 
-**macOS:** The current implementation may use simulated readings or placeholder hardware data.
+EcoScan retrieves hardware specifications and sensor readings using OSHI, LibreHardwareMonitor integration, and Windows-specific storage detection.
 
-Consumers should not assume that every reported power value is a physical sensor measurement.
+CPU and GPU power readings depend on hardware sensor availability. RAM and storage power consumption are calculated using fixed estimates.
 
+### macOS
+
+EcoScan provides simulated hardware information to support development and testing of the Swing user interface.
+
+The current implementation combines real system specifications retrieved through OSHI with fabricated hardware information.
+
+| Component | macOS behaviour |
+|---|---|
+| CPU name | Retrieved through OSHI |
+| CPU power | Simulated using the hardware profile or fallback |
+| GPU | Simulated integrated GPU information |
+| GPU power | Fabricated power reading |
+| RAM capacity | Retrieved through OSHI |
+| RAM modules | Simulated LPDDR5 module |
+| Storage | Simulated 256 GB SSD |
+| RAM power | Fixed estimate based on memory type |
+| Storage power | Fixed estimate based on device type |
+
+For the current Apple M3 development configuration, the simulated power breakdown is:
+
+- CPU: 12.0 W
+- GPU: 8.0 W
+- RAM: 2.0 W
+- Storage: 2.5 W
+- Combined component power: 24.5 W
+
+These values are intended to provide a complete dataset for UI development. They are not measurements of the Mac's actual power consumption.
+
+The macOS simulation uses the same `HardwareInfo` interface and power calculation methods as the Windows implementation.
+
+This allows front-end components to be developed and tested on either operating system without requiring separate UI implementations.
 ## 12. Integration Recommendations
 
 - Reuse the `HardwareInfo` object returned by the latest completed scan.
