@@ -1,5 +1,10 @@
+
 package com.example.monitortest.model;
 
+/**
+ * Stores hardware specifications and sensor measurements,
+ * including whether CPU power is simulated.
+ */
 public class HardwareInfo {
 
     private final String cpuName;
@@ -7,16 +12,21 @@ public class HardwareInfo {
     private final double cpuPower;
     private final long totalMemory;
 
+    // Identifies whether CPU power is simulated.
+    private final boolean cpuPowerSimulated;
+
     public HardwareInfo(
             String cpuName,
             double cpuTemperature,
             double cpuPower,
-            long totalMemory
+            long totalMemory,
+            boolean cpuPowerSimulated
     ) {
         this.cpuName = cpuName;
         this.cpuTemperature = cpuTemperature;
         this.cpuPower = cpuPower;
         this.totalMemory = totalMemory;
+        this.cpuPowerSimulated = cpuPowerSimulated;
     }
 
     public String getCpuName() {
@@ -33,5 +43,13 @@ public class HardwareInfo {
 
     public long getTotalMemory() {
         return totalMemory;
+    }
+
+    /**
+     * Indicates whether the CPU power value is simulated.
+     * @return true for simulated readings, false otherwise.
+     */
+    public boolean isCpuPowerSimulated() {
+        return cpuPowerSimulated;
     }
 }

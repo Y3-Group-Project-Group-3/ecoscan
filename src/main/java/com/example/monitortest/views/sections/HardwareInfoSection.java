@@ -17,6 +17,9 @@ public class HardwareInfoSection {
     public static JLabel cpuPowerLabel;
 
     public static JPanel createHardwareInfoSection() {
+
+        // Identify simulated CPU power readings on macOS.
+
         JPanel section = column();
 
         section.add(label(
@@ -35,6 +38,8 @@ public class HardwareInfoSection {
         memoryLabel = label("Memory: Not retrieved yet", Font.PLAIN, 13, TEXT_MAIN);
         cpuPowerLabel = label("CPU Power: Not retrieved yet", Font.PLAIN, 13, TEXT_MAIN);
 
+
+
         hardwareCard.add(cpuLabel);
         hardwareCard.add(Box.createVerticalStrut(8));
         hardwareCard.add(memoryLabel);
@@ -46,23 +51,23 @@ public class HardwareInfoSection {
         return section;
     }
 
-        public static void updateHardwareInfo(HardwareInfo info) {
 
-            cpuLabel.setText("CPU: " + info.getCpuName());
+    public static void updateHardwareInfo(HardwareInfo info) {
 
-            if (Double.isNaN(info.getCpuPower())) {
-                cpuPowerLabel.setText("CPU Power: Not supported");
-            } else {
-                cpuPowerLabel.setText(
-                        String.format("CPU Power: %.1f W", info.getCpuPower())
-                );
-            }
+        cpuLabel.setText("CPU: " + info.getCpuName());
 
-            memoryLabel.setText(
-                    String.format(
-                            "Total Memory: %.2f GB",
-                            info.getTotalMemory() / (1024.0 * 1024 * 1024)
-                    )
+        // Display CPU power and identify simulated measurements.
+        if (Double.isNaN(info.getCpuPower())) {
+            cpuPowerLabel.setText("CPU Power: Not supported");
+        } else {
+            cpuPowerLabel.setText(
+                    String.format( "CPU Power: %.1f W%s", info.getCpuPower(), info.isCpuPowerSimulated() ? " (Simulated)" : "")
             );
+        }
+
+        // Convert total memory from bytes to gigabytes.
+        memoryLabel.setText( String.format( "Total Memory: %.2f GB", info.getTotalMemory() / (1024.0 * 1024 * 1024))
+        );
     }
+
 }

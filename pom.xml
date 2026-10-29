@@ -45,11 +45,34 @@
 
 
 <!--        Vibecoded to all hell chatGPT patched version that saves the day-->
+<!--        <dependency>-->
+<!--            <groupId>io.github.pandalxb</groupId>-->
+<!--            <artifactId>jLibreHardwareMonitor</artifactId>-->
+<!--            <version>1.0.6-patched</version>-->
+<!--        </dependency>-->
+
+<!--        New even more vibecoded version -->
         <dependency>
             <groupId>io.github.pandalxb</groupId>
             <artifactId>jLibreHardwareMonitor</artifactId>
-            <version>1.0.6-patched</version>
+            <version>1.0.6-libre-test</version>
         </dependency>
+
+        <!-- Required by the experimental jLibreHardwareMonitor library to execute PowerShell commands for hardware sensor retrieval. -->
+        <dependency>
+            <groupId>io.github.pandalxb</groupId>
+            <artifactId>jPowerShell</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+
+
+        <!-- Gson: Reads and parses JSON hardware profiles. -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.13.2</version>
+        </dependency>
+
 
 
     </dependencies>
@@ -68,6 +91,46 @@
                     </mainClass>
                 </configuration>
             </plugin>
+
+
+            <!--
+                Copies EcoScan's runtime dependencies into target/dependency.
+
+                This includes OSHI, the patched jLibreHardwareMonitor
+                library and their required transitive dependencies.
+
+                The resulting directory will be used when packaging
+                EcoScan with jpackage.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.7.1</version>
+
+                <executions>
+                    <execution>
+                        <id>copy-runtime-dependencies</id>
+
+                        <!-- Run automatically when Maven packages the application. -->
+                        <phase>package</phase>
+
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+
+                        <configuration>
+                            <!-- Only include libraries needed at runtime. -->
+                            <includeScope>runtime</includeScope>
+
+                            <!-- Keep dependencies in a predictable directory. -->
+                            <outputDirectory>
+                                ${project.build.directory}/dependency
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
 
         </plugins>
     </build>
