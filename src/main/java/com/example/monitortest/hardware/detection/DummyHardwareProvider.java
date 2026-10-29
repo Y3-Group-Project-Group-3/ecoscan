@@ -1,6 +1,8 @@
 package com.example.monitortest.hardware.detection;
 
 import com.example.monitortest.hardware.model.HardwareInfo;
+import com.example.monitortest.hardware.model.MemoryModule;
+import com.example.monitortest.hardware.model.StorageDevice;
 import oshi.SystemInfo;
 import com.google.gson.JsonObject;
 
@@ -51,6 +53,29 @@ public class DummyHardwareProvider {
             cpuPower = profile.get("cpuPower").getAsDouble();
         }
 
+        // Simulate a memory module using the Mac's actual total memory capacity.
+        // Apple Silicon uses unified memory, represented here as a single module
+        // so that the memory breakdown interface can be tested.
+        List<MemoryModule> memoryModules = List.of(
+                new MemoryModule(
+                        "Apple",
+                        "LPDDR5",
+                        totalMemory,
+                        3_200_000_000L // Simulated clock frequency: 3200 MHz.
+                )
+        );
+
+        // Simulate a physical SSD for macOS front-end development.
+        // This allows storage information and power estimates to use
+        // the same data flow as detected Windows storage devices.
+        List<StorageDevice> storageDevices = List.of(
+                new StorageDevice(
+                        "Apple Internal SSD",
+                        256_000_000_000L, // Simulated capacity: 256 GB.
+                        "SSD"
+                )
+        );
+
 
         return new HardwareInfo(
                 cpuName,
@@ -58,16 +83,16 @@ public class DummyHardwareProvider {
                 cpuPower,
                 totalMemory,
                 true,
-                "Not detected",
-                "Unknown",
-                0L,
-                Double.NaN,
-                "Not detected",
-                "Unknown",
-                "Unknown",
-                // Storage detection will be added to the macOS provider later.
-                List.of(),  // Storage devices
-                List.of()   // RAM modules
+                // Simulated GPU specifications and power for macOS UI testing.
+                "Apple M3 Integrated GPU",
+                "Apple",
+                totalMemory, // Apple Silicon uses unified memory.
+                8.0,         // Fabricated GPU power in watts.
+                "Apple",
+                "Apple Motherboard",
+                "1.0",
+                storageDevices, // Simulated SSD.
+                memoryModules   // Simulated RAM modules.
         );
 
 

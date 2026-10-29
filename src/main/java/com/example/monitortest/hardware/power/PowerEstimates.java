@@ -31,11 +31,14 @@ public final class PowerEstimates {
             return Double.NaN;
         }
 
+        // Estimate memory power using the reported memory technology.
+        // LPDDR5 is included to support Apple Silicon development profiles.
         return switch (module.getMemoryType().trim().toUpperCase()) {
             case "DDR2" -> 4.0;
             case "DDR3" -> 3.0;
             case "DDR4" -> 2.5;
             case "DDR5" -> 3.5;
+            case "LPDDR5" -> 2.0;
             default -> Double.NaN;
         };
     }

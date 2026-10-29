@@ -162,8 +162,10 @@ public class HardwareInfo {
 
 
     /**
-     * Calculates the total measured power consumption of supported hardware components at scan time.
-     * @return total measured power in watts, or NaN if no valid power measurements are available
+     * Calculates the total power consumption of available CPU and GPU readings.
+     *
+     * @return Combined CPU and GPU power in watts,
+     *         or NaN when neither reading is available.
      */
     public double getTotalMeasuredPower() {
 
@@ -176,13 +178,13 @@ public class HardwareInfo {
             hasMeasurements = true;
         }
 
-        // Include GPU package power when a valid reading exists.
-        if (isValidMeasuredPower(cpuPower)) {
+        // Include GPU package power only when its reading is valid.
+        if (isValidMeasuredPower(gpuPower)) {
             totalPower += gpuPower;
             hasMeasurements = true;
         }
 
-        // Distinguish missing measurements from actual zero power.
+        // Return unavailable only when neither reading is valid.
         return hasMeasurements ? totalPower : Double.NaN;
     }
 
