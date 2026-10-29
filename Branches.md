@@ -1,112 +1,230 @@
-# Branches Guide
+# EcoScan — Branches Guide
 
-| Branch | Created From | Merges Into |
-|--------|--------------|-------------|
-|    feature/home-*    |       views-home       |      views-home       |
-|    feature/loading-*    |       views-loading       |      views-loading       |
-|    feature/results-*    |       views-results       |      views-results       |
-|    feature/history-*    |       views-history       |      views-history       |
+## 1. Branch Structure
 
+Each part of EcoScan has its own development branch. New features should be created from the relevant development branch and merged back into that same branch when complete.
 
-> e.g `feature/results-recommendation-component`  comes from `views-results` and will merge into `views-results` when ready
+| Feature branch | Created from | Merges into |
+|---|---|---|
+| `feature/home-*` | `views-home` | `views-home` |
+| `feature/loading-*` | `views-loading` | `views-loading` |
+| `feature/results-*` | `views-results` | `views-results` |
+| `feature/history-*` | `views-history` | `views-history` |
 
-## Updating Branches
- ### Updating feature branches: 
- When a feature requires functionality that has been merged into its parent development branch,
- you should fetch the latest remote changes and merge the parent branch into their feature branch. 
+For example:
 
+`feature/results-recommendation-component` → `views-results`
 
- 
- 
-**Do not merge unfinished feature branches directly into one another unless agreed with the team.**
-**Also, if you need something done in order to do your work then make sure its done in the correct order and separate. Don't combine multiple branches into 1
-Example (actual branch names are probably different)
-- You need to be able to import a .csv into the history page before you can delete scans from the history page
-- You would complete import-csv branch first then merge that into views-history
-- Then, while in the delete-scans branch you pull the latest views-history and work from that.
-- Don't do it the other way around, that will just get really confusing for the person merging the code
+**Important rules:**
 
-## An example guide just to emphasise this using the import-scans and delete-scans branches
- 
- ### Step 1 — finish and push import-scans functionality
- 
-push your work to the repo:
+- Work on your own feature branch, not directly on the shared development branch.
+- Keep each feature branch focused on one task.
+- Merge completed features into their parent branch through a GitHub pull request.
+- Do not merge unfinished feature branches into one another unless agreed with the team.
+- If your feature depends on another feature, wait until the required feature has been merged into the parent branch before incorporating it.
 
-- ` git switch feature/history-import-scans `
-- ` git push origin feature/history-import-scans `
+---
 
-You then create a GitHub pull request [Guide to Creating a Pull Request](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-a-pull-request)
-- ` Base:     views-history `
-- ` Compare:  feature/history-import-scans `
+## 2. Creating a New Feature Branch
 
-### Step 2 - Once reviewed and merged, the import-scans functionality becomes part of views-history.
+Before starting a new task, retrieve the latest remote branch information:
 
-- You might just need to wait on the person reviewing your code.
-- It's probably going to be Chris, so go easy on him there's only so many hours in the day.
-- I'm doing this to avoid people have to worry about conflicts.
+```bash
+git fetch origin
+```
 
-### Step 3 - You're working on the delete-scans function that needs the import-scans function
-3.0 - Check that required work has been completed
-- First check the trello
-- then if its not clear ask in Discord
-- *Don't assume anything has been done*
-<br/><br/>
+Create your feature branch from the appropriate parent branch:
 
-3.1 Check the current branch
+```bash
+git switch -c feature/history-delete-scans origin/views-history
+```
 
-> `git branch --show-current`
+This ensures your new branch starts with the latest version of `views-history`.
 
-This should result in something like ` feature/history-delete-scans `
-> you should know what your current active branch is but it's important to double check
+When you're ready to publish the branch:
 
-<br/><br/>
-3.1.1 If you're on the wrong branch then:
+```bash
+git push -u origin feature/history-delete-scans
+```
 
-> ` git switch name-of-the-correct-branch ` 
+After this first push, you can normally use `git push` without specifying the branch name.
 
-<br/><br/>
-3.2 Check for uncommitted changes ( you should have 0, otherwise commit them or undo them and proceed )
+---
 
-> ` git status `
+## 3. Updating an Existing Feature Branch
 
+Sometimes another teammate completes functionality that your feature needs.
 
-<br/><br/>
-3.3 Next, get the latest version of the project (this downloads info about all remote branches, including views-history)
+For example:
 
-> ` git fetch origin `
+- You're working on deleting scans from the History page.
+- Another teammate is implementing CSV scan imports.
+- Your delete-scans functionality depends on the imported scan data.
 
+The correct approach is to finish and merge the import functionality first, then update your delete-scans branch.
 
-<br/><br/>
-3.4 Merge the updated parent branch (with the import-scans code)
-- This incorporates the latest views-history changes into feature/history-view-scan
-- If there are conflicting changes, Git might ask you to resolve them before completing the merge.
-- In this instance because you want the new code you should favour the new code (that will make sense when it happens)
+### Step 1 — Complete the required feature
 
-> `git merge origin/views-history`
+The developer working on CSV imports completes and tests their changes.
 
-<br/><br/>
-3.5 You should now be able to work on the delete-scans function with the import-scans function included in views-history
+They push their branch:
 
-<br/><br/>
-3.6 You can then push your work to github and continue working on the delete-scans branch.
+```bash
+git switch feature/history-import-scans
+git push origin feature/history-import-scans
+```
 
-> ` git push origin feature/history-view-scan ` 
+They then create a GitHub pull request:
 
-<br/><br/>
-End: Then once you're happy that the work is done you create a pull request like above
+- **Base:** `views-history`
+- **Compare:** `feature/history-import-scans`
 
+[GitHub guide to creating pull requests](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-a-pull-request)
 
+The pull request should be reviewed and merged before dependent work is integrated.
 
+### Step 2 — Confirm the dependency has been merged
 
+Before updating your own branch:
 
+1. Check Trello to confirm the required task is complete.
+2. Check GitHub to confirm its pull request has been merged.
+3. If anything is unclear, ask in Discord.
 
-## Explanation
-- feature/ - A new piece of code that involves functionality
-- design/ - Only changes appearance 
-- bug/ - bug
-- tweak/ - A change to existing functionality
+**Don't assume a feature is available just because someone says they've finished coding it.**
 
+### Step 3 — Switch to your feature branch
 
-### Note
-- I'm putting this together pretty quickly so i'll come back to it and more information
-- Hopefully enough to give you a basic idea of what's going on with the branches
+Check your current branch:
+
+```bash
+git branch --show-current
+```
+
+If you're on the wrong branch:
+
+```bash
+git switch feature/history-delete-scans
+```
+
+### Step 4 — Check for uncommitted changes
+
+Run:
+
+```bash
+git status
+```
+
+Ideally, Git should report:
+
+`nothing to commit, working tree clean`
+
+If you have uncommitted changes, commit or stash them before proceeding.
+
+Only discard changes if you're certain they are unnecessary.
+
+### Step 5 — Fetch the latest remote changes
+
+Run:
+
+```bash
+git fetch origin
+```
+
+This retrieves the latest information about remote branches without modifying your current files.
+
+### Step 6 — Merge the updated parent branch
+
+While still on `feature/history-delete-scans`, run:
+
+```bash
+git merge origin/views-history
+```
+
+This brings the latest completed History functionality, including CSV imports, into your feature branch.
+
+It does not merge your unfinished delete-scans functionality into `views-history`.
+
+**If a merge conflict occurs:**
+
+- Read the conflicting changes carefully.
+- Don't automatically accept the newer version.
+- Preserve both changes where appropriate.
+- Ask the teammate responsible for the affected code if you're unsure.
+- Finish resolving the conflict before continuing.
+
+### Step 7 — Test and push
+
+Once the merge completes:
+
+- Confirm EcoScan still compiles.
+- Test the functionality affected by the merge.
+- Continue developing your feature.
+
+Push your updated branch:
+
+```bash
+git push origin feature/history-delete-scans
+```
+
+When your feature is finished and tested, create a pull request:
+
+- **Base:** `views-history`
+- **Compare:** `feature/history-delete-scans`
+
+---
+
+## 4. Before Opening a Pull Request
+
+Make sure:
+
+- [ ] Your feature is complete.
+- [ ] The project compiles successfully.
+- [ ] Your changes work as expected.
+- [ ] You haven't accidentally included unrelated changes.
+- [ ] Your branch includes any required completed work from its parent branch.
+- [ ] All changes are committed and pushed.
+
+Your pull request should briefly explain what you changed and how you tested it.
+
+---
+
+## 5. Branch Naming Conventions
+
+| Prefix | Purpose | Example |
+|---|---|---|
+| `feature/` | New functionality | `feature/history-import-scans` |
+| `design/` | Visual or styling changes | `design/results-layout` |
+| `bug/` | Fixing existing problems | `bug/history-loading-error` |
+| `tweak/` | Improving existing functionality | `tweak/results-power-display` |
+
+Use descriptive names that make the purpose of each branch obvious.
+
+---
+
+## 6. Common Git Commands
+
+| Command | Purpose |
+|---|---|
+| `git status` | Check changes and working tree |
+| `git branch --show-current` | Show your current branch |
+| `git fetch origin` | Retrieve remote updates |
+| `git switch branch-name` | Switch branches |
+| `git merge origin/branch-name` | Merge remote branch changes into your current branch |
+| `git add .` | Stage changes under the current directory |
+| `git commit -m "message"` | Save staged changes locally |
+| `git push` | Upload commits to the remote branch |
+
+---
+
+## 7. Final Reminders
+
+**Keep branches small and focused.** One feature per branch makes reviewing and merging significantly easier.
+
+**Don't work directly on shared development branches.** Use feature branches and pull requests.
+
+**Communicate dependencies early.** If your task requires another teammate's work, coordinate through Trello or Discord.
+
+**Ask before resolving unfamiliar conflicts.** It's better to spend a few minutes checking than accidentally remove someone else's work.
+
+The aim is to keep everyone's changes organised and make integration as straightforward as possible.
