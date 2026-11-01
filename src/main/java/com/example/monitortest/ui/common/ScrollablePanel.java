@@ -3,17 +3,42 @@ package com.example.monitortest.ui.common;
 import javax.swing.*;
 import java.awt.*;
 
-/** Panel that fills the scroll pane's visible area, so backgrounds reach the bottom of the window. */
+// custom JPanel that fills the available viewport space while allowing vertical scrolling when content exceeds it.
 public class ScrollablePanel extends JPanel implements Scrollable {
 
-    protected ScrollablePanel(LayoutManager layout) { super(layout); }
+    // Creates a scrollable panel using the supplied layout manager.
+    public ScrollablePanel(LayoutManager layout) {
+        super(layout);
+    }
 
-    public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
-    public int getScrollableUnitIncrement(Rectangle r, int o, int d) { return 16; }
-    public int getScrollableBlockIncrement(Rectangle r, int o, int d) { return 160; }
-    public boolean getScrollableTracksViewportWidth() { return true; }
+    // Returns the panel's preferred size within a JScrollPane.
+    @Override
+    public Dimension getPreferredScrollableViewportSize() {
+        return getPreferredSize();
+    }
+
+    // Defines the scrolling distance for a single increment.
+    @Override
+    public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return 16;
+    }
+
+    // Defines the scrolling distance for a larger increment.
+    @Override
+    public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return 160;
+    }
+
+    // Matches the viewport width to prevent horizontal scrolling.
+    @Override
+    public boolean getScrollableTracksViewportWidth() {
+        return true;
+    }
+
+    // Expands to fill the viewport height unless vertical scrolling is needed.
+    @Override
     public boolean getScrollableTracksViewportHeight() {
-        // Stretch to the window height unless the content is taller (then scroll)
-        return getParent() instanceof JViewport v && v.getHeight() > getPreferredSize().height;
+        // Check whether the viewport is taller than the panel's preferred height.
+        return getParent() instanceof JViewport viewport && viewport.getHeight() > getPreferredSize().height;
     }
 }

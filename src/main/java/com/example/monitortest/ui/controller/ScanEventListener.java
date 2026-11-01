@@ -16,6 +16,14 @@ import java.util.Set;
 
 public class ScanEventListener implements ActionListener {
 
+    // Number of hardware components included in the scan.
+    private static final int TOTAL_COMPONENTS = 4;
+
+    // Stores a hardware component and its reported scanning status.
+    private record ScanProgress(String component, String status) {
+    }
+
+
     private final JFrame frame;
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
@@ -57,85 +65,113 @@ public class ScanEventListener implements ActionListener {
             }
         }
 
+        // Stop the scan if the loading panel cannot be found.
+        if (loadingPanel == null) {
+            refreshButton.setEnabled(true);
+            JOptionPane.showMessageDialog(frame, "The loading screen could not be found.", "Hardware Scan Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         // Reset progress and component statuses for a new scan.
         loadingPanel.resetProgress();
+
 
         cardLayout.show(mainPanel, "loading");
         final LoadingPanel activeLoadingPanel = loadingPanel;
         // Track completed hardware stages for this scan.
         final Set<String> completedComponents = new HashSet<>();
 
-        SwingWorker<HardwareInfo, Void> worker =
+        // Run the hardware scan in the background and report progress events.
+        SwingWorker<HardwareInfo, ScanProgress> worker =
                 new SwingWorker<>() {
 
                     @Override
                     protected HardwareInfo doInBackground() {
 
-                        // Perform the hardware scan and receive progress updates.
+                        // Perform the hardware scan and publish component status updates.
+                        // Previously, we used SwingUtilities.invokeLater() to send each status update to the EDT.
+                        // Now, publish() passes those updates to SwingWorker's process() method
                         return hardwareInfoService.getHardwareInfo((component, status) -> {
-
-                            // Forward each update to the Swing Event Dispatch Thread.
-                            SwingUtilities.invokeLater(() -> {
-
-                                if (activeLoadingPanel != null) {
-
-                                    // Update the component's detection status.
-                                    activeLoadingPanel.setPartStatus(component, status);
-
-                                    if ("DETECTING".equals(status)) {
-                                        activeLoadingPanel.setCurrentPart(component);
-                                    }
-
-                                    // Count each component only once when detection finishes.
-                                    if ("DONE".equals(status)) {
-                                        completedComponents.add(component);
-
-                                        // Four components, each representing 25% of the scan.
-                                        int progress = completedComponents.size() * 25;
-
-                                        activeLoadingPanel.setProgress(progress);
-                                    }
-                                }
-                            });
+                            // Queue the progress event for processing on the Swing EDT.
+                            publish(new ScanProgress(component, status));
                         });
                     }
 
+
+                    @Override
+                    protected void process(java.util.List<ScanProgress> chunks) {
+
+                        // Process hardware status updates on the Swing EDT.
+                        for (ScanProgress progressEvent : chunks) {
+
+                            String component = progressEvent.component();
+                            String status = progressEvent.status();
+
+                            // Update the hardware row's detection status.
+                            activeLoadingPanel.setPartStatus(component, status);
+
+                            // Display the component currently being scanned.
+                            if ("DETECTING".equals(status)) {
+                                activeLoadingPanel.setCurrentPart(component);
+                            }
+
+                            // Update progress when a component finishes scanning.
+                            if ("DONE".equals(status)) {
+
+                                // Count each component only once.
+                                completedComponents.add(component);
+
+                                // Calculate the overall scan percentage.
+                                int progress = Math.min( 100, completedComponents.size() * 100 / TOTAL_COMPONENTS );
+
+                                activeLoadingPanel.setProgress(progress);
+                            }
+                        }
+                    }
+
+
                     @Override
                     protected void done() {
+
                         try {
+                            // Retrieve the completed hardware scan results.
                             HardwareInfo info = get();
 
-                            // Update both sections using the same completed scan.
+                            // Ensure the progress display reaches 100% after a successful scan.
+                            activeLoadingPanel.setProgress(100);
+
+                            // Update the results sections with the latest hardware information.
                             HardwareInfoSection.updateHardwareInfo(info);
                             ComponentSection.updateComponentSection(info);
 
-                        } catch (Exception exception) {
-                            exception.printStackTrace();
-                            JOptionPane.showMessageDialog(
-                                    frame,
-                                    "Failed to retrieve hardware information.",
-                                    "Hardware Scan Error",
-                                    JOptionPane.ERROR_MESSAGE
-                            );
-
-                        } finally {
-                            // Stop any remaining loading animation.
-                            if (activeLoadingPanel != null) {
-                                activeLoadingPanel.stopLoadingAnimation();
-                            }
-
-                            // Keep the completed loading page visible for 2 seconds.
+                            // Keep the completed loading page visible for two seconds.
                             Timer transitionTimer = new Timer(2000, e -> {
-                                // Re-enable scanning and display the results.
+
+                                // Re-enable scanning and display the results page.
                                 refreshButton.setEnabled(true);
                                 cardLayout.show(mainPanel, "results");
                             });
 
-                            // Run the transition only once.
+                            // Ensure the transition happens only once.
                             transitionTimer.setRepeats(false);
                             transitionTimer.start();
+
+                        } catch (Exception exception) {
+
+                            // Report the scan failure without navigating to outdated results.
+                            exception.printStackTrace();
+
+                            JOptionPane.showMessageDialog(
+                                    frame, "Failed to retrieve hardware information.", "Hardware Scan Error", JOptionPane.ERROR_MESSAGE
+                            );
+
+                            // Allow the user to initiate another scan.
+                            refreshButton.setEnabled(true);
+                            // Return to the Home page so the user can retry the scan.
+                            cardLayout.show(mainPanel, "home");
                         }
                     }
+
                 };
         worker.execute();
     }
