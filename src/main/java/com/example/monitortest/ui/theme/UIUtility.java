@@ -53,14 +53,6 @@ public final class UIUtility {
         return l;
     }
 
-    // Overload that sets the alignment
-    // you just add
-    // e.g :
-    // label("Left", Font.BOLD, 14, TEXT_MAIN, Component.LEFT_ALIGNMENT);
-    // label("Center", Font.BOLD, 14, TEXT_MAIN, Component.CENTER_ALIGNMENT);
-    // label("Right", Font.BOLD, 14, TEXT_MAIN, Component.RIGHT_ALIGNMENT)
-    //
-
     public static JLabel label(
             String text,
             int style,
@@ -73,28 +65,6 @@ public final class UIUtility {
 
         return label;
     }
-//
-//    public static JLabel resultsLabel(String text, int size, int style, Color color) {
-//        JLabel l = new JLabel(text);
-//        l.setFont(new Font(AppTheme.FONT_FAMILY, style, size));
-//        l.setForeground(color);
-//        l.setAlignmentX(LEFT_ALIGNMENT);
-//        return l;
-//    }
-
-
-
-//    scrollable()
-//    /** Wraps a page in a scroll pane with no border, so short windows can still reach everything. */
-//    static JScrollPane scrollable(JComponent page) {
-//        JScrollPane scroll = new JScrollPane(page);
-//        scroll.setBorder(null);
-//        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-//        scroll.getViewport().setBackground(AppTheme.BG_COLOR);
-//        scroll.getVerticalScrollBar().setUnitIncrement(16);
-//        return scroll;
-//    }
-
 
     // RESULTS PANEL
     public static JPanel column() {
@@ -182,28 +152,4 @@ public final class UIUtility {
         return btn;
     }
 
-    public static void showDebugBorders(Container container) {
-        for (Component component : container.getComponents()) {
-
-            if (component instanceof JComponent jc) {
-                Color color;
-
-                if (jc instanceof JLabel) {
-                    color = Color.RED;
-                } else if (jc instanceof JButton) {
-                    color = Color.BLUE;
-                } else if (jc instanceof JPanel) {
-                    color = Color.GREEN;
-                } else {
-                    color = Color.ORANGE;
-                }
-
-                jc.setBorder(BorderFactory.createLineBorder(color, 1));
-            }
-
-            if (component instanceof Container child) {
-                showDebugBorders(child);
-            }
-        }
-    }
 }

@@ -10,6 +10,7 @@ import oshi.hardware.CentralProcessor;
 import oshi.hardware.GlobalMemory;
 import oshi.hardware.GraphicsCard;
 import oshi.hardware.HardwareAbstractionLayer;
+import java.util.function.BiConsumer;
 
 import java.util.Comparator;
 import java.util.List;
@@ -20,11 +21,11 @@ import java.util.List;
 public class ScanHardware {
 
     /**
-     * Retrieves hardware specifications and sensor readings.
-     * @return Hardware information for the current scan.
+     * Retrieves hardware information while reporting scan progress.
+     * @param progressCallback Receives the hardware component name and its current detection status.
+     * @return The completed hardware information.
      */
-    public HardwareInfo getHardwareInfo() {
-
+    public HardwareInfo getHardwareInfo( BiConsumer<String, String> progressCallback) {
         /***************************** OS Detection ************************/
         // Use simulated hardware information when running on macOS.
         String operatingSystem = System.getProperty("os.name").toLowerCase();
@@ -43,7 +44,14 @@ public class ScanHardware {
         CentralProcessor processor = hardware.getProcessor();
         GlobalMemory memory = hardware.getMemory();
 
+        // Report that CPU identification has started.
+        if (progressCallback != null) {
+            progressCallback.accept("CPU", "DETECTING");
+        }
+        // Retrieve CPU identification using OSHI.
         String cpuName = processor.getProcessorIdentifier().getName();
+
+        // RAM information will be reported separately.
         long totalMemory = memory.getTotal();
 
 
@@ -86,6 +94,7 @@ public class ScanHardware {
 
             HardwareSensorReader sensorReader = new HardwareSensorReader();
 
+            /************************** CPU **********************************/
             // Attempt to retrieve CPU sensor readings.
             try {
                 cpuPower = sensorReader.getSensorValue( computer, "Cpu", "Power", "Package" );
@@ -101,15 +110,27 @@ public class ScanHardware {
                 System.err.println( "Warning: CPU sensor retrieval failed: " + e.getMessage());
             }
 
+            /************************** GPU **********************************/
             // Attempt to retrieve GPU sensor readings independently.
             try {
                 gpuPower = sensorReader.getGpuPower(computer);
             } catch (Exception e) {
-                System.err.println( "Warning: GPU sensor retrieval failed: " + e.getMessage()
-                );
+                System.err.println( "Warning: GPU sensor retrieval failed: " + e.getMessage());
             }
+
         }
 
+        // CPU identification and sensor retrieval have now been attempted.
+        // A missing sensor value does not prevent the scan from continuing.
+        if (progressCallback != null) {
+            progressCallback.accept("CPU", "DONE");
+        }
+
+        /************************** GPU **********************************/
+        // Report that GPU sensor retrieval is starting.
+        if (progressCallback != null) {
+            progressCallback.accept("GPU", "DETECTING");
+        }
 
         String gpuName = "Not detected";
         String gpuVendor = "Unknown";
@@ -129,23 +150,47 @@ public class ScanHardware {
             gpuVram = gpu.getVRam();
         }
 
+        // GPU sensor retrieval and hardware identification are complete.
+        if (progressCallback != null) {
+            progressCallback.accept("GPU", "DONE");
+        }
 
         /***************************** MOTHERBOARD ************************/
-         // Retrieve motherboard identification using OSHI. These details are supplied by the system firmware.
+        // Retrieve motherboard identification using OSHI. These details are supplied by the system firmware.
         var baseboard = systemInfo.getHardware().getComputerSystem().getBaseboard();
         String motherboardManufacturer = baseboard.getManufacturer();
         String motherboardModel = baseboard.getModel();
         String motherboardVersion = baseboard.getVersion();
 
         /***************************** RAM ************************/
+        // Report that RAM detection is starting.
+        if (progressCallback != null) {
+            progressCallback.accept("RAM", "DETECTING");
+        }
+
         // Retrieve the installed RAM modules using the dedicated detector.
         MemoryDetector memoryDetector = new MemoryDetector();
         List<MemoryModule> detectedMemoryModules = memoryDetector.getMemoryModules(memory);
 
+        // Report that RAM detection has finished.
+        if (progressCallback != null) {
+            progressCallback.accept("RAM", "DONE");
+        }
+
         /***************************** STORAGE ************************/
-        // Retrieve physical drives and their SSD/HDD classifications using the dedicated storage detector.
+        // Report that storage detection is starting.
+        if (progressCallback != null) {
+            progressCallback.accept("Storage", "DETECTING");
+        }
+
+        // Retrieve physical drives and their SSD/HDD classifications.
         StorageDetector storageDetector = new StorageDetector();
         List<StorageDevice> storageDevices = storageDetector.getStorageDevices(hardware);
+
+        // Report that storage detection has finished.
+        if (progressCallback != null) {
+            progressCallback.accept("Storage", "DONE");
+        }
 
 
         /***************************** THE SCAN INFO ITSELF ************************/
@@ -166,8 +211,13 @@ public class ScanHardware {
                 storageDevices,
                 detectedMemoryModules
         );
+    }
 
-
-
+    /**
+     * Retrieves hardware specifications and sensor readings.
+     * @return Hardware information for the current scan.
+     */
+    public HardwareInfo getHardwareInfo() {
+        return getHardwareInfo(null);
     }
 }
