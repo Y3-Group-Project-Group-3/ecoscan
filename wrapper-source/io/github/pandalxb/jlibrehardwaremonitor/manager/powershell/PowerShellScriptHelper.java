@@ -86,28 +86,26 @@ class PowerShellScriptHelper {
 		StringBuilder code = new StringBuilder();
 
 		if (LibType.TYPE_LIBRE.equals(libType)) {
+			// Extract the additional .NET dependency before loading System.Memory.
+			SensorsUtils.generateLibPath("/lib/", "System.Numerics.Vectors.dll");
 
 			code.append("[System.Reflection.Assembly]::LoadFile(\"")
-					.append(SensorsUtils.generateLibPath("/lib/",
-							"System.Runtime.CompilerServices.Unsafe.dll"))
+					.append(SensorsUtils.generateLibPath("/lib/","System.Runtime.CompilerServices.Unsafe.dll"))
 					.append("\") | Out-Null;")
 					.append(LINE_BREAK);
 
 			code.append("[System.Reflection.Assembly]::LoadFile(\"")
-					.append(SensorsUtils.generateLibPath("/lib/",
-							"System.Memory.dll"))
+					.append(SensorsUtils.generateLibPath("/lib/","System.Memory.dll"))
 					.append("\") | Out-Null;")
 					.append(LINE_BREAK);
 
 			code.append("[System.Reflection.Assembly]::LoadFile(\"")
-					.append(SensorsUtils.generateLibPath("/lib/",
-							"HidSharp.dll"))
+					.append(SensorsUtils.generateLibPath("/lib/","HidSharp.dll"))
 					.append("\") | Out-Null;")
 					.append(LINE_BREAK);
 
 			code.append("[System.Reflection.Assembly]::LoadFile(\"")
-					.append(SensorsUtils.generateLibPath("/lib/",
-							"LibreHardwareMonitorLib.dll"))
+					.append(SensorsUtils.generateLibPath("/lib/","LibreHardwareMonitorLib.dll"))
 					.append("\") | Out-Null;")
 					.append(LINE_BREAK);
 

@@ -1,9 +1,12 @@
 package com.example.monitortest.ui.window;
 
 import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsTracker;
-import com.example.monitortest.ui.controller.ScanEventListener;
+import com.example.monitortest.hardware.monitoring.LiveMonitorAvailability;
+import com.example.monitortest.hardware.monitoring.LiveMonitoringService;
 import com.example.monitortest.hardware.detection.ScanHardware;
-import com.example.monitortest.ui.common.InfoTooltip;
+
+import com.example.monitortest.services.startup.ApplicationElevationManager;
+import com.example.monitortest.services.startup.ApplicationProcessManager;
 
 import com.example.monitortest.ui.history.HistoryPanel;
 import com.example.monitortest.ui.home.HomePanel;
@@ -11,11 +14,13 @@ import com.example.monitortest.ui.nav.NavBar;
 import com.example.monitortest.ui.loading.LoadingPanel;
 import com.example.monitortest.ui.results.ResultsPanel;
 import com.example.monitortest.ui.livemonitor.LiveMonitorPanel;
+import com.example.monitortest.ui.common.InfoTooltip;
+import com.example.monitortest.ui.controller.ScanEventListener;
 
 import javax.swing.*;
 import java.awt.*;
 
-import com.example.monitortest.hardware.monitoring.LiveMonitoringService;
+
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -35,6 +40,85 @@ public class CreateWindow {
         LoadingPanel loadingPanel = new LoadingPanel();
         HistoryPanel historyPanel = new HistoryPanel();
         LiveMonitorPanel liveMonitorPanel = new LiveMonitorPanel();
+
+
+        // Configure the administrator restart action for packaged EcoScan builds.
+        liveMonitorPanel.setAdministratorRestartAction(() -> {
+
+            ApplicationElevationManager elevationManager = new ApplicationElevationManager();
+            ApplicationProcessManager processManager = new ApplicationProcessManager();
+
+            // Only the packaged Windows executable supports this restart workflow.
+            if (!processManager.isPackagedApplication()) {
+                return;
+            }
+
+            // Confirm that the user wants to restart EcoScan.
+            int choice = JOptionPane.showConfirmDialog(
+                    frame,
+                    "EcoScan needs to restart with administrator privileges "
+                            + "to enable live monitoring.\n\n"
+                            + "Would you like to restart now?",
+                    "Restart as Administrator",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+            );
+
+            if (choice != JOptionPane.YES_OPTION) {
+                return;
+            }
+
+            // Request elevation without blocking Swing's Event Dispatch Thread.
+            SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
+
+                @Override
+                protected Boolean doInBackground() {
+                    return elevationManager.requestAdministratorElevation(processManager.getApplicationExecutable() );
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        if (get()) {
+
+                            // An elevated instance has been launched successfully.
+                            // Close the current instance.
+                            frame.dispose();
+
+                        } else {
+
+                            // Keep EcoScan open when elevation is declined or fails.
+                            JOptionPane.showMessageDialog(
+                                    frame,
+                                    "Administrator elevation was cancelled or failed.\n"
+                                            + "EcoScan will continue with limited functionality.",
+                                    "Administrator Access",
+                                    JOptionPane.WARNING_MESSAGE
+                            );
+                        }
+
+                    } catch (Exception ex) {
+
+                        JOptionPane.showMessageDialog(
+                                frame,
+                                "Unable to restart EcoScan as administrator.",
+                                "Restart Failed",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                }
+            };
+
+            worker.execute();
+        });
+
+
+        // Determine whether the current environment supports live monitoring.
+        LiveMonitorAvailability.Status monitoringStatus = LiveMonitorAvailability.check();
+        // Display an explanation when live monitoring is unavailable.
+        if (monitoringStatus != LiveMonitorAvailability.Status.AVAILABLE) {
+            liveMonitorPanel.showUnavailableState(monitoringStatus);
+        }
 
         // Register screens with the CardLayout.
         mainPanel.add(homePanel, "home");
@@ -116,8 +200,12 @@ public class CreateWindow {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         // Begin collecting power readings automatically.
-        // start monitoring independently of which navigation page is selected.
-        monitoringService.start();
+        frame.setVisible(true);
+
+        // Start live sensor retrieval only when the environment is supported.
+        if (monitoringStatus == LiveMonitorAvailability.Status.AVAILABLE) {
+            monitoringService.start();
+        }
     }
 
 }

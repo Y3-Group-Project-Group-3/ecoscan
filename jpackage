@@ -1,0 +1,51 @@
+Step 1 - Maven Clean
+Step 2 - Maven Package
+
+Step 3 - Create the input directory if it doesn't already exist:
+New-Item -ItemType Directory -Force "jpackage-build\input" | Out-Null
+
+Remove files left over from previous builds:
+Remove-Item "jpackage-build\input\*" -Recurse -Force
+
+Copy the application JAR
+Copy-Item "target\hardware-monitor-1.0-SNAPSHOT.jar" "jpackage-build\input\"
+
+Copy the runtime dependencies
+Copy-Item "target\dependency\*.jar" "jpackage-build\input\"
+
+Remove the previous debug application image
+Remove-Item "jpackage-build\output\EcoScan-debug\EcoScan" -Recurse -Force -ErrorAction SilentlyContinue
+
+Generate EcoScan.exe
+
+jpackage `
+    --type app-image `
+    --name EcoScan `
+    --input "jpackage-build\input" `
+    --dest "jpackage-build\output\EcoScan-debug" `
+    --main-jar "hardware-monitor-1.0-SNAPSHOT.jar" `
+    --main-class "com.example.monitortest.Main" `
+    --win-console
+
+
+explorer "jpackage-build\output\EcoScan-debug\EcoScan"
+
+Create a release build without the debugging console
+jpackage `
+    --type app-image `
+    --name EcoScan `
+    --input "jpackage-build\input" `
+    --dest "jpackage-build\output\EcoScan-release" `
+    --main-jar "hardware-monitor-1.0-SNAPSHOT.jar" `
+    --main-class "com.example.monitortest.Main"
+
+The resulting executable will be located at:
+jpackage-build\output\EcoScan-release\EcoScan\EcoScan.exe
+
+If that output folder already contains an EcoScan application image, remove or rename the old image first
+
+Create a portable ZIP (optional)
+Compress-Archive `
+    -Path "jpackage-build\output\EcoScan-release\EcoScan" `
+    -DestinationPath "jpackage-build\output\EcoScan-portable.zip" `
+    -Force

@@ -6,6 +6,8 @@ import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.ui.loading.components.Spinner;
 import com.example.monitortest.ui.livemonitor.components.CarbonEmissionsPanel;
 import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsTracker;
+import com.example.monitortest.hardware.monitoring.LiveMonitorAvailability;
+import com.example.monitortest.services.startup.ApplicationProcessManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -36,6 +38,9 @@ public class LiveMonitorPanel extends JPanel {
 
     // Displays the estimated emissions accumulated during monitoring.
     private final CarbonEmissionsPanel carbonEmissionsPanel = new CarbonEmissionsPanel();
+
+    // check if app requires restart
+    private Runnable administratorRestartAction;
 
     public LiveMonitorPanel() {
         super(new BorderLayout());
@@ -198,6 +203,14 @@ public class LiveMonitorPanel extends JPanel {
     }
 
     /**
+     * Configures the action used to restart EcoScan with administrator privileges.
+     * @param action the administrator restart operation
+     */
+    public void setAdministratorRestartAction(Runnable action) {
+        this.administratorRestartAction = action;
+    }
+
+    /**
      * Creates a styled card displaying a hardware power measurement.
      *
      * @param title Description of the measurement.
@@ -234,6 +247,115 @@ public class LiveMonitorPanel extends JPanel {
 
         return card;
     }
+
+
+
+    // Replaces the live monitoring interface with an explanatory message when the current environment is unsupported.
+    public void showUnavailableState(LiveMonitorAvailability.Status status) {
+
+        // The existing monitoring interface should remain unchanged
+        // when the environment meets the requirements.
+        if (status == LiveMonitorAvailability.Status.AVAILABLE) {
+            return;
+        }
+
+        String title;
+        String description;
+
+        // Select the appropriate message for the current environment.
+        switch (status) {
+
+            case WINDOWS_ONLY -> {
+                title = "Windows Only";
+                description = "Live hardware monitoring is currently supported on Windows only.";
+            }
+
+            case ADMIN_REQUIRED -> {
+                title = "Administrator Privileges Required";
+                description = "Live hardware monitoring requires administrator privileges to access hardware sensors.";
+            }
+
+            default -> {
+                return;
+            }
+        }
+
+        // Create a centred message panel.
+        JPanel messagePanel = new JPanel(new GridBagLayout());
+        messagePanel.setBackground(BG_COLOR);
+
+        JPanel messageContent = new JPanel();
+        messageContent.setLayout( new BoxLayout(messageContent, BoxLayout.Y_AXIS) );
+        messageContent.setOpaque(false);
+
+        // Display the availability message heading.
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(font(Font.BOLD, 22));
+        titleLabel.setForeground(TEXT_MAIN);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Display the explanation beneath the heading.
+        JLabel descriptionLabel = new JLabel(description);
+        descriptionLabel.setFont(font(Font.PLAIN, 14));
+        descriptionLabel.setForeground(TEXT_MUTED);
+        descriptionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+
+        messageContent.add(titleLabel);
+        messageContent.add(Box.createVerticalStrut(12));
+        messageContent.add(descriptionLabel);
+
+        // Offer administrator elevation only when it is required.
+        if (status == LiveMonitorAvailability.Status.ADMIN_REQUIRED) {
+
+            ApplicationProcessManager processManager = new ApplicationProcessManager();
+
+            messageContent.add(Box.createVerticalStrut(20));
+
+            if (processManager.isPackagedApplication()) {
+
+                // The packaged EcoScan executable supports Windows UAC elevation.
+                JButton restartButton = new JButton("Restart as Administrator");
+
+                restartButton.setFont(font(Font.BOLD, 13));
+                restartButton.setBackground(new Color(22, 137, 76));
+                restartButton.setForeground(Color.WHITE);
+                restartButton.setFocusPainted(false);
+                restartButton.setCursor( Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) );
+                restartButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                // Delegate the restart operation to CreateWindow.
+                restartButton.addActionListener(e -> {
+                    if (administratorRestartAction != null) {
+                        administratorRestartAction.run();
+                    }
+                });
+
+                messageContent.add(restartButton);
+
+            } else {
+
+                // IntelliJ launches cannot safely restart using java.exe alone.
+                JLabel instructionLabel = new JLabel( "Restart IntelliJ as administrator to enable live monitoring." );
+
+                instructionLabel.setFont(font(Font.PLAIN, 13));
+                instructionLabel.setForeground(TEXT_MUTED);
+                instructionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+                messageContent.add(instructionLabel);
+            }
+        }
+
+        messagePanel.add(messageContent);
+
+        // Replace the page contents with the unavailable message.
+        removeAll();
+        add(messagePanel, BorderLayout.CENTER);
+
+        revalidate();
+        repaint();
+    }
+
 
 
     // Formats a power measurement to one decimal place.

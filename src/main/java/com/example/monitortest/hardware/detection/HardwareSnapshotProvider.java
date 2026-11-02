@@ -23,8 +23,8 @@ public class HardwareSnapshotProvider {
         // Avoid calling Windows-only functionality on macOS or Linux.
         String operatingSystem = System.getProperty("os.name", "");
 
+        // LibreHardwareMonitor sensor retrieval is supported on Windows only.
         if (!operatingSystem.toLowerCase(Locale.ROOT).startsWith("windows")) {
-            System.out.println( "LibreHardwareMonitor unavailable on this operating system." );
             return null;
         }
 
@@ -38,17 +38,19 @@ public class HardwareSnapshotProvider {
                 .setPsuEnabled(false)
                 .setMemoryEnabled(false)
                 .setStorageEnabled(false);
-                // this is where we turn on the sensors so we can read them...
 
         // Retrieve the hardware snapshot.
         // The caller can reuse this snapshot for multiple sensor lookups.
         try {
+
             Computer computer = LibreHardwareManager.createInstance(config).getComputer();
-            // Check whether any hardware information was retrieved.
-            if (computer == null || computer.getHardware() == null) {
-                System.out.println( "LibreHardwareMonitor returned no hardware information." );
+
+            // Reject snapshots with no available hardware sensors.
+            if (computer == null || computer.getHardware() == null || computer.getHardware().isEmpty()) {
+                System.err.println("LibreHardwareMonitor returned no hardware information.");
                 return null;
             }
+
             return computer;
 
         } catch (RuntimeException exception) {

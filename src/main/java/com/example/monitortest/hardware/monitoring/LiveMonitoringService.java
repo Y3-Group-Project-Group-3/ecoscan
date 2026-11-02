@@ -64,9 +64,12 @@ public class LiveMonitoringService {
     }
 
 
-    // Stops monitoring and interrupts any active collection task.
+    // Stops live monitoring without interrupting an active hardware sensor retrieval.
     public void stop() {
-        scheduler.shutdownNow();
+
+        // Stop accepting new monitoring tasks.
+        // Allow any currently running retrieval to finish naturally.
+        scheduler.shutdown();
     }
 
     //Provides access to the current monitoring session's emissions data.

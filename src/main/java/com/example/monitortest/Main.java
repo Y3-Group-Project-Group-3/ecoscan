@@ -7,6 +7,8 @@ import com.example.monitortest.services.pawnio.PawnIOServiceManager;
 import com.example.monitortest.services.startup.ApplicationElevationManager;
 import com.example.monitortest.services.startup.ApplicationProcessManager;
 import com.example.monitortest.services.startup.ApplicationStartupManager;
+import com.example.monitortest.services.startup.HardwareLibraryManager;
+import java.io.IOException;
 
 
 /**
@@ -17,6 +19,27 @@ import com.example.monitortest.services.startup.ApplicationStartupManager;
 public class Main{
 
     public static void main(String[] args) {
+
+        // Store hardware-monitoring DLLs in EcoScan's local application data.
+        // This avoids depending on the directory from which EcoScan was launched.
+        if (System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).startsWith("windows")) {
+            String localAppData = System.getenv("LOCALAPPDATA");
+            if (localAppData != null && !localAppData.isBlank()) {
+
+                java.nio.file.Path libraryDirectory = java.nio.file.Path.of(localAppData, "EcoScan", "lib");
+                // Configure the custom jLibreHardwareMonitor library.
+                System.setProperty( "ecoscan.lib.dir", libraryDirectory.toString() );
+
+                // Extract the DLL dependencies before starting hardware monitoring.
+                try {
+                    HardwareLibraryManager.prepareLibraries(libraryDirectory);
+                } catch (IOException e) {
+                    System.err.println("Unable to prepare hardware-monitoring libraries: " + e.getMessage());
+                }
+
+            }
+        }
+
 
         // Create the manager responsible for PawnIO operations.
         PawnIOInstaller pawnIOInstaller = new PawnIOInstaller();
