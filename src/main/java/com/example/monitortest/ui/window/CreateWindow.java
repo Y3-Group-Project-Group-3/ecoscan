@@ -5,6 +5,7 @@ import com.example.monitortest.hardware.monitoring.LiveMonitorAvailability;
 import com.example.monitortest.hardware.monitoring.LiveMonitoringService;
 import com.example.monitortest.hardware.detection.ScanHardware;
 
+import io.github.pandalxb.jlibrehardwaremonitor.manager.powershell.PowerShellOperations;
 import com.example.monitortest.services.startup.ApplicationElevationManager;
 import com.example.monitortest.services.startup.ApplicationProcessManager;
 
@@ -80,10 +81,8 @@ public class CreateWindow {
                 protected void done() {
                     try {
                         if (get()) {
-
-                            // An elevated instance has been launched successfully.
-                            // Close the current instance.
-                            frame.dispose();
+                            // Trigger the normal window-closing sequence so monitoring shuts down.
+                            frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
 
                         } else {
 
@@ -186,19 +185,100 @@ public class CreateWindow {
         frame.setContentPane(rootPanel);
         navigate.accept("home");
 
-        // Stop background monitoring when the application closes.
-        // ensures the scheduler receives a shutdown request when ecoscan closes
+        // Prevent multiple shutdown requests from running simultaneously.
+        final boolean[] shuttingDown = {false};
+
         frame.addWindowListener(new WindowAdapter() {
+
             @Override
             public void windowClosing(WindowEvent e) {
+
+                // Ignore additional close requests while shutdown is underway.
+                if (shuttingDown[0]) {
+                    return;
+                }
+
+
+                shuttingDown[0] = true;
+
+                // Prevent new manual hardware scans during shutdown.
+                scanEventListener.beginShutdown();
+
+                // Stop scheduling new live monitoring readings.
                 monitoringService.stop();
+
+                // Wait for monitoring to finish without blocking Swing.
+                SwingWorker<Boolean, Void> shutdownWorker = new SwingWorker<>() {
+
+                    @Override
+                    protected Boolean doInBackground() {
+
+                        // Wait for live monitoring to finish.
+                        boolean monitoringStopped = monitoringService.awaitTermination( 10, java.util.concurrent.TimeUnit.SECONDS );
+
+                        // Wait for any active manual hardware scan to finish.
+                        while (scanEventListener.isScanRunning()) {
+
+                            try {
+                                Thread.sleep(200);
+                            }
+                            catch (InterruptedException exception) {
+
+                                // Preserve the interrupted status.
+                                Thread.currentThread().interrupt();
+                                return false;
+                            }
+                        }
+
+                        // Do not close PowerShell if monitoring is still active.
+                        if (!monitoringStopped) {
+                            System.err.println( "PowerShell shutdown skipped: live monitoring is still active." );
+                            return false;
+                        }
+
+                        try {
+                            // Both hardware operations have finished.
+                            // Close the shared PowerShell session.
+                            PowerShellOperations.closeSession();
+
+                            return true;
+                        }
+                        catch (Exception exception) {
+                            System.err.println( "Failed to close PowerShell session: " + exception.getMessage() );
+                            return false;
+                        }
+                    }
+
+                    @Override
+                    protected void done() {
+
+                        try {
+                            // Retrieve the result of the background shutdown process.
+                            boolean shutdownSuccessful = get();
+
+                            if (shutdownSuccessful) { System.out.println("EcoScan shutdown completed successfully."); }
+                            else {
+                                System.err.println( "EcoScan shutdown was incomplete. PowerShell may still be active." );
+                            }
+                        }
+                        catch (Exception exception) {
+                            System.err.println( "Error during EcoScan shutdown: " + exception.getMessage() );
+                        }
+
+                        // Close the application after the shutdown attempt.
+                        frame.dispose();
+                        System.exit(0);
+                    }
+                };
+
+                shutdownWorker.execute();
             }
         });
 
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // Allow EcoScan to finish background operations before exiting.
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.setSize(1280, 760);
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
         // Begin collecting power readings automatically.
         frame.setVisible(true);
 

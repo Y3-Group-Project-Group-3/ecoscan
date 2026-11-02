@@ -52,10 +52,17 @@
 <!--        </dependency>-->
 
 <!--        New even more vibecoded version -->
+<!--        <dependency>-->
+<!--            <groupId>io.github.pandalxb</groupId>-->
+<!--            <artifactId>jLibreHardwareMonitor</artifactId>-->
+<!--            <version>1.0.6-libre-test</version>-->
+<!--        </dependency>-->
+
+        <!--        New Version with shutdown fix-->
         <dependency>
             <groupId>io.github.pandalxb</groupId>
             <artifactId>jLibreHardwareMonitor</artifactId>
-            <version>1.0.6-libre-test</version>
+            <version>1.0.6-libre-shutdown</version>
         </dependency>
 
         <!-- Required by the experimental jLibreHardwareMonitor library to execute PowerShell commands for hardware sensor retrieval. -->

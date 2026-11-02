@@ -163,32 +163,37 @@ public class LiveMonitorPanel extends JPanel {
 
     }
 
+
     /**
      * Updates the displayed CPU and GPU power measurements.
-     * Ensures Swing components are updated on the Event Dispatch Thread.
+     * Ensures all Swing components are updated on the Event Dispatch Thread.
      */
     public void updatePowerReadings(LiveMonitorSnapshot snapshot) {
 
-        // Schedule GUI updates on Swing's Event Dispatch Thread.
+        // Perform all interface updates on Swing's Event Dispatch Thread.
         SwingUtilities.invokeLater(() -> {
+
+            // Update the displayed power measurements.
             cpuPowerLabel.setText(formatPower(snapshot.cpuPower()));
             gpuPowerLabel.setText(formatPower(snapshot.gpuPower()));
             totalPowerLabel.setText(formatPower(snapshot.totalPower()));
+
             // Add the latest measurements to the scrolling graphs.
             cpuGraph.addReading(snapshot.cpuPower());
             gpuGraph.addReading(snapshot.gpuPower());
+
+            // Stop the loading animations after the first sensor retrieval.
+            cpuSpinner.stop();
+            gpuSpinner.stop();
+            totalSpinner.stop();
+
+            // Hide the loading indicators.
+            cpuSpinner.setVisible(false);
+            gpuSpinner.setVisible(false);
+            totalSpinner.setVisible(false);
         });
-
-        // The first retrieval has completed, so stop the loading animations.
-        cpuSpinner.stop();
-        gpuSpinner.stop();
-        totalSpinner.stop();
-
-        // Remove the spinners from view once readings become available.
-        cpuSpinner.setVisible(false);
-        gpuSpinner.setVisible(false);
-        totalSpinner.setVisible(false);
     }
+
 
     //Updates the carbon emissions display using values captured by the monitoring service.
     public void updateCarbonEmissions(double totalGrams, double averageGramsPerSecond) {

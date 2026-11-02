@@ -28,7 +28,10 @@ public class ScanEventListener implements ActionListener {
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
     private final ScanHardware hardwareInfoService;
-
+    // Tracks the currently running hardware scan.
+    private volatile boolean scanRunning = false;
+    // Prevents new hardware scans once application shutdown begins.
+    private volatile boolean shuttingDown = false;
 
     /**
      * Creates the event listener responsible for coordinating hardware scans and updating the application interface.
@@ -45,9 +48,25 @@ public class ScanEventListener implements ActionListener {
         this.hardwareInfoService = hardwareInfoService;
     }
 
+    // Reports whether a hardware scan is currently active.
+    public boolean isScanRunning() {
+        return scanRunning;
+    }
+
+    // Prevents additional hardware scans during application shutdown.
+    public void beginShutdown() {
+        shuttingDown = true;
+    }
+
 
 
     public void actionPerformed(ActionEvent event){
+
+        // Ignore scan requests during shutdown or while another scan is running.
+        if (shuttingDown || scanRunning) {
+            return;
+        }
+
         // Configure the button
         JButton refreshButton = (JButton) event.getSource();
 
@@ -87,14 +106,16 @@ public class ScanEventListener implements ActionListener {
 
                     @Override
                     protected HardwareInfo doInBackground() {
-
-                        // Perform the hardware scan and publish component status updates.
-                        // Previously, we used SwingUtilities.invokeLater() to send each status update to the EDT.
-                        // Now, publish() passes those updates to SwingWorker's process() method
-                        return hardwareInfoService.getHardwareInfo((component, status) -> {
-                            // Queue the progress event for processing on the Swing EDT.
-                            publish(new ScanProgress(component, status));
-                        });
+                        try {
+                            // Perform the hardware scan and publish component status updates.
+                            return hardwareInfoService.getHardwareInfo((component, status) -> {
+                                publish(new ScanProgress(component, status));
+                            });
+                        }
+                        finally {
+                            // The background hardware operation has finished.
+                            scanRunning = false;
+                        }
                     }
 
 
@@ -173,6 +194,8 @@ public class ScanEventListener implements ActionListener {
                     }
 
                 };
+        // Mark the scan as active before starting the background worker.
+        scanRunning = true;
         worker.execute();
     }
 

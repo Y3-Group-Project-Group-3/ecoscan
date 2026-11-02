@@ -80,9 +80,8 @@ public class ApplicationStartupManager {
      */
     public boolean handleAdministratorElevation() {
 
-        // Windows administrator elevation is not supported or required on macOS.
+        // Skip Windows-specific elevation on other operating systems.
         if (!isWindows()) {
-            System.out.println("Non-Windows operating system detected. Skipping administrator elevation.");
             return false;
         }
 
@@ -140,9 +139,8 @@ public class ApplicationStartupManager {
      */
     public void handlePawnIOStatus() {
 
-        // PawnIO is only supported on Windows.
+        // Skip PawnIO initialization on unsupported operating systems.
         if (!isWindows()) {
-            System.out.println("Non-Windows operating system detected. Skipping PawnIO initialization.");
             return;
         }
 
@@ -159,8 +157,6 @@ public class ApplicationStartupManager {
                 try {
                     // Retrieve the completed status check on Swing's EDT.
                     PawnIOService.PawnIOStatus pawnIOStatus = get();
-
-                    System.out.println("PawnIO Status: " + pawnIOStatus);
 
                     // Request approval if the driver is installed but stopped.
                     if (pawnIOStatus == PawnIOService.PawnIOStatus.STOPPED) {

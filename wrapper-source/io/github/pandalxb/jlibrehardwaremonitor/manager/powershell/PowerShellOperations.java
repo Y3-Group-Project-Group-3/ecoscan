@@ -47,4 +47,16 @@ public enum PowerShellOperations {
 	public String getEnvironmentVersion() {
 		return powerShell.executeCommand("[Environment]::Version.ToString()").getCommandOutput();
 	}
+
+	/**
+	 * Closes the shared PowerShell session when EcoScan shuts down.
+	 *
+	 * This method should only be called after all hardware
+	 * monitoring operations have finished.
+	 */
+	public static void closeSession() {
+
+		// Release the PowerShell process and its associated threads.
+		powerShell.close();
+	}
 }

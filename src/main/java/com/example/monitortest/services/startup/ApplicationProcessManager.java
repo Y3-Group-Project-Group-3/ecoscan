@@ -4,11 +4,11 @@ package com.example.monitortest.services.startup;
 import java.nio.file.Path;
 
 /**
- * Provides information about the process currently
- * running EcoScan.
+ * Provides information about the process currently running EcoScan.
  *
- * This information will eventually help us identify
- * the correct executable when restarting the application.
+ * Identifies the application executable, determines whether EcoScan
+ * is running as a packaged application, and retrieves process
+ * information for startup diagnostics.
  */
 public class ApplicationProcessManager {
 
@@ -55,9 +55,7 @@ public class ApplicationProcessManager {
          * Compare the executable filename rather than its full path.
          * This allows EcoScan to run from different installation directories.
          */
-        return executable.getFileName()
-                .toString()
-                .equalsIgnoreCase("EcoScan.exe");
+        return executable.getFileName().toString().equalsIgnoreCase("EcoScan.exe");
     }
 
 

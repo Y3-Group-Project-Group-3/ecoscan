@@ -41,11 +41,8 @@ public class PawnIOInstallationManager {
                 JOptionPane.QUESTION_MESSAGE
         );
 
-        // Record the user's decision for diagnostic purposes.
-        boolean approved = userChoice == JOptionPane.YES_OPTION;
-        System.out.println("PawnIO installation accepted: " + approved);
-
-        return approved;
+        // Return true only when the user approves installing PawnIO.
+        return userChoice == JOptionPane.YES_OPTION;
     }
 
     /**
@@ -95,10 +92,6 @@ public class PawnIOInstallationManager {
 
                 // Wait for PowerShell to finish and retrieve its exit code.  An exit code of zero normally indicates successful execution.
                 int exitCode = installationProcess.waitFor();
-
-                // Display the results for debugging.
-                System.out.println("PawnIO installation exit code: " + exitCode);
-                System.out.println("PawnIO installation output: " + installationOutput);
 
                 /*
                  * Check the installer process result and report it to the user.

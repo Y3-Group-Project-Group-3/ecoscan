@@ -18,6 +18,8 @@ public class LiveMonitoringService {
     private final ScheduledExecutorService scheduler;
     // Track whether the monitoring service has encountered a failure.
     private boolean monitoringFailed = false;
+    // Prevent multiple monitoring tasks from being scheduled.
+    private boolean started = false;
 
     public LiveMonitoringService(Consumer<LiveMonitorSnapshot> onSnapshot) {
 
@@ -40,6 +42,10 @@ public class LiveMonitoringService {
 
     // Starts periodic hardware power monitoring.
     public void start() {
+
+        // Avoid scheduling duplicate monitoring tasks.
+        if (started) { return; }
+        started = true;
 
         // Run immediately, then wait two seconds after each completed reading.
         scheduler.scheduleWithFixedDelay(() -> {
@@ -67,6 +73,8 @@ public class LiveMonitoringService {
                     System.out.println("Live monitoring recovered successfully.");
                     monitoringFailed = false;
                 }
+
+
 
                 // Record when the retrieval completed.
                 long timestamp = System.currentTimeMillis();
@@ -97,6 +105,21 @@ public class LiveMonitoringService {
         // Stop accepting new monitoring tasks.
         // Allow any currently running retrieval to finish naturally.
         scheduler.shutdown();
+    }
+
+    // Waits for any active monitoring task to finish.
+    public boolean awaitTermination(long timeout, TimeUnit unit) {
+
+        try {
+            return scheduler.awaitTermination(timeout, unit);
+        }
+        catch (InterruptedException exception) {
+
+            // Restore the interrupted status of the calling thread.
+            Thread.currentThread().interrupt();
+
+            return false;
+        }
     }
 
     //Provides access to the current monitoring session's emissions data.

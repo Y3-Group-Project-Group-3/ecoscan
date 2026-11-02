@@ -10,25 +10,12 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * Handles Windows administrator privilege checks and eventually, requests to restart EcoScan with elevation.
+ * Manages Windows administrator privilege checks and elevation requests.
  *
- * This class is separate from PawnIOManager because
- * administrator privileges concern the application itself,
- * rather than the PawnIO driver specifically.
+ * Determines whether EcoScan is running with elevated privileges
+ * and supports restarting the packaged application through Windows UAC.
  */
 public class ApplicationElevationManager {
-
-    /**
-     * Represents the outcome of requesting an elevated application launch.
-     */
-    public enum ElevationResult {
-        STARTED,       // Windows accepted the elevated launch request.
-        CANCELLED,     // The user declined the UAC prompt.
-        FAILED,        // An error prevented the launch.
-        ALREADY_ADMIN, // EcoScan is already elevated.
-        UNSUPPORTED    // Not running as a packaged Windows executable.
-    }
-
 
     /**
      * Checks whether the current EcoScan process is running with elevated administrator privileges on Windows.
@@ -50,21 +37,20 @@ public class ApplicationElevationManager {
              */
             Process process = new ProcessBuilder("whoami.exe", "/groups").redirectErrorStream(true).start();
 
-            /*
-             * Read the output while the command runs, then wait for it to finish.
-             * The command normally returns a small amount of data.
-             */
-            String output = new String(process.getInputStream().readAllBytes(),StandardCharsets.UTF_8);
-
+            // Wait up to five seconds for the Windows privilege check to complete.
             boolean finished = process.waitFor(5, TimeUnit.SECONDS);
 
+            // Stop the process if it exceeds the timeout.
             if (!finished) {
                 process.destroyForcibly();
                 return false;
             }
 
+            // Read the command output after the process has finished.
+            String output = new String( process.getInputStream().readAllBytes(), StandardCharsets.UTF_8 );
+
             /*
-             * S-1-16-12288 identifies the Windows High Mandatory Integrity Level, normally used by elevated processes.             *
+             * S-1-16-12288 identifies the Windows High Mandatory Integrity Level, normally used by elevated processes.
              * Check the command succeeded before inspecting its output.
              */
             return process.exitValue() == 0 && output.contains("S-1-16-12288");
@@ -96,9 +82,7 @@ public class ApplicationElevationManager {
          * Validate the executable before attempting elevation.
          * Only Windows supports this elevation mechanism.
          */
-        if (!System.getProperty("os.name").toLowerCase().contains("win")
-                || executable == null
-                || !Files.isRegularFile(executable)) {
+        if (!System.getProperty("os.name").toLowerCase().contains("win") || executable == null || !Files.isRegularFile(executable)) {
             return false;
         }
 
@@ -114,7 +98,8 @@ public class ApplicationElevationManager {
                     "-NonInteractive",
                     /*
                      * Attempt to relaunch EcoScan with administrator privileges.
-                     * If the user cancels UAC, PowerShell catches the error and * exits with code 1 without printing the exception.
+                     * If the user cancels UAC, PowerShell catches the error
+                     * and exits with code 1 without printing the exception.
                      * A successful elevation request exits with code 0.
                      */
                     "-Command",

@@ -98,8 +98,6 @@ public class PawnIOServiceManager {
                 try {
                     boolean started = get();
 
-                    System.out.println("PawnIO start successful: " + started);
-
                     JOptionPane.showMessageDialog(
                             null,
                             started
