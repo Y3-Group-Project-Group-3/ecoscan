@@ -21,6 +21,8 @@ public class NavBar extends JPanel {
     private final NavButton homeNav;
     private final NavButton resultsNav;
     private final NavButton historyNav;
+    private final NavButton liveMonitorNav;
+
 
     public NavBar(Consumer<String> navigate) {
 
@@ -28,9 +30,7 @@ public class NavBar extends JPanel {
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(200, 0));
         setBackground(SIDEBAR_BG);
-        setBorder(BorderFactory.createMatteBorder(
-                0, 0, 0, 1, SIDEBAR_BORDER
-        ));
+        setBorder(BorderFactory.createMatteBorder( 0, 0, 0, 1, SIDEBAR_BORDER ));
 
         // Logo text
         JPanel logoText = new JPanel();
@@ -69,10 +69,13 @@ public class NavBar extends JPanel {
         homeNav = new NavButton("Home", "HOME");
         resultsNav = new NavButton("Results", "RESULTS");
         historyNav = new NavButton("History", "HISTORY");
+        liveMonitorNav = new NavButton("Live Monitor", "CPU");
 
         homeNav.addActionListener(e -> navigate.accept("home"));
         resultsNav.addActionListener(e -> navigate.accept("results"));
         historyNav.addActionListener(e -> navigate.accept("history"));
+        liveMonitorNav.addActionListener(e -> navigate.accept("liveMonitor"));
+
 
         // Top section
         JPanel top = new JPanel();
@@ -85,6 +88,8 @@ public class NavBar extends JPanel {
         top.add(homeNav);
         top.add(Box.createVerticalStrut(6));
         top.add(resultsNav);
+        top.add(Box.createVerticalStrut(6));
+        top.add(liveMonitorNav);
         top.add(Box.createVerticalStrut(6));
         top.add(historyNav);
 
@@ -119,6 +124,7 @@ public class NavBar extends JPanel {
         homeNav.setActive("home".equals(page));
         resultsNav.setActive("results".equals(page));
         historyNav.setActive("history".equals(page));
+        liveMonitorNav.setActive("liveMonitor".equals(page));
     }
 
     // Horizontal divider

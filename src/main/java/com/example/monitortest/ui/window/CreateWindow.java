@@ -8,9 +8,14 @@ import com.example.monitortest.ui.home.HomePanel;
 import com.example.monitortest.ui.nav.NavBar;
 import com.example.monitortest.ui.loading.LoadingPanel;
 import com.example.monitortest.ui.results.ResultsPanel;
+import com.example.monitortest.ui.livemonitor.LiveMonitorPanel;
 
 import javax.swing.*;
 import java.awt.*;
+
+import com.example.monitortest.hardware.monitoring.LiveMonitoringService;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class CreateWindow {
 
@@ -24,11 +29,13 @@ public class CreateWindow {
         ResultsPanel resultsPanel = new ResultsPanel();
         LoadingPanel loadingPanel = new LoadingPanel();
         HistoryPanel historyPanel = new HistoryPanel();
+        LiveMonitorPanel liveMonitorPanel = new LiveMonitorPanel();
 
         // Register screens with the CardLayout.
         mainPanel.add(homePanel, "home");
         mainPanel.add(resultsPanel, "results");
         mainPanel.add(loadingPanel, "loading");
+        mainPanel.add(liveMonitorPanel, "liveMonitor");
         mainPanel.add(historyPanel, "history");
 
         final NavBar[] navRef = new NavBar[1];
@@ -50,9 +57,14 @@ public class CreateWindow {
         rootPanel.add(mainPanel, BorderLayout.CENTER);
 
 
-
         // Create the hardware service.
         ScanHardware hardwareInfoService = new ScanHardware();
+
+        // Create the live power monitoring service.
+        // Forward each new power snapshot to the Live Monitor page.
+        LiveMonitoringService monitoringService = new LiveMonitoringService(
+                liveMonitorPanel::updatePowerReadings
+        );
 
         // Create the scan button listener
         ScanEventListener scanEventListener = new ScanEventListener(
@@ -74,13 +86,25 @@ public class CreateWindow {
         navigate.accept("home");
 
         // Setup the main window
-        // TODO:: Can be in its own class
         frame.setContentPane(rootPanel);
         navigate.accept("home");
+
+        // Stop background monitoring when the application closes.
+        // ensures the scheduler receives a shutdown request when ecoscan closes
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                monitoringService.stop();
+            }
+        });
+
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1280, 760);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+        // Begin collecting power readings automatically.
+        // start monitoring independently of which navigation page is selected.
+        monitoringService.start();
     }
 
 }
