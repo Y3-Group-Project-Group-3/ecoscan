@@ -1,5 +1,6 @@
 package com.example.monitortest.ui.results.breakdown;
 
+import com.example.monitortest.ui.theme.AppTheme;
 import com.example.monitortest.hardware.model.HardwareInfo;
 
 import javax.swing.*;
@@ -55,7 +56,7 @@ public class PowerSummaryPanel extends JPanel {
 
         // Create the total power display.
         totalPowerLabel = new JLabel( "Total Measured Power: Not retrieved yet" );
-        totalPowerLabel.setFont( totalPowerLabel.getFont().deriveFont(Font.BOLD, 14f));
+        totalPowerLabel.setFont( totalPowerLabel.getFont().deriveFont(Font.BOLD, AppTheme.FONT_CARD_TITLE));
 
         // Update the summary when the selected mode changes.
         measuredOnlyButton.addActionListener(e -> {

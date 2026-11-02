@@ -195,21 +195,21 @@ public class LoadingPanel extends JPanel {
 
         // Create the section label.
         JLabel eyebrow = new JLabel("SYSTEM DIAGNOSTIC");
-        eyebrow.setFont(font(Font.BOLD, 10));
+        eyebrow.setFont(font(Font.BOLD, FONT_LABEL));
         eyebrow.setForeground(GREEN);
 
         // Create the main heading.
         JLabel heading = new JLabel("Scanning your computer");
-        heading.setFont(font(Font.BOLD, 24));
+        heading.setFont(font(Font.BOLD, FONT_TITLE));
         heading.setForeground(TEXT_MAIN);
 
         // Create the labels that display the currently detected hardware.
         detectingPrefix = new JLabel("Now detecting:");
-        detectingPrefix.setFont(font(Font.PLAIN, 11.5f));
+        detectingPrefix.setFont(font(Font.PLAIN, FONT_SMALL));
         detectingPrefix.setForeground(TEXT_MUTED);
 
         detectingPart = new JLabel();
-        detectingPart.setFont(font(Font.BOLD, 11.5f));
+        detectingPart.setFont(font(Font.BOLD, FONT_SMALL));
         detectingPart.setForeground(GREEN);
 
         // Arrange the detection labels horizontally.
@@ -244,13 +244,13 @@ public class LoadingPanel extends JPanel {
 
         // Create the progress caption.
         JLabel caption = new JLabel("Hardware scan in progress");
-        caption.setFont(font(Font.PLAIN, 11.5f));
+        caption.setFont(font(Font.PLAIN, FONT_SMALL));
         caption.setForeground(TEXT_BODY);
         caption.setVerticalAlignment(SwingConstants.BOTTOM);
 
         // Create the percentage label updated during scanning.
         percentLabel = new JLabel("0%");
-        percentLabel.setFont(font(Font.BOLD, 19));
+        percentLabel.setFont(font(Font.BOLD, FONT_HEADING));
         percentLabel.setForeground(GREEN);
 
         // Position the caption and percentage on opposite sides.
@@ -313,7 +313,7 @@ public class LoadingPanel extends JPanel {
         informationSection.setOpaque(false);
 
         // Explain that the hardware scan runs automatically.
-        JLabel hint = label( "Scanning is automatic. No input needed.", Font.PLAIN, 10.5f, TEXT_MUTED, Component.CENTER_ALIGNMENT );
+        JLabel hint = label( "Scanning is automatic. No input needed.", Font.PLAIN, FONT_SMALL, TEXT_MUTED, Component.CENTER_ALIGNMENT );
 
         hint.setIcon(new Dot(6, new Color(0x2563EB)));
         hint.setIconTextGap(7);
@@ -324,7 +324,7 @@ public class LoadingPanel extends JPanel {
         informationSection.add(Box.createVerticalStrut(16));
 
         // Explain what happens after the scan finishes.
-        JLabel footer = label( "The scan results will appear when scanning is complete.", Font.PLAIN, 10, TEXT_FAINT, Component.CENTER_ALIGNMENT );
+        JLabel footer = label( "The scan results will appear when scanning is complete.", Font.PLAIN, FONT_SMALL, TEXT_FAINT, Component.CENTER_ALIGNMENT );
 
         informationSection.add(footer);
 
@@ -349,11 +349,11 @@ public class LoadingPanel extends JPanel {
         icon.setVerticalAlignment(SwingConstants.TOP);
 
         JLabel title = new JLabel("Warning");
-        title.setFont(font(Font.BOLD, 11.5f));
+        title.setFont(font(Font.BOLD, FONT_SMALL));
         title.setForeground(new Color(0x78350F));
         JLabel body = new JLabel("<html><div style='width:420px'>Some hardware information could not be retrieved. "
                 + "EcoScan will continue with the available information.</div></html>");
-        body.setFont(font(Font.PLAIN, 11));
+        body.setFont(font(Font.PLAIN, FONT_SMALL));
         body.setForeground(new Color(0x92400E));
 
         JPanel text = new JPanel();

@@ -1,5 +1,7 @@
 package com.example.monitortest.ui.history.components;
 
+import com.example.monitortest.ui.theme.AppTheme;
+import com.example.monitortest.ui.theme.UIUtility;
 import javax.swing.*;
 import java.awt.*;
 
@@ -28,8 +30,8 @@ public class ResultBadge {
         };
 
         badge.setOpaque(false);
-        badge.setPreferredSize(new Dimension(75, 22));
-        badge.setFont(new Font("SansSerif", Font.BOLD, 10));
+        badge.setPreferredSize(new Dimension(90, 26));   // sized to fit FONT_BADGE
+        badge.setFont(UIUtility.font("SansSerif", Font.BOLD, AppTheme.FONT_BADGE));
 
         switch (text.toUpperCase()) {
             case "KEEP":

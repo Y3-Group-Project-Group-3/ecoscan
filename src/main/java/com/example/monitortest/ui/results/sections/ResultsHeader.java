@@ -18,14 +18,14 @@ public class ResultsHeader {
 
         JPanel left = column();
 
-        left.add(label("SCAN RESULTS", Font.BOLD, 12, GREEN));
+        left.add(label("SCAN RESULTS", Font.BOLD, FONT_LABEL, GREEN));
         left.add(Box.createVerticalStrut(4));
-        left.add(label("Environmental assessment", Font.BOLD, 28, TEXT_MAIN));
+        left.add(label("Environmental assessment", Font.BOLD, FONT_TITLE, TEXT_MAIN));
 
         header.add(left, BorderLayout.WEST);
 
         // data: scan date, PC name and intended use (from Home page)
-        JLabel scanInfo = label("📅  Scanned 1 Oct 2026   •   My PC   •   Home use", Font.PLAIN, 13, TEXT_MUTED);
+        JLabel scanInfo = label("📅  Scanned 1 Oct 2026   •   My PC   •   Home use", Font.PLAIN, FONT_BODY, TEXT_MUTED);
         JPanel right = new JPanel(new BorderLayout());
         right.setOpaque(false);
         right.add(scanInfo, BorderLayout.SOUTH);

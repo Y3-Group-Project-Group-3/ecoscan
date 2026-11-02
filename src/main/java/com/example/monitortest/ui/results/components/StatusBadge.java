@@ -1,5 +1,6 @@
 package com.example.monitortest.ui.results.components;
 
+import com.example.monitortest.ui.theme.AppTheme;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -25,7 +26,7 @@ public class StatusBadge {
             }
         };
 //        JLabel l = label(text, 10, Font.BOLD, fg);
-        JLabel l = label(text, Font.BOLD, 10, fg);
+        JLabel l = label(text, Font.BOLD, AppTheme.FONT_BADGE, fg);
         l.setOpaque(true);
         l.setBackground(bg);
         l.setBorder(new EmptyBorder(4, 10, 4, 10));

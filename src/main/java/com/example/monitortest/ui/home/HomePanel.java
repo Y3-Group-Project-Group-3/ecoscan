@@ -41,12 +41,12 @@ public class HomePanel extends JPanel {
 
         // ---- Heading block ----
         // --- hardware assessment label
-        JLabel infoLabel = UIUtility.label("HARDWARE ASSESSMENT", Font.BOLD, 10, AppTheme.GREEN);
+        JLabel infoLabel = UIUtility.label("HARDWARE ASSESSMENT", Font.BOLD, AppTheme.FONT_LABEL, AppTheme.GREEN);
         column.add(UIUtility.alignComponent(infoLabel, FlowLayout.CENTER));
 
         // --- Scan yo computer label
         column.add(Box.createVerticalStrut(8));
-        JLabel pageTitle = UIUtility.label("Scan your computer", Font.BOLD, 30, AppTheme.TEXT_MAIN);
+        JLabel pageTitle = UIUtility.label("Scan your computer", Font.BOLD, AppTheme.FONT_TITLE, AppTheme.TEXT_MAIN);
         column.add(UIUtility.alignComponent(pageTitle, FlowLayout.CENTER));
 
         // --- paragraph text
@@ -54,12 +54,12 @@ public class HomePanel extends JPanel {
         // HTML lets the text wrap and centre inside a fixed width
         JLabel paragraphLabel =  UIUtility.label("<html><div style='width:440px; text-align:center;'>EcoScan finds your hardware for you, "
                 + "nothing to type in. It analyses your computer's environmental impact and tells you whether "
-                + "to keep, upgrade or replace it.</div></html>", Font.PLAIN, 12.5f, AppTheme.TEXT_MUTED);
+                + "to keep, upgrade or replace it.</div></html>", Font.PLAIN, AppTheme.FONT_BODY, AppTheme.TEXT_MUTED);
         column.add(UIUtility.alignComponent(paragraphLabel, FlowLayout.CENTER));
 
         // ---- "What do you use it for?" cards ----
         column.add(Box.createVerticalStrut(32));
-        JLabel questionLabel = UIUtility.label("What do you use it for?", Font.BOLD, 12, AppTheme.TEXT_MAIN);
+        JLabel questionLabel = UIUtility.label("What do you use it for?", Font.BOLD, AppTheme.FONT_LABEL, AppTheme.TEXT_MAIN);
         column.add(UIUtility.alignComponent(questionLabel, FlowLayout.CENTER));
         column.add(Box.createVerticalStrut(12));
 
@@ -88,7 +88,7 @@ public class HomePanel extends JPanel {
 
         // ---- Privacy note ----
         column.add(Box.createVerticalStrut(14));
-        JLabel privacy = UIUtility.label("Only hardware and system information is read. No personal files are accessed.", Font.PLAIN, 10.5f, AppTheme.TEXT_MUTED);
+        JLabel privacy = UIUtility.label("Only hardware and system information is read. No personal files are accessed.", Font.PLAIN, AppTheme.FONT_SMALL, AppTheme.TEXT_MUTED);
         privacy.setIcon(new LineIcon("SHIELD", 13, AppTheme.GREEN));
         privacy.setIconTextGap(6);
         column.add(UIUtility.alignComponent(privacy,FlowLayout.CENTER));

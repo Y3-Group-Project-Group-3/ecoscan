@@ -1,5 +1,6 @@
 package com.example.monitortest.ui.history.sections;
 
+import com.example.monitortest.ui.theme.UIUtility;
 import com.example.monitortest.ui.history.components.ScanRow;
 
 import javax.swing.*;
@@ -59,7 +60,7 @@ public class HistoryListSection extends JPanel {
                 "Select a row to delete it, or choose View to open the full breakdown."
         );
 
-        infoLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        infoLabel.setFont(UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL));
         infoLabel.setForeground(new Color(75, 85, 99));
         infoLabel.setOpaque(true);
         infoLabel.setBackground(new Color(243, 244, 246));
@@ -81,7 +82,7 @@ public class HistoryListSection extends JPanel {
 
         for (String title : titles) {
             JLabel label = new JLabel(title);
-            label.setFont(new Font("SansSerif", Font.BOLD, 10));
+            label.setFont(UIUtility.font("SansSerif", Font.BOLD, FONT_BADGE));
             label.setForeground(new Color(75, 85, 99));
             header.add(label);
         }

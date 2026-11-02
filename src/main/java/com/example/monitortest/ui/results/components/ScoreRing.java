@@ -1,5 +1,6 @@
 package com.example.monitortest.ui.results.components;
 
+import com.example.monitortest.ui.theme.UIUtility;
 import com.example.monitortest.ui.theme.AppTheme;
 
 import javax.swing.*;
@@ -33,14 +34,14 @@ import static com.example.monitortest.ui.theme.AppTheme.GREEN;
             g.setColor(GREEN);
             g.drawArc(6, 6, s, s, 90, -(int) (360 * score / 100.0));
             g.setColor(AppTheme.TEXT_MAIN);
-            g.setFont(new Font(AppTheme.FONT_FAMILY, Font.BOLD, 32));
+            g.setFont(UIUtility.font(Font.BOLD, AppTheme.FONT_SCORE));
 
             FontMetrics fm = g.getFontMetrics();
             String t = String.valueOf(score);
 
             g.drawString(t, 6 + (s - fm.stringWidth(t)) / 2, 6 + s / 2 + 6);
             g.setColor(AppTheme.TEXT_MUTED);
-            g.setFont(new Font(AppTheme.FONT_FAMILY, Font.PLAIN, 11));
+            g.setFont(UIUtility.font(Font.PLAIN, AppTheme.FONT_SMALL));
 
             fm = g.getFontMetrics();
 

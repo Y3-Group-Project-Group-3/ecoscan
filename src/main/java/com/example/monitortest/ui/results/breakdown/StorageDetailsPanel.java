@@ -32,7 +32,7 @@ public class StorageDetailsPanel {
 
         // Handle scans where no physical storage devices were detected.
         if (info.getStorageDevices().isEmpty()) {
-            storageDetails.add(label( "No physical storage devices detected", Font.PLAIN, 13, TEXT_MUTED ));
+            storageDetails.add(label( "No physical storage devices detected", Font.PLAIN, FONT_BODY, TEXT_MUTED ));
             return storageDetails;
         }
 
@@ -51,8 +51,8 @@ public class StorageDetailsPanel {
             driveRow.setOpaque(false);
             driveRow.setAlignmentX(Component.LEFT_ALIGNMENT);
             driveRow.setBorder(new EmptyBorder(8, 0, 8, 0));
-            driveRow.add( label(driveText, Font.PLAIN, 13, TEXT_MAIN), BorderLayout.CENTER);
-            driveRow.add( label(powerText, Font.BOLD, 13, TEXT_MAIN), BorderLayout.EAST );
+            driveRow.add( label(driveText, Font.PLAIN, FONT_BODY, TEXT_MAIN), BorderLayout.CENTER);
+            driveRow.add( label(powerText, Font.BOLD, FONT_BODY, TEXT_MAIN), BorderLayout.EAST );
 
             storageDetails.add(driveRow);
         }
