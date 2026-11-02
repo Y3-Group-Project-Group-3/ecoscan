@@ -1,5 +1,6 @@
 
 package com.example.monitortest.ui.nav;
+import com.example.monitortest.services.startup.ApplicationElevationManager;
 
 import com.example.monitortest.ui.common.GradientBadge;
 import com.example.monitortest.ui.common.LineIcon;
@@ -49,9 +50,7 @@ public class NavBar extends JPanel {
         logoText.add(appSub);
 
         // Logo row
-        JPanel logoRow = new JPanel(
-                new FlowLayout(FlowLayout.LEFT, 10, 0)
-        );
+        JPanel logoRow = new JPanel( new FlowLayout(FlowLayout.LEFT, 10, 0) );
 
         logoRow.setOpaque(false);
         logoRow.setBorder(new EmptyBorder(20, 6, 18, 16));
@@ -60,10 +59,7 @@ public class NavBar extends JPanel {
         logoRow.add(logoText);
 
         logoRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        logoRow.setMaximumSize(new Dimension(
-                Integer.MAX_VALUE,
-                logoRow.getPreferredSize().height
-        ));
+        logoRow.setMaximumSize(new Dimension( Integer.MAX_VALUE, logoRow.getPreferredSize().height ));
 
         // Navigation buttons
         homeNav = new NavButton("Home", "HOME");
@@ -93,11 +89,23 @@ public class NavBar extends JPanel {
         top.add(Box.createVerticalStrut(6));
         top.add(historyNav);
 
-        // Version label
-        JLabel version = new JLabel(
-                "Version 1.0.0",
-                new Dot(6, new Color(0x22C55E)),
-                SwingConstants.LEFT
+
+        // Check whether EcoScan is running with administrator privileges.
+        ApplicationElevationManager elevationManager = new ApplicationElevationManager();
+        boolean isAdministrator = elevationManager.isRunningAsAdministrator();
+
+        // Choose the status indicator colour based on the privilege level.
+        Color statusColor = isAdministrator
+                ? new Color(0x22C55E)  // Green: administrator privileges.
+                : new Color(0xF59E0B); // Amber: standard privileges.
+
+        // Version label with administrator privilege indicator.
+        JLabel version = new JLabel( "Version 1.0.0", new Dot(6, statusColor), SwingConstants.LEFT );
+
+        // Explain the current privilege level when hovering over the label.
+        version.setToolTipText( isAdministrator
+                        ? "EcoScan is running with administrator privileges."
+                        : "EcoScan is running without administrator privileges. Some hardware sensors may be unavailable."
         );
 
         version.setIconTextGap(8);

@@ -75,11 +75,7 @@ public class Main{
         }
 
         // Initialize the application window and execute the remaining startup operations.
-        startupManager.initializeApplicationWindow(() -> {
-            // Check PawnIO and coordinate any required operations.
-            startupManager.handlePawnIOStatus();
-            // Print information about the application environment.
-            startupManager.printStartupDiagnostics();
-        });
+        // Check PawnIO and coordinate any required operations.
+        startupManager.initializeApplicationWindow(startupManager::handlePawnIOStatus);
     }
 }

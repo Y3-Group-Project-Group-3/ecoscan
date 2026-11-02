@@ -7,6 +7,7 @@ import com.example.monitortest.services.pawnio.PawnIOService;
 import com.example.monitortest.services.pawnio.PawnIOServiceManager;
 import com.example.monitortest.ui.window.CreateWindow;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
 
 /**
@@ -133,39 +134,67 @@ public class ApplicationStartupManager {
         });
     }
 
+
     /**
-     * Checks the PawnIO driver status and coordinates the appropriate startup action.
-     * Delegates service startup and installation operations to their respective managers.
+     * Checks the PawnIO driver status without blocking Swing's Event Dispatch Thread.
      */
     public void handlePawnIOStatus() {
 
-        // PawnIO is a Windows-only driver.
-        // On macOS, EcoScan will use its alternative data source.
+        // PawnIO is only supported on Windows.
         if (!isWindows()) {
             System.out.println("Non-Windows operating system detected. Skipping PawnIO initialization.");
             return;
         }
 
-        // Retrieve the current Windows driver status.
-        PawnIOService.PawnIOStatus pawnIOStatus = pawnIOService.checkPawnIOStatus();
+        // Check the Windows driver status on a background thread.
+        SwingWorker<PawnIOService.PawnIOStatus, Void> worker = new SwingWorker<>() {
 
-        System.out.println("PawnIO Status: " + pawnIOStatus);
+            @Override
+            protected PawnIOService.PawnIOStatus doInBackground() {
+                return pawnIOService.checkPawnIOStatus();
+            }
 
-        //If PawnIO is installed but stopped, offer to start the Windows driver service.
-        if (pawnIOStatus == PawnIOService.PawnIOStatus.STOPPED) {
-            boolean startApproved = serviceManager.requestServiceStartApproval();
-            if (startApproved) { serviceManager.startService(); }
-        }
+            @Override
+            protected void done() {
+                try {
+                    // Retrieve the completed status check on Swing's EDT.
+                    PawnIOService.PawnIOStatus pawnIOStatus = get();
 
-        /*
-         * If PawnIO is missing, offer installation. * The installation manager handles the background
-         * process and result reporting.
-         */
-        else if (pawnIOStatus == PawnIOService.PawnIOStatus.NOT_INSTALLED) {
-            boolean installationApproved = installationManager.requestInstallationApproval();
-            if (installationApproved) { installationManager.startInstallation(); }
-        }
+                    System.out.println("PawnIO Status: " + pawnIOStatus);
+
+                    // Request approval if the driver is installed but stopped.
+                    if (pawnIOStatus == PawnIOService.PawnIOStatus.STOPPED) {
+                        boolean approved = serviceManager.requestServiceStartApproval();
+
+                        if (approved) {
+                            serviceManager.startService();
+                        }
+                    }
+
+                    // Request approval if PawnIO needs installing.
+                    else if (pawnIOStatus == PawnIOService.PawnIOStatus.NOT_INSTALLED) {
+                        boolean approved = installationManager.requestInstallationApproval();
+
+                        if (approved) {
+                            installationManager.startInstallation();
+                        }
+                    }
+
+                } catch (InterruptedException e) {
+                    // Preserve the interruption status.
+                    Thread.currentThread().interrupt();
+
+                } catch (java.util.concurrent.ExecutionException e) {
+                    // Report an unexpected failure in the background status check.
+                    System.err.println("PawnIO status check failed: " + e.getMessage());
+                }
+            }
+        };
+
+        // Start the status check without blocking the interface.
+        worker.execute();
     }
+
 
     /**
      * Prints diagnostic information about EcoScan's  runtime environment and PawnIO installer.

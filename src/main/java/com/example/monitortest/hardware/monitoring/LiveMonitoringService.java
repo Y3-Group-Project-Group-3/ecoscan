@@ -16,6 +16,8 @@ public class LiveMonitoringService {
 
     private final LiveHardwareReader reader;
     private final ScheduledExecutorService scheduler;
+    // Track whether the monitoring service has encountered a failure.
+    private boolean monitoringFailed = false;
 
     public LiveMonitoringService(Consumer<LiveMonitorSnapshot> onSnapshot) {
 
@@ -46,6 +48,26 @@ public class LiveMonitoringService {
                 // Retrieve the latest CPU and GPU power readings.
                 LiveMonitorSnapshot snapshot = reader.readSnapshot();
 
+                // Check whether either power sensor returned a valid reading.
+                boolean cpuAvailable = Double.isFinite(snapshot.cpuPower());
+                boolean gpuAvailable = Double.isFinite(snapshot.gpuPower());
+
+                // Treat monitoring as unavailable only when both readings are missing.
+                if (!cpuAvailable && !gpuAvailable) {
+
+                    // Report the first failure without repeatedly logging it.
+                    if (!monitoringFailed) {
+                        System.err.println("Live monitoring: CPU and GPU power readings unavailable.");
+                        monitoringFailed = true;
+                    }
+
+                } else if (monitoringFailed) {
+
+                    // At least one sensor has recovered.
+                    System.out.println("Live monitoring recovered successfully.");
+                    monitoringFailed = false;
+                }
+
                 // Record when the retrieval completed.
                 long timestamp = System.currentTimeMillis();
 
@@ -56,7 +78,12 @@ public class LiveMonitoringService {
                 onSnapshot.accept(snapshot);
 
             } catch (Exception e) {
-                System.err.println( "Live monitoring failed: " + e.getMessage() );
+
+                // Report the first failure without repeating the same error every poll.
+                if (!monitoringFailed) {
+                    System.err.println("Live monitoring failed: " + e.getMessage());
+                    monitoringFailed = true;
+                }
             }
 
             // set the polling delay
