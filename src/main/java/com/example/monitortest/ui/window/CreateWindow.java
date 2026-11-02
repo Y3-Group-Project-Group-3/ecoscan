@@ -239,7 +239,7 @@ public class CreateWindow {
                         try {
                             // Both hardware operations have finished.
                             // Close the shared PowerShell session.
-                            PowerShellOperations.closeSession();
+//                            PowerShellOperations.closeSession();
 
                             return true;
                         }
