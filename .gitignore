@@ -22,6 +22,11 @@ lib-backup-0.9.4/
 /lib/jLibreHardwareMonitor-1.0.6-patched.jar
 /lib/jLibreHardwareMonitor-1.0.6-patched.pom
 
+# Temporary jLibreHardwareMonitor build artifacts
+/jLibreHardwareMonitor-1.0.6-libre-shutdown.jar
+/jLibreHardwareMonitor-1.0.6-libre-shutdown-new.jar
+/wrapper-shutdown-build/
+
 ### Eclipse ###
 .apt_generated
 .classpath

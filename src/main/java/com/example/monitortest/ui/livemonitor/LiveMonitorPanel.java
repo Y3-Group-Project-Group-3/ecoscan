@@ -8,6 +8,7 @@ import com.example.monitortest.ui.livemonitor.components.CarbonEmissionsPanel;
 import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsTracker;
 import com.example.monitortest.hardware.monitoring.LiveMonitorAvailability;
 import com.example.monitortest.services.startup.ApplicationProcessManager;
+import com.example.monitortest.ui.livemonitor.components.EmissionComparisonPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -38,6 +39,8 @@ public class LiveMonitorPanel extends JPanel {
 
     // Displays the estimated emissions accumulated during monitoring.
     private final CarbonEmissionsPanel carbonEmissionsPanel = new CarbonEmissionsPanel();
+    // Displays the PC's emissions against household appliance milestones.
+    private final EmissionComparisonPanel emissionComparisonPanel = new EmissionComparisonPanel();
 
     // check if app requires restart
     private Runnable administratorRestartAction;
@@ -127,6 +130,28 @@ public class LiveMonitorPanel extends JPanel {
 
         summaryPanel.add(emissionsContainer);
 
+        // Give the comparison bar the same horizontal margins as the other panels.
+        JPanel comparisonContainer = new JPanel(new BorderLayout());
+        comparisonContainer.setOpaque(false);
+        comparisonContainer.setBorder( BorderFactory.createEmptyBorder(0, 40, 20, 40) );
+
+
+        // Give the emissions comparison ruler the same rounded card styling.
+        RoundedPanel comparisonCard = new RoundedPanel( Color.WHITE, new Color(226, 232, 240), 16
+        );
+
+        comparisonCard.setLayout(new BorderLayout());
+        comparisonCard.setBorder( BorderFactory.createEmptyBorder(15, 20, 15, 20) );
+
+        // Keep the custom-drawn ruler inside the styled card.
+        comparisonCard.add(emissionComparisonPanel, BorderLayout.CENTER);
+
+        comparisonContainer.add(comparisonCard, BorderLayout.CENTER);
+
+
+        // Place the comparison bar below the carbon emissions summary.
+        summaryPanel.add(comparisonContainer);
+
         // Create a vertically stacked container for the page content.
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
@@ -195,15 +220,13 @@ public class LiveMonitorPanel extends JPanel {
     }
 
 
-    //Updates the carbon emissions display using values captured by the monitoring service.
     public void updateCarbonEmissions(double totalGrams, double averageGramsPerSecond) {
 
-        // Schedule the emissions display update on Swing's EDT.
+        // Update both emissions components on Swing's Event Dispatch Thread.
         SwingUtilities.invokeLater(() -> {
-            carbonEmissionsPanel.updateEmissions(
-                    totalGrams,
-                    averageGramsPerSecond
-            );
+            carbonEmissionsPanel.updateEmissions( totalGrams, averageGramsPerSecond );
+            // Pass both the cumulative emissions and the emissions rate.
+            emissionComparisonPanel.updateEmissions( totalGrams, averageGramsPerSecond );
         });
     }
 

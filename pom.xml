@@ -81,6 +81,22 @@
         </dependency>
 
 
+        <!-- Swing support for displaying and drawing icons. -->
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-swing</artifactId>
+            <version>12.4.0</version>
+        </dependency>
+
+        <!-- Font Awesome 6 icon collection. -->
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-fontawesome6-pack</artifactId>
+            <version>12.4.0</version>
+        </dependency>
+
+
+
 
     </dependencies>
 
