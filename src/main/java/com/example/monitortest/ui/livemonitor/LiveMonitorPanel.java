@@ -4,6 +4,8 @@ import com.example.monitortest.hardware.monitoring.LiveMonitorSnapshot;
 import com.example.monitortest.ui.livemonitor.components.PowerGraphPanel;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.ui.loading.components.Spinner;
+import com.example.monitortest.ui.livemonitor.components.CarbonEmissionsPanel;
+import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsTracker;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,6 +33,9 @@ public class LiveMonitorPanel extends JPanel {
     private final Spinner cpuSpinner = new Spinner();
     private final Spinner gpuSpinner = new Spinner();
     private final Spinner totalSpinner = new Spinner();
+
+    // Displays the estimated emissions accumulated during monitoring.
+    private final CarbonEmissionsPanel carbonEmissionsPanel = new CarbonEmissionsPanel();
 
     public LiveMonitorPanel() {
         super(new BorderLayout());
@@ -62,6 +67,11 @@ public class LiveMonitorPanel extends JPanel {
         // Create a container for both power graphs.
         JPanel graphsPanel = new JPanel(new GridLayout(2, 1, 0, 20));
         graphsPanel.setOpaque(false);
+
+        // Reserve enough vertical space for both graphs.
+        graphsPanel.setPreferredSize(new Dimension(0, 520));
+        graphsPanel.setMinimumSize(new Dimension(0, 520));
+
         graphsPanel.setBorder(BorderFactory.createEmptyBorder(10, 40, 30, 40));
 
         // Create rounded containers for the CPU and GPU graphs.
@@ -96,14 +106,55 @@ public class LiveMonitorPanel extends JPanel {
         graphsPanel.add(cpuSection);
         graphsPanel.add(gpuSection);
 
-        // Arrange the readings above the graphs.
-        JPanel contentPanel = new JPanel(new BorderLayout());
-        contentPanel.setOpaque(false);
-        contentPanel.add(readingsPanel, BorderLayout.NORTH);
-        contentPanel.add(graphsPanel, BorderLayout.CENTER);
+        /********************* Emissions Panel *****************************/
+        // Stack the power cards and carbon emissions panel above the graphs.
+        JPanel summaryPanel = new JPanel();
+        summaryPanel.setLayout(new BoxLayout(summaryPanel, BoxLayout.Y_AXIS));
+        summaryPanel.setOpaque(false);
 
+        summaryPanel.add(readingsPanel);
+
+        // Match the horizontal spacing of the existing power cards.
+        JPanel emissionsContainer = new JPanel(new BorderLayout());
+        emissionsContainer.setOpaque(false);
+        emissionsContainer.setBorder( BorderFactory.createEmptyBorder(0, 40, 20, 40) );
+        emissionsContainer.add(carbonEmissionsPanel, BorderLayout.CENTER);
+
+        summaryPanel.add(emissionsContainer);
+
+        // Create a vertically stacked container for the page content.
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setOpaque(false);
+
+        // Ensure the summary and graphs fill the available width.
+        summaryPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        graphsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Keep the graphs at their preferred height.
+        summaryPanel.setMaximumSize( new Dimension(Integer.MAX_VALUE, summaryPanel.getPreferredSize().height) );
+        graphsPanel.setMaximumSize( new Dimension(Integer.MAX_VALUE, 520) );
+
+        // Add the summary section above the graphs.
+        contentPanel.add(summaryPanel);
+        contentPanel.add(graphsPanel);
+
+        // Allow vertical scrolling when the content exceeds the window height.
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+
+        scrollPane.setBorder(null);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+
+        // Improve scrolling speed.
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        // Prevent horizontal scrolling.
+        scrollPane.setHorizontalScrollBarPolicy( JScrollPane.HORIZONTAL_SCROLLBAR_NEVER );
+
+        // Keep the page heading visible while the content scrolls.
         add(heading, BorderLayout.NORTH);
-        add(contentPanel, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
 
     }
 
@@ -132,6 +183,18 @@ public class LiveMonitorPanel extends JPanel {
         cpuSpinner.setVisible(false);
         gpuSpinner.setVisible(false);
         totalSpinner.setVisible(false);
+    }
+
+    //Updates the carbon emissions display using values captured by the monitoring service.
+    public void updateCarbonEmissions(double totalGrams, double averageGramsPerSecond) {
+
+        // Schedule the emissions display update on Swing's EDT.
+        SwingUtilities.invokeLater(() -> {
+            carbonEmissionsPanel.updateEmissions(
+                    totalGrams,
+                    averageGramsPerSecond
+            );
+        });
     }
 
     /**

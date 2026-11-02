@@ -1,9 +1,15 @@
 package com.example.monitortest.hardware.monitoring;
 
+// ensures that emissions continue accumulating even when you navigate away from Live Monitor.
+import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsCalculator;
+import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsTracker;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+
+
 
 // Continuously retrieves CPU and GPU power readings on a dedicated background thread.
 public class LiveMonitoringService {
@@ -27,6 +33,8 @@ public class LiveMonitoringService {
     }
 
     private final Consumer<LiveMonitorSnapshot> onSnapshot;
+    // Track estimated emissions throughout the monitoring session.
+    private final CarbonEmissionsTracker emissionsTracker = new CarbonEmissionsTracker(new CarbonEmissionsCalculator());
 
     // Starts periodic hardware power monitoring.
     public void start() {
@@ -35,8 +43,16 @@ public class LiveMonitoringService {
         scheduler.scheduleWithFixedDelay(() -> {
 
             try {
+                // Retrieve the latest CPU and GPU power readings.
                 LiveMonitorSnapshot snapshot = reader.readSnapshot();
-                // Deliver the latest readings to the registered listener.
+
+                // Record when the retrieval completed.
+                long timestamp = System.currentTimeMillis();
+
+                // Accumulate estimated emissions using the latest snapshot.
+                emissionsTracker.addSnapshot(snapshot, timestamp);
+
+                // Forward the snapshot to the existing Live Monitor interface.
                 onSnapshot.accept(snapshot);
 
             } catch (Exception e) {
@@ -51,5 +67,10 @@ public class LiveMonitoringService {
     // Stops monitoring and interrupts any active collection task.
     public void stop() {
         scheduler.shutdownNow();
+    }
+
+    //Provides access to the current monitoring session's emissions data.
+    public CarbonEmissionsTracker getEmissionsTracker() {
+        return emissionsTracker;
     }
 }

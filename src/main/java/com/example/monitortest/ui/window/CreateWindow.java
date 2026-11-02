@@ -1,7 +1,9 @@
 package com.example.monitortest.ui.window;
 
+import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsTracker;
 import com.example.monitortest.ui.controller.ScanEventListener;
 import com.example.monitortest.hardware.detection.ScanHardware;
+import com.example.monitortest.ui.common.InfoTooltip;
 
 import com.example.monitortest.ui.history.HistoryPanel;
 import com.example.monitortest.ui.home.HomePanel;
@@ -20,6 +22,9 @@ import java.awt.event.WindowEvent;
 public class CreateWindow {
 
     public void createAndShowGUI() {
+        // Apply EcoScan's shared tooltip appearance.
+        InfoTooltip.configureAppearance();
+
         JFrame frame = new JFrame("EcoScan");
         CardLayout cardLayout = new CardLayout();
         JPanel mainPanel = new JPanel(cardLayout);
@@ -62,17 +67,25 @@ public class CreateWindow {
 
         // Create the live power monitoring service.
         // Forward each new power snapshot to the Live Monitor page.
-        LiveMonitoringService monitoringService = new LiveMonitoringService(
-                liveMonitorPanel::updatePowerReadings
-        );
+        // Update both power measurements and emissions after each snapshot.
+        final LiveMonitoringService[] monitoringRef = new LiveMonitoringService[1];
+
+        LiveMonitoringService monitoringService = new LiveMonitoringService(snapshot -> {
+            // Update the CPU/GPU cards and graphs.
+            liveMonitorPanel.updatePowerReadings(snapshot);
+
+            // Retrieve the emissions accumulated by the monitoring service.
+            CarbonEmissionsTracker tracker = monitoringRef[0].getEmissionsTracker();
+
+            // Update the carbon emissions panel.
+            liveMonitorPanel.updateCarbonEmissions( tracker.getTotalEmissionsGrams(), tracker.getAverageEmissionsPerSecond() );
+
+        });
+
+        monitoringRef[0] = monitoringService;
 
         // Create the scan button listener
-        ScanEventListener scanEventListener = new ScanEventListener(
-                frame,
-                cardLayout,
-                mainPanel,
-                hardwareInfoService
-        );
+        ScanEventListener scanEventListener = new ScanEventListener( frame, cardLayout, mainPanel, hardwareInfoService );
 
         // Connect the Home page Scan Computer button
         homePanel.getScanButton().addActionListener(scanEventListener);
