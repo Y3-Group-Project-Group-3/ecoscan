@@ -33,7 +33,7 @@ public final class MemoryDetailsPanel {
 
         // Handle scans where no RAM modules were detected.
         if (info.getMemoryModules().isEmpty()) {
-            memoryDetails.add(label( "No physical RAM modules detected", Font.PLAIN, FONT_BODY, TEXT_MUTED ));
+            memoryDetails.add(label( "No physical RAM modules detected", Font.PLAIN, FONT_BODY_SIZE, TEXT_MUTED ));
             return memoryDetails;
         }
 
@@ -63,8 +63,8 @@ public final class MemoryDetailsPanel {
             moduleRow.setAlignmentX(Component.LEFT_ALIGNMENT);
             moduleRow.setBorder(new EmptyBorder(8, 0, 8, 0));
 
-            moduleRow.add( label(moduleText, Font.PLAIN, FONT_BODY, TEXT_MAIN), BorderLayout.CENTER);
-            moduleRow.add( label(powerText, Font.BOLD, FONT_BODY, TEXT_MAIN), BorderLayout.EAST );
+            moduleRow.add( label(moduleText, Font.PLAIN, FONT_BODY_SIZE, TEXT_MAIN), BorderLayout.CENTER);
+            moduleRow.add( label(powerText, Font.BOLD, FONT_BODY_SIZE, TEXT_MAIN), BorderLayout.EAST );
 
             memoryDetails.add(moduleRow);
             moduleNumber++;

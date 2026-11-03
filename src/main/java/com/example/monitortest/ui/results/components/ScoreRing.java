@@ -34,14 +34,14 @@ import static com.example.monitortest.ui.theme.AppTheme.GREEN;
             g.setColor(GREEN);
             g.drawArc(6, 6, s, s, 90, -(int) (360 * score / 100.0));
             g.setColor(AppTheme.TEXT_MAIN);
-            g.setFont(UIUtility.font(Font.BOLD, AppTheme.FONT_SCORE));
+            g.setFont(UIUtility.font(Font.BOLD, AppTheme.FONT_SCORE_SIZE));
 
             FontMetrics fm = g.getFontMetrics();
             String t = String.valueOf(score);
 
             g.drawString(t, 6 + (s - fm.stringWidth(t)) / 2, 6 + s / 2 + 6);
             g.setColor(AppTheme.TEXT_MUTED);
-            g.setFont(UIUtility.font(Font.PLAIN, AppTheme.FONT_SMALL));
+            g.setFont(UIUtility.font(Font.PLAIN, AppTheme.FONT_SMALL_SIZE));
 
             fm = g.getFontMetrics();
 

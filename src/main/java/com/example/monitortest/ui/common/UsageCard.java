@@ -56,8 +56,8 @@ public class UsageCard extends JToggleButton {
         icon.paintIcon(this, g2, boxX + 8, boxY + 8);
 
         // Title and subtitle, centred
-        drawCentred(g2, title, UIUtility.font(Font.BOLD, AppTheme.FONT_BODY), AppTheme.TEXT_MAIN, 68);
-        drawCentred(g2, subtitle, UIUtility.font(Font.PLAIN, AppTheme.FONT_BADGE), new Color(0x8A96A8), 88);
+        drawCentred(g2, title, UIUtility.font(Font.BOLD, AppTheme.FONT_BODY_SIZE), AppTheme.TEXT_MAIN, 68);
+        drawCentred(g2, subtitle, UIUtility.font(Font.PLAIN, AppTheme.FONT_BADGE_SIZE), new Color(0x8A96A8), 88);
 
         // Green tick badge in the top-right corner
         if (selected) {

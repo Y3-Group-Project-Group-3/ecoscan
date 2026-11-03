@@ -60,7 +60,7 @@ public class HistoryListSection extends JPanel {
                 "Select a row to delete it, or choose View to open the full breakdown."
         );
 
-        infoLabel.setFont(UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL));
+        infoLabel.setFont(UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE));
         infoLabel.setForeground(new Color(75, 85, 99));
         infoLabel.setOpaque(true);
         infoLabel.setBackground(new Color(243, 244, 246));
@@ -82,7 +82,7 @@ public class HistoryListSection extends JPanel {
 
         for (String title : titles) {
             JLabel label = new JLabel(title);
-            label.setFont(UIUtility.font("SansSerif", Font.BOLD, FONT_BADGE));
+            label.setFont(UIUtility.font("SansSerif", Font.BOLD, FONT_BADGE_SIZE));
             label.setForeground(new Color(75, 85, 99));
             header.add(label);
         }

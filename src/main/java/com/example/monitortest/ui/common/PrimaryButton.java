@@ -18,7 +18,7 @@ public class PrimaryButton extends JButton {
         super(text, icon);
 
         setIconTextGap(8);
-        setFont(UIUtility.font(Font.BOLD, AppTheme.FONT_BODY));
+        setFont(UIUtility.font(Font.BOLD, AppTheme.FONT_BODY_SIZE));
         setForeground(Color.WHITE);
 
         setBorder(new EmptyBorder(10, 30, 10, 30));

@@ -145,7 +145,7 @@ public final class UIUtility {
     // History Panel
     public static JButton createPillButton(String text) {
         JButton btn = new JButton(text);
-        btn.setFont(font("SansSerif", Font.BOLD, FONT_LABEL));
+        btn.setFont(font("SansSerif", Font.BOLD, FONT_LABEL_SIZE));
         btn.setForeground(TEXT_MAIN);
         btn.setBackground(Color.WHITE);
         btn.setFocusPainted(false);

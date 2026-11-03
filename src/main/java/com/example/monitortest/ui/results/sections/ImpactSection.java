@@ -6,7 +6,6 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
-import static com.example.monitortest.ui.theme.AppTheme.FONT_FAMILY;
 import static com.example.monitortest.ui.theme.AppTheme.TEXT_MAIN;
 import static com.example.monitortest.ui.theme.AppTheme.TEXT_MUTED;
 import static com.example.monitortest.ui.theme.UIUtility.*;
@@ -31,10 +30,10 @@ public class ImpactSection {
         JPanel top = row();
         JPanel titles = column();
 //        titles.add(label("ENVIRONMENTAL IMPACT", 12, Font.BOLD, GREEN));
-        titles.add(label("ENVIRONMENTAL IMPACT", Font.BOLD, FONT_LABEL, GREEN));
+        titles.add(label("ENVIRONMENTAL IMPACT", Font.BOLD, FONT_LABEL_SIZE, GREEN));
         titles.add(Box.createVerticalStrut(4));
 //        footprintTitle = label("Your daily footprint", 20, Font.BOLD, TEXT_MAIN);
-        footprintTitle = label("Your daily footprint", Font.BOLD, FONT_HEADING, TEXT_MAIN);
+        footprintTitle = label("Your daily footprint", Font.BOLD, FONT_HEADING_SIZE, TEXT_MAIN);
         titles.add(footprintTitle);
         top.add(titles, BorderLayout.WEST);
 
@@ -48,7 +47,7 @@ public class ImpactSection {
         for (int i = 0; i < scales.length; i++) {
             String s = scales[i];
             JToggleButton b = new JToggleButton(s);
-            b.setFont(font(Font.PLAIN, FONT_LABEL));
+            b.setFont(font(Font.PLAIN, FONT_LABEL_SIZE));
             b.setFocusPainted(false);
             b.setContentAreaFilled(false);
             b.setOpaque(true);
@@ -64,10 +63,10 @@ public class ImpactSection {
         section.add(top);
         section.add(Box.createVerticalStrut(14));
 
-        energyValue = label("", Font.BOLD, FONT_STAT, TEXT_MAIN);
-        energyUnit = label("", Font.PLAIN, FONT_LABEL, TEXT_MUTED);
-        co2Value = label("", Font.BOLD, FONT_STAT, TEXT_MAIN);
-        co2Unit = label("", Font.PLAIN, FONT_LABEL, TEXT_MUTED);
+        energyValue = label("", Font.BOLD, FONT_STAT_SIZE, TEXT_MAIN);
+        energyUnit = label("", Font.PLAIN, FONT_LABEL_SIZE, TEXT_MUTED);
+        co2Value = label("", Font.BOLD, FONT_STAT_SIZE, TEXT_MAIN);
+        co2Unit = label("", Font.PLAIN, FONT_LABEL_SIZE, TEXT_MUTED);
 
         JPanel cards = new JPanel(new GridLayout(1, 3, 16, 0));
         cards.setOpaque(false);
@@ -78,8 +77,8 @@ public class ImpactSection {
         cards.add(statCard("☁", new Color(0xF3EEFF), "CO₂ EMISSIONS", co2Value, co2Unit, "209 kg/year"));
         // data: estimated lifespan
         cards.add(statCard("📅", new Color(0xFFF4E8), "ESTIMATED LIFESPAN",
-                label("3–5", Font.BOLD, FONT_STAT, TEXT_MAIN),
-                label("years", Font.PLAIN, FONT_LABEL, TEXT_MUTED), ""));
+                label("3–5", Font.BOLD, FONT_STAT_SIZE, TEXT_MAIN),
+                label("years", Font.PLAIN, FONT_LABEL_SIZE, TEXT_MUTED), ""));
         section.add(cards);
 
         updateImpactValues();

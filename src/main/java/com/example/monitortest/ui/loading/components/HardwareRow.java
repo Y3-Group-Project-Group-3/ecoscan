@@ -40,7 +40,7 @@ public class HardwareRow extends JPanel {
 
         iconBox = new IconBox(new LineIcon(iconName, 16, TEXT_BODY).withStroke(1.8f));
         JLabel nameLabel = new JLabel(name);
-        nameLabel.setFont(font(Font.BOLD, FONT_LABEL));
+        nameLabel.setFont(font(Font.BOLD, FONT_LABEL_SIZE));
         nameLabel.setForeground(new Color(0x1E293B));
         Box left = Box.createHorizontalBox();
         left.add(iconBox);
@@ -97,7 +97,7 @@ public class HardwareRow extends JPanel {
 
     private static JLabel statusLabel(String text, Color color) {
         JLabel l = new JLabel(text);
-        l.setFont(font(Font.BOLD, FONT_BADGE));
+        l.setFont(font(Font.BOLD, FONT_BADGE_SIZE));
         l.setForeground(color);
         return l;
     }

@@ -176,7 +176,10 @@ public class CreateWindow {
         // register the scan button listener
         resultsPanel.getRefreshButton().addActionListener(scanEventListener);
 
-        homePanel.getHistoryButton().addActionListener(e -> navigate.accept("history"));
+        // Navigate to the Live Monitor page from the Home page.
+        homePanel.getLiveMonitorButton().addActionListener(e -> {
+            navigate.accept("liveMonitor");
+        });
 
         // Start on the home screen
         navigate.accept("home");

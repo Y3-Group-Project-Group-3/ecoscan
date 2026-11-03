@@ -32,7 +32,7 @@ public class ScoreRecommendationSection {
         JPanel scoreCard = card();
         scoreCard.setLayout(new BorderLayout(0, 10));
 //        scoreCard.add(label("ECO SCORE", 12, Font.BOLD, GREEN), BorderLayout.NORTH);
-        scoreCard.add(label("ECO SCORE", Font.BOLD, FONT_LABEL, GREEN), BorderLayout.NORTH);
+        scoreCard.add(label("ECO SCORE", Font.BOLD, FONT_LABEL_SIZE, GREEN), BorderLayout.NORTH);
         JPanel scoreBody = new JPanel(new FlowLayout(FlowLayout.LEFT, 18, 0));
         scoreBody.setOpaque(false);
         scoreBody.add(new ScoreRing(78));                       // data: eco score 0-100
@@ -40,7 +40,7 @@ public class ScoreRecommendationSection {
         scoreCard.add(scoreBody, BorderLayout.CENTER);
         // data: short description of the score
 //        scoreCard.add(label("<html><div style='width:260px'>Strong overall efficiency for a desktop in this category.</div></html>", 12, Font.PLAIN, TEXT_MUTED), BorderLayout.SOUTH);
-        scoreCard.add(label("<html><div style='width:260px'>Strong overall efficiency for a desktop in this category.</div></html>", Font.PLAIN, FONT_LABEL, TEXT_MUTED), BorderLayout.SOUTH);
+        scoreCard.add(label("<html><div style='width:260px'>Strong overall efficiency for a desktop in this category.</div></html>", Font.PLAIN, FONT_LABEL_SIZE, TEXT_MUTED), BorderLayout.SOUTH);
         c.gridx = 0; c.weightx = 0.35; c.insets = new Insets(0, 0, 0, 8);
         panel.add(scoreCard, c);
 
@@ -49,12 +49,12 @@ public class ScoreRecommendationSection {
         recoCard.setLayout(new BoxLayout(recoCard, BoxLayout.Y_AXIS));
         JPanel recoTop = row();
 //        recoTop.add(label("RECOMMENDATION", 12, Font.BOLD, TEXT_MAIN), BorderLayout.WEST);
-        recoTop.add(label("RECOMMENDATION", Font.BOLD, FONT_LABEL, TEXT_MAIN), BorderLayout.WEST);
+        recoTop.add(label("RECOMMENDATION", Font.BOLD, FONT_LABEL_SIZE, TEXT_MAIN), BorderLayout.WEST);
         // data: which option is active (KEEP / UPGRADE / REPLACE)
         recoTop.add(wrap(recommendationTabs("KEEP")), BorderLayout.EAST);
         recoCard.add(recoTop);
 //        recoCard.add(label("KEEP", 40, Font.BOLD, GREEN));      // data: recommendation
-        recoCard.add(label("KEEP", Font.BOLD, FONT_DISPLAY, GREEN));
+        recoCard.add(label("KEEP", Font.BOLD, FONT_DISPLAY_SIZE, GREEN));
         recoCard.add(Box.createVerticalStrut(6));
         // data: reason for the recommendation
 //        recoCard.add(label("<html><div style='width:390px'>Your computer is still suitable for its intended use. "
@@ -63,7 +63,7 @@ public class ScoreRecommendationSection {
         recoCard.add(label(
                 "<html><div style='width:390px'>Your computer is still suitable for its intended use. "
                         + "Replacing it now may create more environmental impact than continuing to use it.</div></html>",
-                Font.PLAIN, FONT_BODY, TEXT_MUTED
+                Font.PLAIN, FONT_BODY_SIZE, TEXT_MUTED
         ));
         recoCard.add(Box.createVerticalStrut(12));
         JPanel note = new JPanel(new BorderLayout());
@@ -76,7 +76,7 @@ public class ScoreRecommendationSection {
 //                12, Font.PLAIN, TEXT_MAIN);
         JLabel noteText = label(
                 "<html><div style='width:370px'>Keeping this PC could avoid approximately <b>180 kg CO₂e</b> from manufacturing a replacement.</div></html>",
-                Font.PLAIN, FONT_LABEL, TEXT_MAIN
+                Font.PLAIN, FONT_LABEL_SIZE, TEXT_MAIN
         );
         noteText.setIcon(loadIcon("icons/leaf_green.png", 14));   // leaf icon from figma
         noteText.setIconTextGap(8);
@@ -93,7 +93,7 @@ public class ScoreRecommendationSection {
         tabs.setBorder(new LineBorder(BORDER_COLOR, 1, true));
         for (String option : new String[]{"KEEP", "UPGRADE", "REPLACE"}) {
 //            JLabel tab = label(option, 11, Font.BOLD, option.equals(active) ? GREEN : TEXT_MUTED);
-            JLabel tab = label(option, Font.BOLD, FONT_SMALL, option.equals(active) ? GREEN : TEXT_MUTED);
+            JLabel tab = label(option, Font.BOLD, FONT_SMALL_SIZE, option.equals(active) ? GREEN : TEXT_MUTED);
             tab.setOpaque(true);
             tab.setBackground(option.equals(active) ? GREEN_LIGHT : CARD_BG);
             tab.setBorder(new EmptyBorder(6, 12, 6, 12));
