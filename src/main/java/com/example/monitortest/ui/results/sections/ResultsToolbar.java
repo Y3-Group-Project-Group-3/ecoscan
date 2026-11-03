@@ -18,7 +18,7 @@ public class ResultsToolbar {
 
     // Creates the toolbar containing power mode controls and refresh action.
 // Builds the toolbar using controls supplied by the Results page.
-    public static JPanel createToolbar( JButton refreshButton, JPanel powerModeControls) {
+    public static JPanel createToolbar( JButton refreshButton, JButton saveButton, JPanel powerModeControls) {
 
         JPanel toolbar = new JPanel(new BorderLayout(16, 0));
         toolbar.setBackground(CARD_BG);
@@ -48,6 +48,8 @@ public class ResultsToolbar {
         // Separate toolbar actions using a reusable vertical divider.
         toolbarActions.add(new VerticalDivider(0.5f));
 
+        toolbarActions.add(saveButton);
+
         // Reuse the existing refresh button.
         toolbarActions.add(refreshButton);
 
@@ -55,6 +57,32 @@ public class ResultsToolbar {
 
         return toolbar;
     }
+
+
+    // Creates the button used to save the currently displayed hardware scan.
+    public static JButton createSaveButton() {
+
+        // Use a standard Swing button until saving functionality is connected.
+        JButton saveButton = new JButton("Save Scan");
+
+        // Match the toolbar's existing button sizing and typography.
+        saveButton.setPreferredSize(new Dimension(130, 42));
+        saveButton.setFont( saveButton.getFont().deriveFont(Font.BOLD, 12f) );
+
+        // Keep the new button consistent with the application's colours.
+        saveButton.setBackground(Color.WHITE);
+        saveButton.setForeground(TEXT_MAIN);
+        saveButton.setFocusPainted(false);
+
+        // Indicate that the button is interactive.
+        saveButton.setCursor( Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) );
+
+        // Saving should only become available after a successful scan.
+        saveButton.setEnabled(false);
+
+        return saveButton;
+    }
+
 
 
     // Creates the refresh button used by the Results toolbar.

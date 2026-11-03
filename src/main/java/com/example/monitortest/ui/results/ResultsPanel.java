@@ -21,6 +21,12 @@ import com.example.monitortest.ui.results.components.EmissionProjectionPanel;
 import com.example.monitortest.ui.results.sections.ResultsToolbar;
 import static com.example.monitortest.ui.theme.AppTheme.*;
 
+import com.example.monitortest.ui.history.model.SavedScan;
+import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
+
+import java.io.IOException;
+import java.util.UUID;
+
 
 import com.example.monitortest.ui.history.model.SavedScan;
 import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
@@ -50,6 +56,24 @@ public class ResultsPanel extends JPanel {
     private final JButton refreshButton = ResultsToolbar.createRefreshButton();
 
 
+    /************************************** csv ************************/
+    // Save action for the currently displayed hardware scan.
+    private final JButton saveButton = ResultsToolbar.createSaveButton();
+
+    // Stores the hardware information currently displayed on the Results Page.
+    private HardwareInfo currentHardwareInfo;
+
+    // Preserves the original timestamp of the displayed hardware scan.
+    private LocalDateTime currentScanTime;
+
+    // Tracks whether estimated RAM and storage power are included.
+    private boolean includeEstimates = false;
+
+    // Handles saving and loading hardware scans from CSV.
+    private final ScanHistoryCsvRepository scanRepository = new ScanHistoryCsvRepository();
+    /**************************************************************************/
+
+
     // Creates the footer displaying information about the latest scan.
     private JPanel createScanInfoFooter() {
 
@@ -69,8 +93,8 @@ public class ResultsPanel extends JPanel {
     // Updates the footer when a completed hardware scan is applied.
     private void updateScanInfoFooter() {
 
-        // Capture the current local date and time.
-        LocalDateTime scanTime = LocalDateTime.now();
+        // Use the timestamp associated with the displayed hardware scan.
+        LocalDateTime scanTime = currentScanTime;
 
         // Format the timestamp for display in the Results footer.
         String formattedTime = scanTime.format(SCAN_TIME_FORMAT);
@@ -94,13 +118,28 @@ public class ResultsPanel extends JPanel {
         // Retrieve the power controls from this Results Page's Component Breakdown.
         JPanel powerModeControls = componentSection.getPowerModeControls();
 
-        // Construct the fixed toolbar using the existing controls and refresh button.
-        add( ResultsToolbar.createToolbar(refreshButton, powerModeControls), BorderLayout.NORTH );
+        // Construct the toolbar with both Refresh and Save Scan actions.
+        add( ResultsToolbar.createToolbar( refreshButton, saveButton, powerModeControls ), BorderLayout.NORTH );
 
         add(scroll, BorderLayout.CENTER);
 
         // Connect the Results sections after their UI components are initialised.
         configureSectionListeners();
+
+        /***************** csv *************************/
+
+        // Connect the Save Scan button to the naming dialog and CSV repository.
+        saveButton.addActionListener(e -> {
+
+            // Ask the user to choose a name for the current scan.
+            String name = requestScanName();
+
+            // Only save when the user provides a valid name.
+            if (name != null) {
+                saveCurrentScan(name);
+            }
+        });
+
     }
 
     private JPanel createMainContentPanel() {
@@ -142,6 +181,10 @@ public class ResultsPanel extends JPanel {
 
         // Keep environmental calculations in sync with the selected power mode.
         componentSection.setPowerModeListener(includeEstimates -> {
+            // Preserve the setting for the saved scan.
+            this.includeEstimates = includeEstimates;
+
+            // Update the existing Results Page sections.
             projectionPanel.setIncludeEstimates(includeEstimates);
             impactSection.setIncludeEstimates(includeEstimates);
         });
@@ -154,8 +197,70 @@ public class ResultsPanel extends JPanel {
     }
 
 
+    /********************************* CSV *******************************/
+    // Returns the Save Scan button for event listener registration.
+    public JButton getSaveButton() { return saveButton; }
+
+    // Requests a user-defined name for the currently displayed hardware scan.
+    // Returns null when the user cancels the dialog.
+    private String requestScanName() {
+
+        while (true) {
+
+            // Display the naming dialog using Swing's built-in input component.
+            String name = JOptionPane.showInputDialog( this, "Enter a name for this scan:", "Save Hardware Scan", JOptionPane.PLAIN_MESSAGE );
+
+            // Cancel or closing the dialog means no name was provided.
+            if (name == null) { return null; }
+
+            // Remove leading and trailing whitespace.
+            name = name.trim();
+
+            // Return the entered name when it is valid.
+            if (!name.isEmpty()) { return name; }
+
+            // Explain the validation issue and allow another attempt.
+            JOptionPane.showMessageDialog( this, "Please enter a name for the scan.", "Invalid Scan Name", JOptionPane.WARNING_MESSAGE );
+        }
+    }
+
+
+    // Saves the currently displayed hardware scan using the user-defined name.
+// Displays a confirmation or error message after the operation.
+    private void saveCurrentScan(String name) {
+
+        // Prevent saving when no completed hardware scan is available.
+        if (currentHardwareInfo == null || currentScanTime == null) {
+            JOptionPane.showMessageDialog( this, "No hardware scan is available to save.", "Save Scan", JOptionPane.WARNING_MESSAGE );
+            return;
+        }
+
+        // Create a saved record using the original scan information.
+        SavedScan savedScan = new SavedScan( UUID.randomUUID(), name, currentScanTime, currentHardwareInfo, includeEstimates );
+
+        try {
+            // Persist the scan using the existing CSV repository.
+            scanRepository.save(savedScan);
+
+            // Confirm that the scan was saved successfully.
+            JOptionPane.showMessageDialog( this, "Hardware scan saved successfully as:\n" + name, "Scan Saved", JOptionPane.INFORMATION_MESSAGE );
+
+        } catch (IOException | IllegalArgumentException e) {
+            // Explain the failure without closing the Results Page.
+            JOptionPane.showMessageDialog( this, "Unable to save the hardware scan:\n" + e.getMessage(), "Save Failed", JOptionPane.ERROR_MESSAGE );
+        }
+    }
+
+
+
+
+    /*********************** UPDATE PAGE ***********************************/
     // Refreshes all Results Page sections after a successful hardware scan.
     public void updateHardwareInfo(HardwareInfo info) throws IOException {
+
+        // Preserve the completed scan and its timestamp for saving.
+        currentHardwareInfo = info;
+        currentScanTime = LocalDateTime.now();
 
         // Update the Component Breakdown and power summary.
         componentSection.updateComponentSection(info);
@@ -166,6 +271,9 @@ public class ResultsPanel extends JPanel {
 
         // Display when the latest scan results were applied.
         updateScanInfoFooter();
+
+        // Allow the user to save the successfully completed hardware scan.
+        saveButton.setEnabled(true);
 
 
 // TEMPORARY TEST: Confirm that the existing scan history remains readable.
