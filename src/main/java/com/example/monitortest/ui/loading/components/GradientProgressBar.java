@@ -1,11 +1,12 @@
 package com.example.monitortest.ui.loading.components;
 
+import com.example.monitortest.ui.common.GraphicsUtils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
-import static com.example.monitortest.ui.theme.UIUtility.smooth;
 
 /**
  * Custom progress bar that smoothly animates towards the percentage reported by the hardware scan.
@@ -57,7 +58,8 @@ public class GradientProgressBar extends JComponent {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Graphics2D g2 = smooth(g);
+        // Create an independent graphics context with smooth rendering.
+        Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
 
         int width = getWidth();
         int height = getHeight();

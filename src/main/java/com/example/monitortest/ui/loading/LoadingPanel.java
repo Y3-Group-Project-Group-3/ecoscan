@@ -1,11 +1,13 @@
 package com.example.monitortest.ui.loading;
 
 import com.example.monitortest.ui.common.GradientBadge;
+import com.example.monitortest.ui.common.GraphicsUtils;
 import com.example.monitortest.ui.common.LineIcon;
 import com.example.monitortest.ui.common.ScrollablePanel;
 import com.example.monitortest.ui.loading.components.GradientProgressBar;
 import com.example.monitortest.ui.loading.components.HardwareRow;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
+
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,7 +16,6 @@ import java.awt.*;
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import static com.example.monitortest.ui.theme.UIUtility.font;
 import static com.example.monitortest.ui.theme.UIUtility.label;
-import static com.example.monitortest.ui.theme.UIUtility.smooth;
 
 // Loading screen for EcoScan. This panel can be added to the team's main window.
 public class LoadingPanel extends JPanel {
@@ -290,12 +291,7 @@ public class LoadingPanel extends JPanel {
         // Add a row for each hardware component.
         for (int i = 0; i < PARTS.length; i++) {
 
-            rows[i] = new HardwareRow(
-                    PARTS[i],
-                    PART_ICONS[i],
-                    i == 0,
-                    i == PARTS.length - 1
-            );
+            rows[i] = new HardwareRow( PARTS[i], PART_ICONS[i], i == 0, i == PARTS.length - 1 );
 
             hardwareCard.add(rows[i]);
         }
@@ -393,12 +389,21 @@ public class LoadingPanel extends JPanel {
         public int getIconWidth() { return size; }
         public int getIconHeight() { return size; }
 
+
+        @Override
         public void paintIcon(Component c, Graphics g, int x, int y) {
-            Graphics2D g2 = smooth(g);
+
+            // Create a smooth graphics context for the circular indicator.
+            Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
+
+            // Draw the indicator using its configured colour and size.
             g2.setColor(color);
             g2.fillOval(x, y, size, size);
+
+            // Release the temporary graphics context.
             g2.dispose();
         }
+
     }
 
 

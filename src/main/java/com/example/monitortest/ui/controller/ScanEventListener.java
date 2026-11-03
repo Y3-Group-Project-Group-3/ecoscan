@@ -2,11 +2,11 @@ package com.example.monitortest.ui.controller;
 
 import com.example.monitortest.hardware.detection.ScanHardware;
 import com.example.monitortest.hardware.model.HardwareInfo;
-import com.example.monitortest.ui.results.sections.ComponentSection;
-import com.example.monitortest.ui.results.sections.HardwareInfoSection;
 import com.example.monitortest.ui.nav.NavBar;
+
 // Hook in loading page
 import com.example.monitortest.ui.loading.LoadingPanel;
+import com.example.monitortest.ui.results.ResultsPanel;
 
 
 import javax.swing.*;
@@ -36,6 +36,8 @@ public class ScanEventListener implements ActionListener {
     private volatile boolean shuttingDown = false;
     // Controls navigation availability while hardware scanning is active.
     private final NavBar navBar;
+    // Reference to the existing Results page.
+    private final ResultsPanel resultsPanel;
 
     /**
      * Creates the event listener responsible for coordinating hardware scans and updating the application interface.
@@ -45,13 +47,15 @@ public class ScanEventListener implements ActionListener {
             CardLayout cardLayout,
             JPanel mainPanel,
             ScanHardware hardwareInfoService,
-            NavBar navBar) {
+            NavBar navBar,
+            ResultsPanel resultsPanel) {
 
         this.frame = frame;
         this.cardLayout = cardLayout;
         this.mainPanel = mainPanel;
         this.hardwareInfoService = hardwareInfoService;
         this.navBar = navBar;
+        this.resultsPanel = resultsPanel;
     }
 
     // Reports whether a hardware scan is currently active.
@@ -110,19 +114,16 @@ public class ScanEventListener implements ActionListener {
         SwingWorker<HardwareInfo, ScanProgress> worker =
                 new SwingWorker<>() {
 
+
                     @Override
                     protected HardwareInfo doInBackground() {
-                        try {
-                            // Perform the hardware scan and publish component status updates.
-                            return hardwareInfoService.getHardwareInfo((component, status) -> {
-                                publish(new ScanProgress(component, status));
-                            });
-                        }
-                        finally {
-                            // The background hardware operation has finished.
-                            scanRunning = false;
-                        }
+                        // Perform hardware detection on a background thread.
+                        // Keep scanRunning true until the UI completion workflow finishes.
+                        return hardwareInfoService.getHardwareInfo((component, status) -> {
+                            publish(new ScanProgress(component, status));
+                        });
                     }
+
 
 
                     @Override
@@ -164,12 +165,18 @@ public class ScanEventListener implements ActionListener {
                             // Retrieve the completed hardware scan results.
                             HardwareInfo info = get();
 
+
+                            // Reject unsuccessful scans that return no hardware information.
+                            if (info == null) {
+                                throw new IllegalStateException( "Hardware scan completed without returning hardware information." );
+                            }
+
+
                             // Ensure the progress display reaches 100% after a successful scan.
                             activeLoadingPanel.setProgress(100);
 
-                            // Update the results sections with the latest hardware information.
-                            HardwareInfoSection.updateHardwareInfo(info);
-                            ComponentSection.updateComponentSection(info);
+                            // Send the completed scan to the Results Page for all section updates.
+                            resultsPanel.updateHardwareInfo(info);
 
                             // Keep the completed loading page visible for two seconds.
                             Timer transitionTimer = new Timer(2000, e -> {
@@ -184,6 +191,9 @@ public class ScanEventListener implements ActionListener {
                                 // Restore scanning and navigation after the loading transition.
                                 refreshButton.setEnabled(true);
                                 navBar.setNavigationEnabled(true);
+
+                                // The completed scan and its loading transition have finished.
+                                scanRunning = false;
                             });
 
                             // Ensure the transition happens only once.
@@ -207,6 +217,9 @@ public class ScanEventListener implements ActionListener {
                             // Restore scanning and navigation after a failed scan.
                             refreshButton.setEnabled(true);
                             navBar.setNavigationEnabled(true);
+
+                            // Allow another scan after the failure has been handled.
+                            scanRunning = false;
                         }
                     }
 

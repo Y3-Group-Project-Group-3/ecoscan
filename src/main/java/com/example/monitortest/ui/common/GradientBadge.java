@@ -1,7 +1,6 @@
 package com.example.monitortest.ui.common;
 
 import com.example.monitortest.ui.theme.AppTheme;
-import com.example.monitortest.ui.theme.UIUtility;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,7 +22,8 @@ public class GradientBadge extends JComponent {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Graphics2D g2 = UIUtility.smooth(g);
+        // Create a graphics context with antialiased shapes and text.
+        Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
         paintBadge(g2, size, iconName, iconSize, radius);
         g2.dispose();
     }

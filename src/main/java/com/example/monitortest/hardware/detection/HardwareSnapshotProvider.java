@@ -18,7 +18,8 @@ public class HardwareSnapshotProvider {
      *
      * @return A hardware snapshot, or null if unavailable.
      */
-    public Computer getSnapshot() {
+    // Prevent concurrent LibreHardwareMonitor requests from different threads.
+    public static synchronized Computer getSnapshot() {
 
         // Avoid calling Windows-only functionality on macOS or Linux.
         String operatingSystem = System.getProperty("os.name", "");
@@ -43,13 +44,34 @@ public class HardwareSnapshotProvider {
         // The caller can reuse this snapshot for multiple sensor lookups.
         try {
 
-            Computer computer = LibreHardwareManager.createInstance(config).getComputer();
 
-            // Reject snapshots with no available hardware sensors.
+            Computer computer = LibreHardwareManager.createInstance(config).getComputer();
             if (computer == null || computer.getHardware() == null || computer.getHardware().isEmpty()) {
                 System.err.println("LibreHardwareMonitor returned no hardware information.");
                 return null;
             }
+
+//            // Check whether LibreHardwareMonitor returned a computer object.
+//            if (computer == null) {
+//                System.err.println("LHM DEBUG: Computer object is null.");
+//                return null;
+//            }
+//
+//            // Check whether the computer contains a hardware collection.
+//            if (computer.getHardware() == null) {
+//                System.err.println("LHM DEBUG: Hardware collection is null.");
+//                return null;
+//            }
+//
+//            // Check whether any hardware components were detected.
+//            if (computer.getHardware().isEmpty()) {
+//                System.err.println("LHM DEBUG: Hardware collection is empty.");
+//                return null;
+//            }
+//
+//            // Report successful sensor discovery for comparison.
+//            System.out.println("LHM DEBUG: Detected " + computer.getHardware().size() + " hardware components.");
+
 
             return computer;
 

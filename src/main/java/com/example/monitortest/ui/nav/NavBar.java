@@ -3,6 +3,7 @@ package com.example.monitortest.ui.nav;
 import com.example.monitortest.services.startup.ApplicationElevationManager;
 
 import com.example.monitortest.ui.common.GradientBadge;
+import com.example.monitortest.ui.common.GraphicsUtils;
 import com.example.monitortest.ui.common.LineIcon;
 
 import javax.swing.*;
@@ -15,7 +16,6 @@ import java.util.function.Consumer;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import static com.example.monitortest.ui.theme.UIUtility.font;
-import static com.example.monitortest.ui.theme.UIUtility.smooth;
 
 public class NavBar extends JPanel {
 
@@ -195,13 +195,21 @@ public class NavBar extends JPanel {
             return size;
         }
 
+
         @Override
         public void paintIcon(Component c, Graphics g, int x, int y) {
-            Graphics2D g2 = smooth(g);
+
+            // Create a smooth graphics context for the navigation indicator.
+            Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
+
+            // Draw the indicator using its assigned colour.
             g2.setColor(color);
             g2.fillOval(x, y, size, size);
+
+            // Release the temporary graphics context.
             g2.dispose();
         }
+
     }
 
     // Navigation button
@@ -284,7 +292,8 @@ public class NavBar extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
 
-            Graphics2D g2 = smooth(g);
+            // Create a smooth graphics context for hover and selection highlights.
+            Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
 
             // Only display hover and focus highlights when navigation is enabled.
             if (active || (isEnabled() && (hover || isFocusOwner()))) {

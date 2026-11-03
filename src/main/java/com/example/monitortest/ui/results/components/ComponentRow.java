@@ -6,6 +6,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
+import org.kordamp.ikonli.swing.FontIcon;
+
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import static com.example.monitortest.ui.theme.AppTheme.TEXT_MAIN;
 import static com.example.monitortest.ui.theme.AppTheme.TEXT_MUTED;
@@ -51,11 +54,16 @@ public class ComponentRow {
     ) {
         JPanel item = new JPanel(new BorderLayout());
         item.setOpaque(false);
-        item.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER_COLOR));
 
+        // Keep a subtle divider between components without outlining each row.
+        item.setBorder(BorderFactory.createMatteBorder( 0, 0, 1, 0, BORDER_COLOR ));
+
+        // Give each component header a consistent white background.
         JPanel header = new JPanel(new BorderLayout());
-        header.setOpaque(false);
+        header.setBackground(CARD_BG);
+        header.setOpaque(true);
         header.setBorder(new EmptyBorder(14, 18, 14, 18));
+
         header.setCursor(new Cursor(Cursor.HAND_CURSOR));
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         left.setOpaque(false);
@@ -69,19 +77,35 @@ public class ComponentRow {
         left.add(label(summary, Font.PLAIN, FONT_BODY_SIZE, TEXT_MUTED));
         header.add(left, BorderLayout.WEST);
 
-//        JLabel arrow = label(openAtStart ? "⌃" : "⌄", 14, Font.PLAIN, TEXT_MUTED);
-        JLabel arrow = label(openAtStart ? "⌃" : "⌄", Font.PLAIN, FONT_CARD_TITLE_SIZE, TEXT_MUTED);
+        // Use Font Awesome icons for expanding and collapsing rows.
+        JLabel arrow = new JLabel(
+                FontIcon.of( openAtStart ? FontAwesomeSolid.CHEVRON_UP : FontAwesomeSolid.CHEVRON_DOWN, 14, TEXT_MUTED )
+        );
+
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         right.setOpaque(false);
-        right.add(StatusBadge.badge(status));
+
+        // Only create a badge when a meaningful status is provided.
+        if (status != null && !status.isBlank() && !status.equals("-")) {
+            right.add(StatusBadge.badge(status));
+        }
+
+        // Always retain the expand/collapse arrow.
         right.add(arrow);
+
         header.add(right, BorderLayout.EAST);
         item.add(header, BorderLayout.NORTH);
 
         // details (hidden until clicked)
         JPanel details = new JPanel(new GridLayout(2, 4, 20, 4));
+
+        // Use a subtle background and divider for expanded specifications.
         details.setBackground(new Color(0xF8FAF9));
-        details.setBorder(new EmptyBorder(12, 18, 14, 18));
+
+        details.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, BORDER_COLOR),
+                new EmptyBorder(12, 18, 14, 18)
+        ));
 
 
         // Display hardware specifications and power measurements.
@@ -117,12 +141,19 @@ public class ComponentRow {
         expandableContent.setVisible(openAtStart);
         item.add(expandableContent, BorderLayout.CENTER);
 
+        // Store the expandable content so its visibility can be checked on refresh.
+        item.putClientProperty("expandableContent", expandableContent);
+
 
         header.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 // Toggle the complete details area, including any additional rows.
                 expandableContent.setVisible(!expandableContent.isVisible());
-                arrow.setText(expandableContent.isVisible() ? "⌃" : "⌄");
+
+                // Update the arrow to reflect the expanded state.
+                arrow.setIcon(FontIcon.of(
+                        expandableContent.isVisible() ? FontAwesomeSolid.CHEVRON_UP : FontAwesomeSolid.CHEVRON_DOWN, 14, TEXT_MUTED
+                ));
 
                 list.revalidate();
                 list.repaint();

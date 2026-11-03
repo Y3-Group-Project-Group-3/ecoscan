@@ -60,13 +60,14 @@ public class ScanHardware {
          * Attempt to retrieve sensor information from LibreHardwareMonitor.
          * If retrieval fails, continue using OSHI hardware specifications.
          */
-        HardwareSnapshotProvider snapshotProvider = new HardwareSnapshotProvider();
-
+//        HardwareSnapshotProvider snapshotProvider = new HardwareSnapshotProvider();
         Computer computer = null;
+        computer = HardwareSnapshotProvider.getSnapshot();
 
         try {
             // Retrieve a snapshot containing the available hardware sensors.
-            computer = snapshotProvider.getSnapshot();
+//            computer = snapshotProvider.getSnapshot();
+            computer = HardwareSnapshotProvider.getSnapshot();
 
         } catch (Exception e) {
             // Report the failure without stopping the entire hardware scan.

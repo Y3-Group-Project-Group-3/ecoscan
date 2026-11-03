@@ -23,7 +23,8 @@ public class LiveHardwareReader {
     public LiveMonitorSnapshot readSnapshot() {
 
         // Retrieve the latest available hardware sensor snapshot.
-        Computer computer = snapshotProvider.getSnapshot();
+//        Computer computer = snapshotProvider.getSnapshot();
+        Computer computer = HardwareSnapshotProvider.getSnapshot();
 
         // Default to unavailable readings if the snapshot cannot be retrieved.
         if (computer == null) {
