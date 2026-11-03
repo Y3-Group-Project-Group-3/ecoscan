@@ -23,7 +23,6 @@ public class HistoryPanel extends JPanel {
         add(createMainContentPanel(), BorderLayout.CENTER);
     }
 
-
     private JPanel createMainContentPanel() {
 
         JPanel main = new JPanel(new BorderLayout(20, 20));
@@ -37,16 +36,27 @@ public class HistoryPanel extends JPanel {
         JPanel center = new JPanel(new BorderLayout(0, 20));
         center.setOpaque(false);
 
-        // ...
-        center.add( new HistoryListSection(), BorderLayout.CENTER );
+        // List of scans (from data/scan_history.csv)
+        HistoryListSection listSection = new HistoryListSection();
+        center.add( listSection, BorderLayout.CENTER );
 
-        // ...
-        center.add( new HistoryActionsSection(), BorderLayout.SOUTH );
+        // Buttons
+        HistoryActionsSection actionsSection = new HistoryActionsSection();
+        center.add( actionsSection, BorderLayout.SOUTH );
 
-        // ...
+        // Delete Selected
+        actionsSection.getDeleteButton().addActionListener(e -> {
+            int answer = JOptionPane.showConfirmDialog(this,
+                    "Delete the selected scans?", "Delete scans",
+                    JOptionPane.OK_CANCEL_OPTION);
+
+            if (answer == JOptionPane.OK_OPTION) {
+                listSection.deleteSelected();
+            }
+        });
+
         main.add(center, BorderLayout.CENTER);
 
         return main;
     }
-
 }

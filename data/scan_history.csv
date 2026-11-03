@@ -1,5 +1,5 @@
-date,device,use,score,co2,result
-1 Oct 2026,My PC,Home,78/100,209 kg/year,KEEP
-12 Aug 2026,My PC,Home,70/100,214 kg/year,KEEP
-5 Jul 2026,Work PC,Office,64/100,258 kg/year,UPGRADE
-20 Apr 2026,Reception PC,Office,48/100,290 kg/year,REPLACE
+date,device,type,co2
+1 Oct 2026,My PC,Hardware scan,18.2 g/hour
+1 Oct 2026,My PC,Session,46.5 g
+12 Aug 2026,Work PC,Hardware scan,21.4 g/hour
+20 Apr 2026,Reception PC,Session,112.0 g
