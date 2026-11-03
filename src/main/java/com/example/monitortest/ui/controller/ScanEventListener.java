@@ -7,6 +7,7 @@ import com.example.monitortest.ui.results.sections.HardwareInfoSection;
 import com.example.monitortest.ui.nav.NavBar;
 // Hook in loading page
 import com.example.monitortest.ui.loading.LoadingPanel;
+import com.example.monitortest.ui.results.ResultsPanel;
 
 
 import javax.swing.*;
@@ -36,6 +37,8 @@ public class ScanEventListener implements ActionListener {
     private volatile boolean shuttingDown = false;
     // Controls navigation availability while hardware scanning is active.
     private final NavBar navBar;
+    // Reference to the existing Results page.
+    private final ResultsPanel resultsPanel;
 
     /**
      * Creates the event listener responsible for coordinating hardware scans and updating the application interface.
@@ -45,13 +48,15 @@ public class ScanEventListener implements ActionListener {
             CardLayout cardLayout,
             JPanel mainPanel,
             ScanHardware hardwareInfoService,
-            NavBar navBar) {
+            NavBar navBar,
+            ResultsPanel resultsPanel) {
 
         this.frame = frame;
         this.cardLayout = cardLayout;
         this.mainPanel = mainPanel;
         this.hardwareInfoService = hardwareInfoService;
         this.navBar = navBar;
+        this.resultsPanel = resultsPanel;
     }
 
     // Reports whether a hardware scan is currently active.
@@ -170,6 +175,7 @@ public class ScanEventListener implements ActionListener {
                             // Update the results sections with the latest hardware information.
                             HardwareInfoSection.updateHardwareInfo(info);
                             ComponentSection.updateComponentSection(info);
+                            resultsPanel.updateHardwareInfo(info);
 
                             // Keep the completed loading page visible for two seconds.
                             Timer transitionTimer = new Timer(2000, e -> {

@@ -169,7 +169,12 @@ public class CreateWindow {
 
         // Provide the navigation bar so scanning can temporarily lock navigation.
         ScanEventListener scanEventListener = new ScanEventListener(
-                frame, cardLayout, mainPanel, hardwareInfoService, navBar
+                frame,
+                cardLayout,
+                mainPanel,
+                hardwareInfoService,
+                navBar,
+                resultsPanel
         );
 
         // Connect the Home page Scan Computer button

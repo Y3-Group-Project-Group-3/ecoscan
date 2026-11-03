@@ -16,6 +16,7 @@ import static com.example.monitortest.ui.results.components.ComponentRow.compone
 import static java.awt.Component.LEFT_ALIGNMENT;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class ComponentSection {
 
@@ -123,6 +124,24 @@ public class ComponentSection {
         if (componentSectionUpdater != null && info != null) {
             componentSectionUpdater.updateComponentSection(info);
         }
+    }
+
+    // Allows the Results page to respond to power calculation mode changes.
+    public static void setPowerModeListener(Consumer<Boolean> listener) {
+        if (powerSummaryPanel != null) {
+            powerSummaryPanel.setPowerModeListener(listener);
+        }
+    }
+
+    // Provides access to the existing power mode controls.
+    // Allows ResultsPanel to display them in its fixed toolbar.
+    public static JPanel getPowerModeControls() {
+
+        if (powerSummaryPanel == null) {
+            return null;
+        }
+
+        return powerSummaryPanel.getPowerModeControls();
     }
 
 }

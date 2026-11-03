@@ -4,19 +4,25 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
+import com.example.monitortest.hardware.model.HardwareInfo;
 import com.example.monitortest.ui.common.FitWidthPanel;
+import com.example.monitortest.ui.results.sections.ComponentSection;
 import com.example.monitortest.ui.results.sections.HardwareInfoSection;
 import com.example.monitortest.ui.results.sections.ImpactSection;
+import com.example.monitortest.ui.results.components.EmissionProjectionPanel;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
-import static com.example.monitortest.ui.results.sections.ComparisonSection.createComparisonSection;
 import static com.example.monitortest.ui.results.sections.ComponentSection.createComponentSection;
 import static com.example.monitortest.ui.results.sections.ResultsHeader.createHeader;
 import static com.example.monitortest.ui.results.sections.ResultsHeader.refreshButton;
-import static com.example.monitortest.ui.results.sections.ScoreRecommendationSection.createScoreAndRecommendation;
 
 // EcoScan - Results page (view only, test data for now)
 public class ResultsPanel extends JPanel {
+
+    // Displays emissions projections based on the latest hardware scan.
+    private final EmissionProjectionPanel projectionPanel = new EmissionProjectionPanel();
+    // Keep a reference so the environmental impact values can be updated.
+    private final ImpactSection impactSection = new ImpactSection();
 
     public ResultsPanel() {
         setLayout(new BorderLayout());
@@ -26,33 +32,74 @@ public class ResultsPanel extends JPanel {
 
         scroll.setBorder(null);
         scroll.getViewport().setBackground(BG_COLOR);
-        scroll.setHorizontalScrollBarPolicy(
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-        );
+        scroll.setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
         scroll.getVerticalScrollBar().setUnitIncrement(16);
+
+        // Keep the power mode controls visible while the Results page scrolls.
+        add(createPowerModeToolbar(), BorderLayout.NORTH);
 
         add(scroll, BorderLayout.CENTER);
     }
 
+    // Creates a fixed toolbar containing the power calculation mode controls.
+    private JPanel createPowerModeToolbar() {
+
+        JPanel toolbar = new JPanel(new BorderLayout(16, 0));
+        toolbar.setBackground(CARD_BG);
+        // Add spacing and a subtle divider beneath the fixed toolbar.
+        // Add a subtle bottom border while preserving the toolbar padding.
+        toolbar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER_COLOR),
+                new EmptyBorder(12, 36, 12, 36)
+        ));
+
+        // Identify the setting that affects the Results page calculations.
+        JLabel modeLabel = new JLabel("POWER CALCULATION MODE");
+        modeLabel.setFont(modeLabel.getFont().deriveFont(Font.BOLD, 12f));
+        modeLabel.setForeground(TEXT_MAIN);
+
+        toolbar.add(modeLabel, BorderLayout.WEST);
+
+        // Reuse the existing radio buttons from PowerSummaryPanel.
+        JPanel controls = ComponentSection.getPowerModeControls();
+
+        if (controls != null) {
+            toolbar.add(controls, BorderLayout.EAST);
+        }
+
+        return toolbar;
+    }
+
     private JPanel createMainContentPanel() {
         JPanel main = new FitWidthPanel();
-        ImpactSection impactSection = new ImpactSection();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
         main.setBackground(BG_COLOR);
         main.setBorder(new EmptyBorder(28, 36, 36, 36));
 
+
         main.add(createHeader());
         main.add(Box.createVerticalStrut(18));
-        main.add(createScoreAndRecommendation());
-        main.add(Box.createVerticalStrut(28));
+
+
         main.add(impactSection.createImpactSection());
         main.add(Box.createVerticalStrut(28));
-        main.add(createComparisonSection());
+        // Keep the scan projection period synchronised with Environmental Impact.
+        impactSection.setTimescaleListener(projectionPanel::setTimescale);
+
+        // Display the new emissions milestone projection.
+        projectionPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        main.add(projectionPanel);
         main.add(Box.createVerticalStrut(28));
 
         main.add(createComponentSection());
 
-        main.add(Box.createVerticalStrut(28));
+        // Keep the power summary, emissions projection and environmental impact in sync.
+        ComponentSection.setPowerModeListener(includeEstimates -> {
+            projectionPanel.setIncludeEstimates(includeEstimates);
+            impactSection.setIncludeEstimates(includeEstimates);
+        });
+
+        /********* Component Breakdown  **********/
         main.add(HardwareInfoSection.createHardwareInfoSection());
 
         return main;
@@ -62,4 +109,9 @@ public class ResultsPanel extends JPanel {
         return refreshButton;
     }
 
+    // Refresh both environmental sections using the latest hardware scan.
+    public void updateHardwareInfo(HardwareInfo info) {
+        projectionPanel.updateHardwareInfo(info);
+        impactSection.updateHardwareInfo(info);
+    }
 }
