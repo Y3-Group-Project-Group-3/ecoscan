@@ -24,6 +24,20 @@ public class ResultsPanel extends JPanel {
     // Keep a reference so the environmental impact values can be updated.
     private final ImpactSection impactSection = new ImpactSection();
 
+    // Creates the scan information footer at the bottom of Results.
+    private JPanel createScanInfoFooter() {
+
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        footer.setOpaque(false);
+
+        JLabel scanInfo = new JLabel( "Scanned 1 Oct 2026   •   My PC   •   Home use" );
+
+        scanInfo.setForeground(TEXT_MUTED);
+        footer.add(scanInfo);
+
+        return footer;
+    }
+
     public ResultsPanel() {
         setLayout(new BorderLayout());
         setBackground(BG_COLOR);
@@ -39,6 +53,8 @@ public class ResultsPanel extends JPanel {
         add(createPowerModeToolbar(), BorderLayout.NORTH);
 
         add(scroll, BorderLayout.CENTER);
+
+
     }
 
     // Creates a fixed toolbar containing the power calculation mode controls.
@@ -60,29 +76,73 @@ public class ResultsPanel extends JPanel {
 
         toolbar.add(modeLabel, BorderLayout.WEST);
 
-        // Reuse the existing radio buttons from PowerSummaryPanel.
+        // Group the power mode controls and refresh button together.
+        JPanel toolbarActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        toolbarActions.setOpaque(false);
+
+        // Reuse the existing power mode controls.
         JPanel controls = ComponentSection.getPowerModeControls();
 
         if (controls != null) {
-            toolbar.add(controls, BorderLayout.EAST);
+            toolbarActions.add(controls);
         }
+
+        // Add a subtle vertical divider between the power modes and refresh action.
+        JPanel divider = new JPanel() {
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+
+                Graphics2D g2 = (Graphics2D) g.create();
+
+                // Smooth the divider's appearance.
+                g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+
+                g2.setColor(BORDER_COLOR);
+                g2.setStroke(new BasicStroke(1.5f));
+
+                // Draw a line half the component's height, centred vertically.
+                int centreX = getWidth() / 2;
+                int lineHeight = getHeight() / 2;
+                int startY = (getHeight() - lineHeight) / 2;
+
+                g2.drawLine( centreX, startY, centreX, startY + lineHeight );
+
+                g2.dispose();
+            }
+        };
+
+        // Reserve a narrow area for the divider.
+        divider.setOpaque(false);
+        divider.setPreferredSize(new Dimension(12, 42));
+
+        toolbarActions.add(divider);
+
+        // Keep the existing refresh button after the divider.
+        toolbarActions.add(refreshButton);
+
+        // Move the existing refresh button into the fixed toolbar.
+        toolbarActions.add(refreshButton);
+        toolbar.add(toolbarActions, BorderLayout.EAST);
 
         return toolbar;
     }
 
     private JPanel createMainContentPanel() {
+
         JPanel main = new FitWidthPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
         main.setBackground(BG_COLOR);
         main.setBorder(new EmptyBorder(28, 36, 36, 36));
 
+        // Initialise the refresh button without displaying the old Results header.
+        createHeader();
 
-        main.add(createHeader());
-        main.add(Box.createVerticalStrut(18));
-
-
+        // Display the environmental impact section.
         main.add(impactSection.createImpactSection());
         main.add(Box.createVerticalStrut(28));
+
         // Keep the scan projection period synchronised with Environmental Impact.
         impactSection.setTimescaleListener(projectionPanel::setTimescale);
 
@@ -100,7 +160,15 @@ public class ResultsPanel extends JPanel {
         });
 
         /********* Component Breakdown  **********/
-        main.add(HardwareInfoSection.createHardwareInfoSection());
+//        main.add(HardwareInfoSection.createHardwareInfoSection());
+
+        /***************** Footer ************/
+        // Separate the scan metadata from the main results.
+        main.add(Box.createVerticalStrut(24));
+
+        JPanel scanFooter = createScanInfoFooter();
+        scanFooter.setAlignmentX(Component.LEFT_ALIGNMENT);
+        main.add(scanFooter);
 
         return main;
     }

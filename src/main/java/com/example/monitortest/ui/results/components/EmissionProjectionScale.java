@@ -4,9 +4,11 @@ import com.example.monitortest.ui.livemonitor.components.EmissionMilestone;
 import com.example.monitortest.ui.livemonitor.components.EmissionMilestones;
 import com.example.monitortest.ui.livemonitor.components.icons.EmissionIconRenderer;
 
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseMotionAdapter;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -43,6 +45,47 @@ public class EmissionProjectionScale extends JPanel {
 
         // Register the panel for milestone tooltips.
         setToolTipText("");
+
+        // Display a hand cursor when hovering over an interactive milestone.
+        addMouseMotionListener(new MouseMotionAdapter() {
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+
+                // Identify the milestone currently beneath the cursor.
+                EmissionMilestone milestone = findHoveredMilestone(e);
+
+                if (milestone != null) {
+                    // Show the hand cursor over milestone markers, icons and labels.
+                    setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+                    // Preserve the existing milestone tooltip.
+                    setToolTipText(milestone.usageDescription());
+                } else {
+                    // Restore the normal cursor outside milestone hit areas.
+                    setCursor(Cursor.getDefaultCursor());
+                    setToolTipText(null);
+                }
+            }
+        });
+
+        // Restore the normal cursor when the mouse leaves the comparison ruler.
+        addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                setCursor(Cursor.getDefaultCursor());
+            }
+        });
+
+        // Restore the default cursor when leaving the comparison scale.
+        addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                setCursor(Cursor.getDefaultCursor());
+            }
+        });
 
 
     }
@@ -114,7 +157,8 @@ public class EmissionProjectionScale extends JPanel {
 
         int startX = 30;
         int endX = getWidth() - 30;
-        int rulerY = getHeight() / 2 + 25;
+        // Position the ruler slightly higher to balance the milestone lanes.
+        int rulerY = getHeight() / 2;
 
         // Draw the horizontal emissions ruler first.
         g2.setColor(new Color(200, 210, 220));
@@ -285,16 +329,14 @@ public class EmissionProjectionScale extends JPanel {
         List<MilestoneLayout> layouts = calculateMilestoneLayouts(g2, startX, endX, rulerY);
 
         Color milestoneColor = new Color(100, 119, 146);
-        Color selectedColor = new Color(52, 120, 207);
         Color connectorColor = new Color(190, 200, 212);
 
         // Draw connectors first so the ruler can appear above them.
         for (MilestoneLayout layout : layouts) {
 
-            boolean selected = layout.index() == selectedMilestoneIndex;
-
-            g2.setColor(selected ? selectedColor : connectorColor);
-            g2.setStroke(new BasicStroke(selected ? 2f : 1.2f));
+            // All milestones use the same connector colour and thickness.
+            g2.setColor(connectorColor);
+            g2.setStroke(new BasicStroke(1.2f));
 
             int iconX = layout.iconX();
             int iconY = layout.iconY();
@@ -335,11 +377,9 @@ public class EmissionProjectionScale extends JPanel {
         for (MilestoneLayout layout : layouts) {
 
             EmissionMilestone milestone = milestones.get(layout.index());
-            boolean selected = layout.index() == selectedMilestoneIndex;
-
-            g2.setColor(selected ? selectedColor : milestoneColor);
-
-            int radius = selected ? 7 : 4;
+            // All milestones use the same grey marker.
+            g2.setColor(milestoneColor);
+            int radius = 4;
 
             g2.fillOval( layout.markerX() - radius, rulerY - radius, radius * 2, radius * 2 );
 
@@ -370,8 +410,8 @@ public class EmissionProjectionScale extends JPanel {
             g2.setColor(Color.WHITE);
             g2.fillRoundRect( backgroundX, backgroundY, backgroundWidth, backgroundHeight, 6, 6 );
 
-            // Draw the milestone name over its background.
-            g2.setColor(selected ? selectedColor : milestoneColor);
+            // Draw all milestone names in the same neutral colour.
+            g2.setColor(milestoneColor);
             g2.drawString(label, textX, textY);
 
         }
@@ -385,7 +425,8 @@ public class EmissionProjectionScale extends JPanel {
 
         int startX = 30;
         int endX = getWidth() - 30;
-        int rulerY = getHeight() / 2 + 25;
+        // Position the ruler slightly higher to balance the milestone lanes.
+        int rulerY = getHeight() / 2;
 
         // Calculate the same positions used when drawing the milestones.
         Graphics2D g2 = (Graphics2D) getGraphics();

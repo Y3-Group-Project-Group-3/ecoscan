@@ -5,21 +5,28 @@ import com.example.monitortest.hardware.model.HardwareInfo;
 
 import com.example.monitortest.ui.livemonitor.components.EmissionMilestone;
 import com.example.monitortest.ui.livemonitor.components.EmissionMilestones;
+import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.ui.theme.AppTheme;
+import com.example.monitortest.ui.common.InfoIcon;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.List;
 
+import static com.example.monitortest.ui.theme.AppTheme.BORDER_COLOR;
+
 // Displays projected emissions milestones using a fixed hardware scan power reading.
-public class EmissionProjectionPanel extends JPanel {
+public class EmissionProjectionPanel extends RoundedPanel {
 
     private final List<EmissionMilestone> milestones = EmissionMilestones.getMilestones();
 
     private final JLabel milestoneLabel;
     private final JLabel emissionsLabel;
-    private final JLabel timeLabel;
+
+    // Explains the projected emissions and selected milestone comparison.
+    private final JLabel projectionExplanation;
+    private final JLabel milestoneExplanation;
 
     private final JSlider milestoneSlider;
 
@@ -36,19 +43,71 @@ public class EmissionProjectionPanel extends JPanel {
     private boolean includeEstimates = false;
 
     // Projection period selected in the Environmental Impact section.
-    private String timescale = "Day";
+    private String timescale = "Hour";
 
     // Displays the scan-specific emissions comparison ruler.
     private final EmissionProjectionScale projectionScale = new EmissionProjectionScale();
 
     public EmissionProjectionPanel() {
+        super(Color.WHITE, BORDER_COLOR, 16);
+
         setLayout(new BorderLayout(0, 16));
         setBackground(AppTheme.CARD_BG);
         setBorder(new EmptyBorder(20, 24, 20, 24));
 
+        // Explain how the scanned power relates to projected emissions.
+        JLabel explanationTitle = new JLabel("UNDERSTANDING YOUR PROJECTED IMPACT");
+        explanationTitle.setForeground(AppTheme.TEXT_MUTED);
+
+        projectionExplanation = new JLabel();
+        projectionExplanation.setForeground(AppTheme.TEXT_MAIN);
+
+        milestoneExplanation = new JLabel();
+        milestoneExplanation.setForeground(AppTheme.TEXT_MUTED);
+
+        // Keep the comparison explanation and CO₂e information icon together.
+        JPanel milestoneExplanationRow = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 6, 0)
+        );
+        milestoneExplanationRow.setOpaque(false);
+        milestoneExplanationRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        InfoIcon co2InfoIcon = new InfoIcon(
+                "What is CO₂e?",
+                "Carbon dioxide equivalent (CO₂e) expresses the climate impact "
+                        + "of different greenhouse gases as an equivalent amount "
+                        + "of carbon dioxide."
+        );
+
+        milestoneExplanationRow.add(milestoneExplanation);
+        milestoneExplanationRow.add(co2InfoIcon);
+
+        // Stack the explanation above the existing milestone information.
+        JPanel explanationPanel = new JPanel();
+        explanationPanel.setLayout(new BoxLayout(explanationPanel, BoxLayout.Y_AXIS));
+        explanationPanel.setOpaque(false);
+
+        explanationTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        projectionExplanation.setAlignmentX(Component.LEFT_ALIGNMENT);
+        milestoneExplanation.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        explanationPanel.add(explanationTitle);
+        explanationPanel.add(Box.createVerticalStrut(8));
+
+        explanationPanel.add(projectionExplanation);
+        explanationPanel.add(Box.createVerticalStrut(6));
+
+        // Display the CO₂e tooltip beside the comparison explanation.
+        explanationPanel.add(milestoneExplanationRow);
+
         // Display the selected milestone and its emissions value.
-        JPanel heading = new JPanel(new GridLayout(2, 1, 0, 6));
-        heading.setOpaque(false);
+        // Create the milestone information on the left side of the header.
+        JPanel milestoneInfo = new JPanel();
+        milestoneInfo.setLayout(new BoxLayout(milestoneInfo, BoxLayout.Y_AXIS));
+        milestoneInfo.setOpaque(false);
+
+        JLabel milestoneTitle = new JLabel("SELECTED MILESTONE");
+        milestoneTitle.setForeground(AppTheme.TEXT_MUTED);
 
         milestoneLabel = new JLabel();
         milestoneLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
@@ -56,10 +115,16 @@ public class EmissionProjectionPanel extends JPanel {
         emissionsLabel = new JLabel();
         emissionsLabel.setForeground(AppTheme.TEXT_MUTED);
 
-        heading.add(milestoneLabel);
-        heading.add(emissionsLabel);
+        // Keep the labels aligned to the left.
+        milestoneTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        milestoneLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        emissionsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        add(heading, BorderLayout.NORTH);
+        milestoneInfo.add(milestoneTitle);
+        milestoneInfo.add(Box.createVerticalStrut(8));
+        milestoneInfo.add(milestoneLabel);
+        milestoneInfo.add(Box.createVerticalStrut(6));
+        milestoneInfo.add(emissionsLabel);
 
         // Each slider position represents one milestone, not a fixed number of grams.
         milestoneSlider = new JSlider(0, milestones.size() - 1, 0);
@@ -82,26 +147,29 @@ public class EmissionProjectionPanel extends JPanel {
         projectionScale.setPreferredSize(new Dimension(0, 360));
         projectionScale.setMaximumSize( new Dimension(Integer.MAX_VALUE, 360));
 
+        // Display the existing comparison ruler without the manual selection slider.
         scaleContainer.add(projectionScale);
-        scaleContainer.add(Box.createVerticalStrut(12));
-        scaleContainer.add(milestoneSlider);
 
         add(scaleContainer, BorderLayout.CENTER);
 
-        // Display the estimated time required to reach the selected milestone.
-        JPanel result = new JPanel(new GridLayout(2, 1, 0, 6));
-        result.setOpaque(false);
+        // Display the selected milestone beneath the explanation.
+        JPanel heading = new JPanel(new BorderLayout());
+        heading.setOpaque(false);
 
-        JLabel resultTitle = new JLabel("ESTIMATED TIME TO MILESTONE");
-        resultTitle.setForeground(AppTheme.TEXT_MUTED);
+        heading.add(milestoneInfo, BorderLayout.WEST);
 
-        timeLabel = new JLabel();
-        timeLabel.setFont(new Font("SansSerif", Font.BOLD, 26));
+        // Place the explanation above the milestone and time information.
+        JPanel upperContent = new JPanel();
+        upperContent.setLayout(new BoxLayout(upperContent, BoxLayout.Y_AXIS));
+        upperContent.setOpaque(false);
 
-        result.add(resultTitle);
-        result.add(timeLabel);
+        heading.setAlignmentX(Component.LEFT_ALIGNMENT);
+        explanationPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        add(result, BorderLayout.SOUTH);
+        // Display the explanation directly above the comparison ruler.
+        upperContent.add(explanationPanel);
+
+        add(upperContent, BorderLayout.NORTH);
 
         updateProjection();
     }
@@ -112,26 +180,14 @@ public class EmissionProjectionPanel extends JPanel {
         updateProjection();
     }
 
-    // Recalculates the projected time whenever the slider or power reading changes.
+    // Updates the selected milestone, explanation and comparison ruler.
     private void updateProjection() {
-        EmissionMilestone milestone = milestones.get(milestoneSlider.getValue());
 
-        milestoneLabel.setText(milestone.name());
-        emissionsLabel.setText( String.format("%.1f g CO₂e", milestone.emissionsGrams()) );
 
-        if (!Double.isFinite(powerWatts) || powerWatts <= 0) {
-            timeLabel.setText("Power reading unavailable");
-            // Keep the ruler updated even when power data is unavailable.
-            updateProjectionScale();
-            return;
-        }
+        // Update the explanation using the selected milestone and scan power.
+        updateExplanation();
 
-        // Calculate the projected time using the shared emissions calculator.
-        double seconds = calculator.calculateTimeToEmissions( powerWatts, milestone.emissionsGrams() );
-
-        timeLabel.setText(formatDuration(seconds));
-
-        // Refresh the ruler whenever the selected milestone or power changes.
+        // Refresh the comparison ruler and highlighted milestone.
         updateProjectionScale();
     }
 
@@ -158,10 +214,11 @@ public class EmissionProjectionPanel extends JPanel {
         setPowerWatts(selectedPower);
     }
 
-    // Receives the selected projection period from Environmental Impact.
+    // Update both the ruler and explanation when the projection period changes.
     public void setTimescale(String timescale) {
         this.timescale = timescale;
         updateProjectionScale();
+        updateExplanation();
     }
 
 
@@ -191,6 +248,73 @@ public class EmissionProjectionPanel extends JPanel {
         // Use the same calculator as the Environmental Impact section.
         double projectedGrams = calculator.calculateEmissions( powerWatts, durationSeconds );
         projectionScale.setProjectedEmissions(projectedGrams);
+    }
+
+    // Updates the explanation using the current scan power, period and milestone.
+    private void updateExplanation() {
+
+        EmissionMilestone milestone = milestones.get(milestoneSlider.getValue());
+
+        // Avoid presenting projections when no valid power reading is available.
+        if (!Double.isFinite(powerWatts) || powerWatts <= 0) {
+            projectionExplanation.setText("A valid scanned power reading is required.");
+            milestoneExplanation.setText("");
+            return;
+        }
+
+        // Match the durations used by the existing comparison ruler.
+        double durationSeconds = switch (timescale) {
+            case "Second" -> 1.0;
+            case "Hour" -> 3600.0;
+            case "Month" -> 30 * 86400.0;
+            case "Year" -> 365 * 86400.0;
+            default -> 86400.0;
+        };
+
+        // Calculate projected emissions using the shared calculator.
+        double projectedGrams = calculator.calculateEmissions(powerWatts, durationSeconds);
+
+        String period = switch (timescale) {
+            case "Second" -> "one second";
+            case "Hour" -> "one hour";
+            case "Month" -> "30 days";
+            case "Year" -> "365 days";
+            default -> "one day";
+        };
+
+        // Display projected emissions without rounding small values to zero.
+        projectionExplanation.setText(String.format(
+                "At a scanned component power of %.1f W, your PC is projected to generate %s CO₂e over %s, assuming constant power consumption.",
+                powerWatts,
+                formatEmissions(projectedGrams),
+                period
+        ));
+
+        // Explain the purpose of the comparison ruler.
+        milestoneExplanation.setText( "The scale below compares your PC's projected CO₂e emissions with everyday activities and products."
+        );
+    }
+
+    // Formats projected emissions with precision appropriate to their size.
+    private String formatEmissions(double grams) {
+
+        if (!Double.isFinite(grams) || grams < 0) {
+            return "N/A";
+        }
+
+        if (grams >= 1000) {
+            return String.format("%,.2f kg", grams / 1000.0);
+        }
+
+        if (grams >= 1) {
+            return String.format("%,.2f g", grams);
+        }
+
+        if (grams >= 0.01) {
+            return String.format("%.3f g", grams);
+        }
+
+        return String.format("%.4f g", grams);
     }
 
 

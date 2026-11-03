@@ -113,7 +113,7 @@ public class ComponentSectionUpdater {
                 componentList,
                 "RAM",
                 ramSummary,
-                "EFFICIENT",
+                "",
                 ramSpecifications,
                 "Not available",
                 ramAdditionalInfo,

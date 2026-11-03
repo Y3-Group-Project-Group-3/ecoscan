@@ -3,6 +3,10 @@ package com.example.monitortest.ui.results.sections;
 import com.example.monitortest.hardware.model.HardwareInfo;
 import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsCalculator;
 
+import com.example.monitortest.ui.loading.components.RoundedPanel;
+import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
+import org.kordamp.ikonli.swing.FontIcon;
+
 import java.util.function.Consumer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,6 +25,8 @@ import static java.awt.Component.LEFT_ALIGNMENT;
 
 public class ImpactSection {
 
+    // Labels displaying the selected power, energy consumption and emissions.
+    private JLabel powerValue, powerUnit;
     private JLabel energyValue, energyUnit, co2Value, co2Unit, footprintTitle;
     private JToggleButton[] timeButtons;
 
@@ -32,7 +38,7 @@ public class ImpactSection {
     private final CarbonEmissionsCalculator calculator = new CarbonEmissionsCalculator();
 
 
-    private String timescale = "Day";
+    private String timescale = "Hour";
 
     // Notifies the Results page when the selected projection period changes.
     private Consumer<String> timescaleListener;
@@ -41,15 +47,29 @@ public class ImpactSection {
     public JPanel createImpactSection() {
         JPanel section = column();
 
-        JPanel top = row();
+        // Build the main Scan Results heading.
+        JPanel top = new JPanel(new BorderLayout(20, 0));
+        top.setOpaque(false);
+
         JPanel titles = column();
-//        titles.add(label("ENVIRONMENTAL IMPACT", 12, Font.BOLD, GREEN));
-        titles.add(label("ENVIRONMENTAL IMPACT", Font.BOLD, FONT_LABEL_SIZE, GREEN));
-        titles.add(Box.createVerticalStrut(4));
-//        footprintTitle = label("Your daily footprint", 20, Font.BOLD, TEXT_MAIN);
-        footprintTitle = label("Your daily footprint", Font.BOLD, FONT_HEADING_SIZE, TEXT_MAIN);
-        titles.add(footprintTitle);
+        titles.setOpaque(false);
+
+        // Small category label above the main heading.
+        titles.add(label("HARDWARE ASSESSMENT", Font.BOLD, FONT_SMALL_SIZE, GREEN));
+        titles.add(Box.createVerticalStrut(6));
+
+        // Make Scan Results the main page heading.
+        titles.add(label("Scan Results", Font.BOLD, 30, TEXT_MAIN));
+        titles.add(Box.createVerticalStrut(6));
+
+        // Briefly describe the information presented on this page.
+        titles.add(label( "Your hardware power and environmental impact overview", Font.PLAIN, FONT_SMALL_SIZE, TEXT_MUTED ));
+
         top.add(titles, BorderLayout.WEST);
+
+        // Initialise the component power labels before creating the cards.
+        powerValue = label("", Font.BOLD, FONT_STAT_SIZE, TEXT_MAIN);
+        powerUnit = label("W", Font.PLAIN, FONT_LABEL_SIZE, TEXT_MUTED);
 
         // timescale buttons (second / hour / day / month / year)
         JPanel toggle = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
@@ -83,19 +103,92 @@ public class ImpactSection {
             timeButtons[i] = b;
             toggle.add(b);
         }
-        top.add(wrapBottom(toggle), BorderLayout.EAST);
-        section.add(top);
+
+        // Create a rounded inset card for the scanned power reading.
+        JPanel powerSummary = new RoundedPanel( new Color(0xF4F7FB), BORDER_COLOR,12 );
+        powerSummary.setLayout(new BorderLayout(14, 0));
+        powerSummary.setBorder(new EmptyBorder(16, 20, 16, 20));
+
+        // Create a softly coloured background for the power icon.
+        JPanel iconPanel = new JPanel(new GridBagLayout());
+        iconPanel.setBackground(new Color(0xE3F4E9));
+        iconPanel.setPreferredSize(new Dimension(48, 48));
+
+        // Use EcoScan's existing Font Awesome 6 icon library.
+        JLabel powerIcon = new JLabel( FontIcon.of(FontAwesomeSolid.BOLT, 20, GREEN) );
+        iconPanel.add(powerIcon);
+
+        // Stack the heading and wattage vertically.
+        JPanel powerDetails = new JPanel();
+        powerDetails.setLayout(new BoxLayout(powerDetails, BoxLayout.Y_AXIS));
+        powerDetails.setOpaque(false);
+
+        JLabel powerTitle = label( "SCANNED COMPONENT POWER", Font.BOLD, FONT_SMALL_SIZE, TEXT_MUTED );
+
+        // Keep the wattage and unit together.
+        JPanel powerReading = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        powerReading.setOpaque(false);
+
+        powerReading.add(powerValue);
+        powerReading.add(powerUnit);
+
+        // Align the heading and reading to the left.
+        powerTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        powerReading.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        powerDetails.add(powerTitle);
+        powerDetails.add(Box.createVerticalStrut(6));
+        powerDetails.add(powerReading);
+
+        // Assemble the inset card.
+        powerSummary.add(iconPanel, BorderLayout.WEST);
+        powerSummary.add(powerDetails, BorderLayout.CENTER);
+
+        // Keep the scanned component power on the right side of the header.
+        top.add(powerSummary, BorderLayout.EAST);
+
+        // Create a rounded header card using EcoScan's shared component.
+        JPanel headerCard = new RoundedPanel(CARD_BG, BORDER_COLOR, 16);
+        headerCard.setLayout(new BorderLayout());
+
+        // Preserve the existing internal spacing.
+        headerCard.setBorder(new EmptyBorder(24, 28, 24, 28));
+
+        headerCard.add(top, BorderLayout.CENTER);
+        headerCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        section.add(headerCard);
+
+        // Separate the header card from the projected impact section.
+        section.add(Box.createVerticalStrut(28));
+
+        // Place the projection heading and time-period selector together.
+        JPanel projectionHeader = row();
+
+        // The heading changes when the selected projection period changes.
+        footprintTitle = label( "Projected impact per day", Font.BOLD, FONT_HEADING_SIZE, TEXT_MAIN );
+
+        projectionHeader.add(footprintTitle, BorderLayout.WEST);
+
+        // Position the time-period controls beside the projection heading.
+        projectionHeader.add(toggle, BorderLayout.EAST);
+
+        section.add(projectionHeader);
         section.add(Box.createVerticalStrut(14));
+
+
 
         energyValue = label("", Font.BOLD, FONT_STAT_SIZE, TEXT_MAIN);
         energyUnit = label("", Font.PLAIN, FONT_LABEL_SIZE, TEXT_MUTED);
         co2Value = label("", Font.BOLD, FONT_STAT_SIZE, TEXT_MAIN);
         co2Unit = label("", Font.PLAIN, FONT_LABEL_SIZE, TEXT_MUTED);
 
-        // Display energy consumption and CO2 emissions side by side.
+        // Display component power, energy consumption and CO₂e side by side.
+        // Keep the two time-dependent projections side by side.
         JPanel cards = new JPanel(new GridLayout(1, 2, 16, 0));
         cards.setOpaque(false);
         cards.setAlignmentX(LEFT_ALIGNMENT);
+
         // data: energy consumption
         cards.add(statCard("⚡", new Color(0xEEF2FF), "ENERGY CONSUMPTION", energyValue, energyUnit, "Constant scan power"));
         // data: CO2 emissions (per year shown on the right)
@@ -161,6 +254,15 @@ public class ImpactSection {
         footprintTitle.setText("Projected impact per " + per);
 
         double powerWatts = getSelectedPower();
+
+        // Display the scanned power independently of the selected projection period.
+        if (Double.isFinite(powerWatts) && powerWatts >= 0) {
+            powerValue.setText(String.format("%.1f", powerWatts));
+            powerUnit.setText("W");
+        } else {
+            powerValue.setText("N/A");
+            powerUnit.setText("");
+        }
 
         if (!Double.isFinite(powerWatts) || powerWatts < 0) {
             energyValue.setText("N/A");

@@ -7,6 +7,7 @@ import com.example.monitortest.ui.loading.components.GradientProgressBar;
 import com.example.monitortest.ui.loading.components.HardwareRow;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
 
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -290,12 +291,7 @@ public class LoadingPanel extends JPanel {
         // Add a row for each hardware component.
         for (int i = 0; i < PARTS.length; i++) {
 
-            rows[i] = new HardwareRow(
-                    PARTS[i],
-                    PART_ICONS[i],
-                    i == 0,
-                    i == PARTS.length - 1
-            );
+            rows[i] = new HardwareRow( PARTS[i], PART_ICONS[i], i == 0, i == PARTS.length - 1 );
 
             hardwareCard.add(rows[i]);
         }

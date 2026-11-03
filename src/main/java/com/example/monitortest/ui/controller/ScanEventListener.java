@@ -173,7 +173,7 @@ public class ScanEventListener implements ActionListener {
                             activeLoadingPanel.setProgress(100);
 
                             // Update the results sections with the latest hardware information.
-                            HardwareInfoSection.updateHardwareInfo(info);
+//                            HardwareInfoSection.updateHardwareInfo(info);
                             ComponentSection.updateComponentSection(info);
                             resultsPanel.updateHardwareInfo(info);
 

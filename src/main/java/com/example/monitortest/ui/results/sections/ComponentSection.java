@@ -2,7 +2,9 @@ package com.example.monitortest.ui.results.sections;
 
 import com.example.monitortest.ui.results.breakdown.ComponentSectionUpdater;
 import com.example.monitortest.ui.results.breakdown.PowerSummaryPanel;
+import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.hardware.model.HardwareInfo;
+
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -47,12 +49,26 @@ public class ComponentSection {
         section.add(label("Hardware assessment", Font.BOLD, FONT_HEADING_SIZE, TEXT_MAIN));
         section.add(Box.createVerticalStrut(14));
 
-        JPanel list = new JPanel();
+        // Clip the expandable rows to the rounded container.
+        JPanel list = new RoundedPanel(CARD_BG, BORDER_COLOR, 16) {
+
+            @Override
+            protected void paintChildren(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+
+                // Prevent expanded row backgrounds from covering rounded corners.
+                g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+
+                g2.clip(new java.awt.geom.RoundRectangle2D.Double( 0, 0, getWidth(), getHeight(), 16, 16 ));
+
+                super.paintChildren(g2);
+                g2.dispose();
+            }
+        };
+
         // Keep a reference so the rows can be refreshed after scanning.
         componentList = list;
         list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
-        list.setBackground(CARD_BG);
-        list.setBorder(new LineBorder(BORDER_COLOR, 1, true));
         list.setAlignmentX(LEFT_ALIGNMENT);
 
 
@@ -63,7 +79,7 @@ public class ComponentSection {
         String cpuShareText = "Not available";
 
         JPanel cpuRow = componentRow(
-                list, "CPU", cpuName, "MEASURED", cpuName, cpuPowerText, "—", cpuShareText, false);
+                list, "CPU", cpuName, "MEASURED", cpuName, cpuPowerText, "-", cpuShareText, false);
         list.add(cpuRow);
         componentRows.put("CPU", cpuRow);
 
@@ -74,7 +90,7 @@ public class ComponentSection {
         String gpuShareText = "Not available";
 
         JPanel gpuRow = componentRow(
-                list, "GPU", gpuName, "MEASURED", gpuName, gpuPowerText, "—", gpuShareText, false
+                list, "GPU", gpuName, "MEASURED", gpuName, gpuPowerText, "-", gpuShareText, false
         );
         list.add(gpuRow);
         componentRows.put("GPU", gpuRow);
@@ -82,7 +98,14 @@ public class ComponentSection {
         /******************** RAM **********************************/
         // Create the RAM row with placeholders until a scan completes.
         JPanel ramRow = componentRow(
-                list, "RAM", "Not retrieved yet", "EFFICIENT", "Not retrieved yet", "Not available", "—", "Not available", false
+                list, "RAM",
+                "Not retrieved yet",
+                "",
+                "Not retrieved yet",
+                "Not available",
+                "-",
+                "Not available",
+                false
         );
         list.add(ramRow);
         componentRows.put("RAM", ramRow);
@@ -90,7 +113,15 @@ public class ComponentSection {
         /******************** Storage **********************************/
         // Create storage row with placeholders until a scan completes
         JPanel storageRow = componentRow(
-                list, "Storage", "Not retrieved yet", "ESTIMATED", "Not retrieved yet", "Not measured", "—", "—", false
+                list,
+                "Storage",
+                "Not retrieved yet",
+                "ESTIMATED",
+                "Not retrieved yet",
+                "Not measured",
+                "=",
+                "-",
+                false
         );
         list.add(storageRow);
         componentRows.put("Storage", storageRow);
