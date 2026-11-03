@@ -167,8 +167,10 @@ public class CreateWindow {
 
         monitoringRef[0] = monitoringService;
 
-        // Create the scan button listener
-        ScanEventListener scanEventListener = new ScanEventListener( frame, cardLayout, mainPanel, hardwareInfoService );
+        // Provide the navigation bar so scanning can temporarily lock navigation.
+        ScanEventListener scanEventListener = new ScanEventListener(
+                frame, cardLayout, mainPanel, hardwareInfoService, navBar
+        );
 
         // Connect the Home page Scan Computer button
         homePanel.getScanButton().addActionListener(scanEventListener);

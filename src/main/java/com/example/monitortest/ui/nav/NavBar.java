@@ -126,6 +126,8 @@ public class NavBar extends JPanel {
         add(bottom, BorderLayout.SOUTH);
 
         setActivePage("home");
+        // Results should remain hidden until a successful scan.
+        setResultsVisible(false);
     }
 
     public void setActivePage(String page) {
@@ -134,6 +136,27 @@ public class NavBar extends JPanel {
         historyNav.setActive("history".equals(page));
         liveMonitorNav.setActive("liveMonitor".equals(page));
     }
+
+    // Shows or hides the Results navigation button.
+    public void setResultsVisible(boolean visible) {
+        resultsNav.setVisible(visible);
+
+        // Refresh the sidebar layout after changing visibility.
+        revalidate();
+        repaint();
+    }
+
+
+    // Enables or disables all navigation buttons during hardware scanning.
+    public void setNavigationEnabled(boolean enabled) {
+
+        // Update the enabled state of each navigation button.
+        homeNav.setEnabled(enabled);
+        resultsNav.setEnabled(enabled);
+        historyNav.setEnabled(enabled);
+        liveMonitorNav.setEnabled(enabled);
+    }
+
 
     // Horizontal divider
     static class Divider extends JComponent {
@@ -188,6 +211,20 @@ public class NavBar extends JPanel {
         private boolean active;
         private boolean hover;
 
+        // prevent the hand pointer from suggesting that disabled buttons are clickable.
+        @Override
+        public void setEnabled(boolean enabled) {
+            super.setEnabled(enabled);
+            // Show a normal cursor while navigation is disabled.
+            setCursor(Cursor.getPredefinedCursor( enabled ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR ));
+            // Remove any previous hover state when disabling the button.
+            if (!enabled) {
+                hover = false;
+            }
+            repaint();
+        }
+
+
         NavButton(String text, String iconName) {
             super(text);
 
@@ -224,6 +261,8 @@ public class NavBar extends JPanel {
                     repaint();
                 }
             });
+
+
         }
 
         void setActive(boolean active) {
@@ -240,32 +279,22 @@ public class NavBar extends JPanel {
             repaint();
         }
 
+
+
         @Override
         protected void paintComponent(Graphics g) {
 
             Graphics2D g2 = smooth(g);
 
-            if (active || hover || isFocusOwner()) {
-                g2.setColor(
-                        active ? SIDEBAR_SELECTED : SIDEBAR_HOVER
-                );
-
-                g2.fill(new RoundRectangle2D.Float(
-                        10, 1,
-                        getWidth() - 20,
-                        getHeight() - 2,
-                        16, 16
-                ));
+            // Only display hover and focus highlights when navigation is enabled.
+            if (active || (isEnabled() && (hover || isFocusOwner()))) {
+                g2.setColor( active ? SIDEBAR_SELECTED : SIDEBAR_HOVER );
+                g2.fill(new RoundRectangle2D.Float( 10, 1, getWidth() - 20, getHeight() - 2, 16, 16 ));
             }
 
             if (active) {
                 g2.setColor(GREEN);
-
-                g2.fill(new RoundRectangle2D.Float(
-                        -3, 6,
-                        6, getHeight() - 12,
-                        4, 4
-                ));
+                g2.fill(new RoundRectangle2D.Float( -3, 6, 6, getHeight() - 12, 4, 4 ));
             }
 
             g2.dispose();

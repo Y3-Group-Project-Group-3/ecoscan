@@ -4,8 +4,10 @@ import com.example.monitortest.hardware.detection.ScanHardware;
 import com.example.monitortest.hardware.model.HardwareInfo;
 import com.example.monitortest.ui.results.sections.ComponentSection;
 import com.example.monitortest.ui.results.sections.HardwareInfoSection;
+import com.example.monitortest.ui.nav.NavBar;
 // Hook in loading page
 import com.example.monitortest.ui.loading.LoadingPanel;
+
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,6 +34,8 @@ public class ScanEventListener implements ActionListener {
     private volatile boolean scanRunning = false;
     // Prevents new hardware scans once application shutdown begins.
     private volatile boolean shuttingDown = false;
+    // Controls navigation availability while hardware scanning is active.
+    private final NavBar navBar;
 
     /**
      * Creates the event listener responsible for coordinating hardware scans and updating the application interface.
@@ -40,12 +44,14 @@ public class ScanEventListener implements ActionListener {
             JFrame frame,
             CardLayout cardLayout,
             JPanel mainPanel,
-            ScanHardware hardwareInfoService) {
+            ScanHardware hardwareInfoService,
+            NavBar navBar) {
 
         this.frame = frame;
         this.cardLayout = cardLayout;
         this.mainPanel = mainPanel;
         this.hardwareInfoService = hardwareInfoService;
+        this.navBar = navBar;
     }
 
     // Reports whether a hardware scan is currently active.
@@ -168,9 +174,16 @@ public class ScanEventListener implements ActionListener {
                             // Keep the completed loading page visible for two seconds.
                             Timer transitionTimer = new Timer(2000, e -> {
 
-                                // Re-enable scanning and display the results page.
-                                refreshButton.setEnabled(true);
+                                // Make Results available after a successful scan.
+                                navBar.setResultsVisible(true);
+
+                                // Display the completed hardware scan results.
                                 cardLayout.show(mainPanel, "results");
+                                navBar.setActivePage("results");
+
+                                // Restore scanning and navigation after the loading transition.
+                                refreshButton.setEnabled(true);
+                                navBar.setNavigationEnabled(true);
                             });
 
                             // Ensure the transition happens only once.
@@ -186,16 +199,22 @@ public class ScanEventListener implements ActionListener {
                                     frame, "Failed to retrieve hardware information.", "Hardware Scan Error", JOptionPane.ERROR_MESSAGE
                             );
 
-                            // Allow the user to initiate another scan.
-                            refreshButton.setEnabled(true);
-                            // Return to the Home page so the user can retry the scan.
+                            // On Failure
+                            // Return to the Home page without displaying outdated scan results.
                             cardLayout.show(mainPanel, "home");
+                            navBar.setActivePage("home");
+
+                            // Restore scanning and navigation after a failed scan.
+                            refreshButton.setEnabled(true);
+                            navBar.setNavigationEnabled(true);
                         }
                     }
 
                 };
-        // Mark the scan as active before starting the background worker.
+        // Mark the scan as active and prevent navigation during scanning.
         scanRunning = true;
+        navBar.setNavigationEnabled(false);
+
         worker.execute();
     }
 
