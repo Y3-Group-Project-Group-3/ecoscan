@@ -56,7 +56,7 @@ public class PowerSummaryPanel extends JPanel {
 
         // Create the total power display.
         totalPowerLabel = new JLabel( "Total Measured Power: Not retrieved yet" );
-        totalPowerLabel.setFont( totalPowerLabel.getFont().deriveFont(Font.BOLD, AppTheme.FONT_CARD_TITLE));
+        totalPowerLabel.setFont( totalPowerLabel.getFont().deriveFont(Font.BOLD, AppTheme.FONT_CARD_TITLE_SIZE));
 
         // Update the summary when the selected mode changes.
         measuredOnlyButton.addActionListener(e -> {

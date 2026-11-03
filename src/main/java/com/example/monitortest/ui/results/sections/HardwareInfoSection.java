@@ -46,16 +46,16 @@ public class HardwareInfoSection {
 
         JPanel section = column();
 
-        section.add(label( "DETECTED HARDWARE", Font.BOLD, AppTheme.FONT_LABEL, GREEN ));
+        section.add(label( "DETECTED HARDWARE", Font.BOLD, AppTheme.FONT_LABEL_SIZE, GREEN ));
 
         section.add(Box.createVerticalStrut(14));
 
         JPanel hardwareCard = card();
         hardwareCard.setLayout(new BoxLayout(hardwareCard, BoxLayout.Y_AXIS));
 
-        cpuLabel = label("CPU: Not retrieved yet", Font.PLAIN, AppTheme.FONT_BODY, TEXT_MAIN);
-        memoryLabel = label("Memory: Not retrieved yet", Font.PLAIN, AppTheme.FONT_BODY, TEXT_MAIN);
-        cpuPowerLabel = label("CPU Power: Not retrieved yet", Font.PLAIN, AppTheme.FONT_BODY, TEXT_MAIN);
+        cpuLabel = label("CPU: Not retrieved yet", Font.PLAIN, AppTheme.FONT_BODY_SIZE, TEXT_MAIN);
+        memoryLabel = label("Memory: Not retrieved yet", Font.PLAIN, AppTheme.FONT_BODY_SIZE, TEXT_MAIN);
+        cpuPowerLabel = label("CPU Power: Not retrieved yet", Font.PLAIN, AppTheme.FONT_BODY_SIZE, TEXT_MAIN);
         cpuTemperatureLabel = new JLabel("CPU Temperature: Not retrieved yet");
 
         // Initialise GPU labels before a hardware scan.

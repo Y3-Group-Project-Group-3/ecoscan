@@ -41,9 +41,9 @@ public class ComponentSection {
     // Build the component breakdown using the supplied scan results.
     public static JPanel createComponentSection(HardwareInfo info) {
         JPanel section = column();
-        section.add(label("COMPONENT BREAKDOWN", Font.BOLD, FONT_LABEL, GREEN));
+        section.add(label("COMPONENT BREAKDOWN", Font.BOLD, FONT_LABEL_SIZE, GREEN));
         section.add(Box.createVerticalStrut(4));
-        section.add(label("Hardware assessment", Font.BOLD, FONT_HEADING, TEXT_MAIN));
+        section.add(label("Hardware assessment", Font.BOLD, FONT_HEADING_SIZE, TEXT_MAIN));
         section.add(Box.createVerticalStrut(14));
 
         JPanel list = new JPanel();

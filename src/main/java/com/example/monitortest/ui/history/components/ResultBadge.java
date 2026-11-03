@@ -31,7 +31,7 @@ public class ResultBadge {
 
         badge.setOpaque(false);
         badge.setPreferredSize(new Dimension(90, 26));   // sized to fit FONT_BADGE
-        badge.setFont(UIUtility.font("SansSerif", Font.BOLD, AppTheme.FONT_BADGE));
+        badge.setFont(UIUtility.font("SansSerif", Font.BOLD, AppTheme.FONT_BADGE_SIZE));
 
         switch (text.toUpperCase()) {
             case "KEEP":

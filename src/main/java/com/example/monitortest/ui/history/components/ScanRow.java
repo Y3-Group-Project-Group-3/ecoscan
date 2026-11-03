@@ -25,7 +25,7 @@ public class ScanRow extends JPanel {
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(8, 15, 8, 15));
 
-        Font font = UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL);
+        Font font = UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE);
 
         add(createCell(date, font));
         add(createCell(device, font));

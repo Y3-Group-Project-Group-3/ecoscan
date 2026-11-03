@@ -42,17 +42,17 @@ public class AppTheme {
     // Sizes are set for readability: body text is 15 and nothing is smaller than 12,
     // so EcoScan stays usable for people with weaker eyesight.
     // To make text bigger or smaller everywhere, change the number here instead of in each panel.
-    public static final float FONT_DISPLAY     = 44f; // the large recommendation word (e.g. "KEEP")
-    public static final float FONT_SCORE       = 36f; // the number inside the eco score ring
-    public static final float FONT_TITLE       = 30f; // page titles (Home, Loading, Results, History)
-    public static final float FONT_STAT        = 28f; // large figures in the impact cards
-    public static final float FONT_HEADING     = 22f; // section headings and the loading percentage
-    public static final float FONT_SUBHEADING  = 18f; // app name in the navigation bar
-    public static final float FONT_CARD_TITLE  = 16f; // component names and card totals
-    public static final float FONT_BODY        = 15f; // normal text, buttons and navigation items
-    public static final float FONT_LABEL       = 14f; // section labels, units and small controls
-    public static final float FONT_SMALL       = 13f; // captions, hints and secondary details
-    public static final float FONT_BADGE       = 12f; // badges and the smallest labels
+    public static final float FONT_DISPLAY_SIZE     = 44f; // the large recommendation word (e.g. "KEEP")
+    public static final float FONT_SCORE_SIZE       = 36f; // the number inside the eco score ring
+    public static final float FONT_TITLE_SIZE       = 30f; // page titles (Home, Loading, Results, History)
+    public static final float FONT_STAT_SIZE        = 28f; // large figures in the impact cards
+    public static final float FONT_HEADING_SIZE     = 22f; // section headings and the loading percentage
+    public static final float FONT_SUBHEADING_SIZE  = 18f; // app name in the navigation bar
+    public static final float FONT_CARD_TITLE_SIZE = 16f; // component names and card totals
+    public static final float FONT_BODY_SIZE = 15f; // normal text, buttons and navigation items
+    public static final float FONT_LABEL_SIZE = 14f; // section labels, units and small controls
+    public static final float FONT_SMALL_SIZE = 13f; // captions, hints and secondary details
+    public static final float FONT_BADGE_SIZE = 12f; // badges and the smallest labels
 
 
 

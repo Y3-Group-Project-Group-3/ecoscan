@@ -31,12 +31,12 @@ public class ComparisonSection {
 
         // Heading and description
         JPanel heading = column();
-        heading.add(label( "COMPARISON", Font.BOLD, FONT_LABEL, GREEN ));
+        heading.add(label( "COMPARISON", Font.BOLD, FONT_LABEL_SIZE, GREEN ));
         heading.add(Box.createVerticalStrut(4));
         heading.add(label(
                 "<html>Better than <span style='color:#2E7D4F'>68%</span> of similar Home PCs.</html>",
                 Font.BOLD,
-                FONT_HEADING,
+                FONT_HEADING_SIZE,
                 TEXT_MAIN
         ));
 
@@ -72,8 +72,8 @@ public class ComparisonSection {
 
         labels.setOpaque(false);
         labels.setPreferredSize(new Dimension(170, 22));   // sized to fit FONT_BODY
-        labels.add(label( name, thisPc ? Font.BOLD : Font.PLAIN, FONT_BODY, thisPc ? TEXT_MAIN : TEXT_MUTED ));
-        labels.add(label( String.valueOf(score), Font.BOLD, FONT_BODY, thisPc ? GREEN : TEXT_MUTED ));
+        labels.add(label( name, thisPc ? Font.BOLD : Font.PLAIN, FONT_BODY_SIZE, thisPc ? TEXT_MAIN : TEXT_MUTED ));
+        labels.add(label( String.valueOf(score), Font.BOLD, FONT_BODY_SIZE, thisPc ? GREEN : TEXT_MUTED ));
         line.add(labels, BorderLayout.WEST);
         line.add( new ComparisonBar( score, thisPc ? GREEN : GREY_BAR), BorderLayout.CENTER);
         return line;

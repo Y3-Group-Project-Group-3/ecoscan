@@ -75,7 +75,7 @@ public class HistoryHeaderSection extends JPanel {
         JLabel title = label(
                 "Previous Scans",
                 Font.BOLD,
-                FONT_TITLE,
+                FONT_TITLE_SIZE,
                 TEXT_MAIN
         );
 
