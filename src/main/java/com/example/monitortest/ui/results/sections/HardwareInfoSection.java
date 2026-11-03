@@ -1,5 +1,6 @@
 package com.example.monitortest.ui.results.sections;
 
+import com.example.monitortest.ui.theme.AppTheme;
 import com.example.monitortest.hardware.model.HardwareInfo;
 import com.example.monitortest.hardware.model.MemoryModule;
 import com.example.monitortest.hardware.model.StorageDevice;
@@ -45,16 +46,16 @@ public class HardwareInfoSection {
 
         JPanel section = column();
 
-        section.add(label( "DETECTED HARDWARE", Font.BOLD, 12, GREEN ));
+        section.add(label( "DETECTED HARDWARE", Font.BOLD, AppTheme.FONT_LABEL, GREEN ));
 
         section.add(Box.createVerticalStrut(14));
 
         JPanel hardwareCard = card();
         hardwareCard.setLayout(new BoxLayout(hardwareCard, BoxLayout.Y_AXIS));
 
-        cpuLabel = label("CPU: Not retrieved yet", Font.PLAIN, 13, TEXT_MAIN);
-        memoryLabel = label("Memory: Not retrieved yet", Font.PLAIN, 13, TEXT_MAIN);
-        cpuPowerLabel = label("CPU Power: Not retrieved yet", Font.PLAIN, 13, TEXT_MAIN);
+        cpuLabel = label("CPU: Not retrieved yet", Font.PLAIN, AppTheme.FONT_BODY, TEXT_MAIN);
+        memoryLabel = label("Memory: Not retrieved yet", Font.PLAIN, AppTheme.FONT_BODY, TEXT_MAIN);
+        cpuPowerLabel = label("CPU Power: Not retrieved yet", Font.PLAIN, AppTheme.FONT_BODY, TEXT_MAIN);
         cpuTemperatureLabel = new JLabel("CPU Temperature: Not retrieved yet");
 
         // Initialise GPU labels before a hardware scan.

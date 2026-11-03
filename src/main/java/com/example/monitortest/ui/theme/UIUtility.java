@@ -18,6 +18,11 @@ public final class UIUtility {
         return new Font(AppTheme.FONT_FAMILY, style, 12).deriveFont(style, size);
     }
 
+    /** Returns a font from a specific family (e.g. "SansSerif") in the given style and size. */
+    public static Font font(String family, int style, float size) {
+        return new Font(family, style, 12).deriveFont(style, size);
+    }
+
 
 //    smooth()
     /** Copy of the Graphics with smooth (anti-aliased) shapes and text. Remember to dispose() it. */
@@ -140,7 +145,7 @@ public final class UIUtility {
     // History Panel
     public static JButton createPillButton(String text) {
         JButton btn = new JButton(text);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 12));
+        btn.setFont(font("SansSerif", Font.BOLD, FONT_LABEL));
         btn.setForeground(TEXT_MAIN);
         btn.setBackground(Color.WHITE);
         btn.setFocusPainted(false);

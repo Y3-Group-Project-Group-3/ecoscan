@@ -19,7 +19,7 @@ public class UsageCard extends JToggleButton {
         this.title = title;
         this.subtitle = subtitle;
         this.icon = new LineIcon(iconName, 16, new Color(0x334155)).withStroke(1.8f);
-        setPreferredSize(new Dimension(148, 96));
+        setPreferredSize(new Dimension(172, 104));   // sized to fit the larger card text
         setContentAreaFilled(false);
         setBorderPainted(false);
         setFocusPainted(false);
@@ -56,8 +56,8 @@ public class UsageCard extends JToggleButton {
         icon.paintIcon(this, g2, boxX + 8, boxY + 8);
 
         // Title and subtitle, centred
-        drawCentred(g2, title, UIUtility.font(Font.BOLD, 12.5f), AppTheme.TEXT_MAIN, 64);
-        drawCentred(g2, subtitle, UIUtility.font(Font.PLAIN, 9.5f), new Color(0x8A96A8), 80);
+        drawCentred(g2, title, UIUtility.font(Font.BOLD, AppTheme.FONT_BODY), AppTheme.TEXT_MAIN, 68);
+        drawCentred(g2, subtitle, UIUtility.font(Font.PLAIN, AppTheme.FONT_BADGE), new Color(0x8A96A8), 88);
 
         // Green tick badge in the top-right corner
         if (selected) {

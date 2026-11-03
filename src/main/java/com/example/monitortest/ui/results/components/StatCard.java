@@ -1,5 +1,6 @@
 package com.example.monitortest.ui.results.components;
 
+import com.example.monitortest.ui.theme.AppTheme;
 import javax.swing.*;
 import java.awt.*;
 
@@ -23,8 +24,8 @@ public class StatCard {
 
         JPanel text = column();
         JPanel top = row();
-        top.add(label(title, Font.BOLD, 10, TEXT_MUTED), BorderLayout.WEST);
-        top.add(label(sideText, Font.PLAIN, 11, TEXT_MUTED), BorderLayout.EAST);
+        top.add(label(title, Font.BOLD, AppTheme.FONT_BADGE, TEXT_MUTED), BorderLayout.WEST);
+        top.add(label(sideText, Font.PLAIN, AppTheme.FONT_SMALL, TEXT_MUTED), BorderLayout.EAST);
         text.add(top);
         text.add(Box.createVerticalStrut(6));
         JPanel valueLine = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));

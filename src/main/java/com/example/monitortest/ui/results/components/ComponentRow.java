@@ -61,16 +61,16 @@ public class ComponentRow {
         left.setOpaque(false);
 
 //        JLabel nameLabel = label(name, 14, Font.BOLD, TEXT_MAIN);
-        JLabel nameLabel = label(name, Font.BOLD, 14, TEXT_MAIN);
+        JLabel nameLabel = label(name, Font.BOLD, FONT_CARD_TITLE, TEXT_MAIN);
 
-        nameLabel.setPreferredSize(new Dimension(200, 20));
+        nameLabel.setPreferredSize(new Dimension(220, 24));   // sized to fit FONT_CARD_TITLE
         left.add(nameLabel);
 //        left.add(label(summary, 13, Font.PLAIN, TEXT_MUTED));
-        left.add(label(summary, Font.PLAIN, 13, TEXT_MUTED));
+        left.add(label(summary, Font.PLAIN, FONT_BODY, TEXT_MUTED));
         header.add(left, BorderLayout.WEST);
 
 //        JLabel arrow = label(openAtStart ? "⌃" : "⌄", 14, Font.PLAIN, TEXT_MUTED);
-        JLabel arrow = label(openAtStart ? "⌃" : "⌄", Font.PLAIN, 14, TEXT_MUTED);
+        JLabel arrow = label(openAtStart ? "⌃" : "⌄", Font.PLAIN, FONT_CARD_TITLE, TEXT_MUTED);
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         right.setOpaque(false);
         right.add(StatusBadge.badge(status));
@@ -85,17 +85,17 @@ public class ComponentRow {
 
 
         // Display hardware specifications and power measurements.
-        details.add(label("Detected specifications", Font.PLAIN, 11, TEXT_MUTED));
-        details.add(label("Power at scan", Font.PLAIN, 11, TEXT_MUTED));
-        details.add(label("Additional information", Font.PLAIN, 11, TEXT_MUTED));
+        details.add(label("Detected specifications", Font.PLAIN, FONT_SMALL, TEXT_MUTED));
+        details.add(label("Power at scan", Font.PLAIN, FONT_SMALL, TEXT_MUTED));
+        details.add(label("Additional information", Font.PLAIN, FONT_SMALL, TEXT_MUTED));
         // Covers both measured power shares and estimated power contributions.
-        details.add(label("Power contribution", Font.PLAIN, 11, TEXT_MUTED));
+        details.add(label("Power contribution", Font.PLAIN, FONT_SMALL, TEXT_MUTED));
 
 
-        details.add(label(spec, Font.BOLD, 13, TEXT_MAIN));
-        details.add(label(impact, Font.BOLD, 13, TEXT_MAIN)); // data: power use (W) of this part
-        details.add(label(age, Font.BOLD, 13, TEXT_MAIN));
-        details.add(label(assessment, Font.BOLD, 13, TEXT_MAIN));
+        details.add(label(spec, Font.BOLD, FONT_BODY, TEXT_MAIN));
+        details.add(label(impact, Font.BOLD, FONT_BODY, TEXT_MAIN)); // data: power use (W) of this part
+        details.add(label(age, Font.BOLD, FONT_BODY, TEXT_MAIN));
+        details.add(label(assessment, Font.BOLD, FONT_BODY, TEXT_MAIN));
 
 
         // Group the standard specifications and optional extra details together.

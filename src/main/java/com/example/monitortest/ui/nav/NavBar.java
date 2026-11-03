@@ -39,11 +39,11 @@ public class NavBar extends JPanel {
         logoText.setOpaque(false);
 
         JLabel appTitle = new JLabel("EcoScan");
-        appTitle.setFont(font(Font.BOLD, 16));
+        appTitle.setFont(font(Font.BOLD, FONT_SUBHEADING));
         appTitle.setForeground(TEXT_MAIN);
 
         JLabel appSub = new JLabel("APPLICATION");
-        appSub.setFont(font(Font.PLAIN, 8));
+        appSub.setFont(font(Font.PLAIN, FONT_BADGE));
         appSub.setForeground(new Color(0x8A96A8));
 
         logoText.add(appTitle);
@@ -109,7 +109,7 @@ public class NavBar extends JPanel {
         );
 
         version.setIconTextGap(8);
-        version.setFont(font(Font.PLAIN, 10.5f));
+        version.setFont(font(Font.PLAIN, FONT_SMALL));
         version.setForeground(TEXT_FAINT);
         version.setBorder(new EmptyBorder(12, 16, 14, 16));
         version.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -197,7 +197,7 @@ public class NavBar extends JPanel {
             setIconTextGap(12);
             setHorizontalAlignment(SwingConstants.LEFT);
             setBorder(new EmptyBorder(0, 22, 0, 22));
-            setFont(font(Font.PLAIN, 12.5f));
+            setFont(font(Font.PLAIN, FONT_BODY));
             setForeground(TEXT_BODY);
 
             setContentAreaFilled(false);
@@ -231,7 +231,7 @@ public class NavBar extends JPanel {
 
             setFont(font(
                     active ? Font.BOLD : Font.PLAIN,
-                    12.5f
+                    FONT_BODY
             ));
 
             setForeground(active ? TEXT_MAIN : TEXT_BODY);

@@ -35,12 +35,12 @@ public class HardwareRow extends JPanel {
         this.last = last;
         setOpaque(false);
         setBorder(new EmptyBorder(8, 14, 8, 14));
-        setPreferredSize(new Dimension(400, 46));
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
+        setPreferredSize(new Dimension(400, 52));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 52));
 
         iconBox = new IconBox(new LineIcon(iconName, 16, TEXT_BODY).withStroke(1.8f));
         JLabel nameLabel = new JLabel(name);
-        nameLabel.setFont(font(Font.BOLD, 12));
+        nameLabel.setFont(font(Font.BOLD, FONT_LABEL));
         nameLabel.setForeground(new Color(0x1E293B));
         Box left = Box.createHorizontalBox();
         left.add(iconBox);
@@ -97,7 +97,7 @@ public class HardwareRow extends JPanel {
 
     private static JLabel statusLabel(String text, Color color) {
         JLabel l = new JLabel(text);
-        l.setFont(font(Font.BOLD, 9.5f));
+        l.setFont(font(Font.BOLD, FONT_BADGE));
         l.setForeground(color);
         return l;
     }

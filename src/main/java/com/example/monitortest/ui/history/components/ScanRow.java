@@ -1,5 +1,6 @@
 package com.example.monitortest.ui.history.components;
 
+import com.example.monitortest.ui.theme.UIUtility;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -19,12 +20,12 @@ public class ScanRow extends JPanel {
             String result
     ) {
         setLayout(new GridLayout(1, 7, 10, 0));
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-        setPreferredSize(new Dimension(700, 45));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        setPreferredSize(new Dimension(700, 50));
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(8, 15, 8, 15));
 
-        Font font = new Font("SansSerif", Font.PLAIN, 12);
+        Font font = UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL);
 
         add(createCell(date, font));
         add(createCell(device, font));
@@ -45,7 +46,7 @@ public class ScanRow extends JPanel {
         buttonPanel.setOpaque(false);
 
         viewButton = new JButton("View");
-        viewButton.setPreferredSize(new Dimension(55, 24));
+        viewButton.setPreferredSize(new Dimension(70, 30));
         buttonPanel.add(viewButton);
 
         add(buttonPanel);

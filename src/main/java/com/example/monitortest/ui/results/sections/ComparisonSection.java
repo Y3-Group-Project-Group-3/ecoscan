@@ -31,12 +31,12 @@ public class ComparisonSection {
 
         // Heading and description
         JPanel heading = column();
-        heading.add(label( "COMPARISON", Font.BOLD, 12, GREEN ));
+        heading.add(label( "COMPARISON", Font.BOLD, FONT_LABEL, GREEN ));
         heading.add(Box.createVerticalStrut(4));
         heading.add(label(
                 "<html>Better than <span style='color:#2E7D4F'>68%</span> of similar Home PCs.</html>",
                 Font.BOLD,
-                20,
+                FONT_HEADING,
                 TEXT_MAIN
         ));
 
@@ -58,6 +58,9 @@ public class ComparisonSection {
 
         section.add(box, BorderLayout.CENTER);
 
+        // Cap the height at what the content needs, so larger fonts are never cut off
+        section.setMaximumSize(new Dimension(Integer.MAX_VALUE, section.getPreferredSize().height));
+
         return section;
     }
 
@@ -68,9 +71,9 @@ public class ComparisonSection {
         JPanel labels = new JPanel(new GridLayout(1, 2));
 
         labels.setOpaque(false);
-        labels.setPreferredSize(new Dimension(140, 18));
-        labels.add(label( name, thisPc ? Font.BOLD : Font.PLAIN, 13, thisPc ? TEXT_MAIN : TEXT_MUTED ));
-        labels.add(label( String.valueOf(score), Font.BOLD, 13, thisPc ? GREEN : TEXT_MUTED ));
+        labels.setPreferredSize(new Dimension(170, 22));   // sized to fit FONT_BODY
+        labels.add(label( name, thisPc ? Font.BOLD : Font.PLAIN, FONT_BODY, thisPc ? TEXT_MAIN : TEXT_MUTED ));
+        labels.add(label( String.valueOf(score), Font.BOLD, FONT_BODY, thisPc ? GREEN : TEXT_MUTED ));
         line.add(labels, BorderLayout.WEST);
         line.add( new ComparisonBar( score, thisPc ? GREEN : GREY_BAR), BorderLayout.CENTER);
         return line;
