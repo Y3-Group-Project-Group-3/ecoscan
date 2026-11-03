@@ -1,0 +1,22 @@
+
+{
+  "profiles": [
+    {
+      "cpuName": "Apple M3",
+      "cpuPower": 12.0,
+      "gpuPower": 5.0,
+      "gpuTemperature": 42.0
+    },
+    {
+      "cpuName": "Apple M2",
+      "cpuPower": 10.0,
+      "gpuPower": 4.0,
+      "gpuTemperature": 40.0
+    }
+  ],
+  "default": {
+    "cpuPower": 15.0,
+    "gpuPower": 6.0,
+    "gpuTemperature": 45.0
+  }
+}
