@@ -4,6 +4,7 @@ import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsCalc
 import com.example.monitortest.hardware.model.HardwareInfo;
 
 import com.example.monitortest.ui.loading.components.RoundedPanel;
+import com.example.monitortest.ui.results.components.projection.EmissionProjectionScale;
 import com.example.monitortest.ui.theme.AppTheme;
 import com.example.monitortest.ui.common.InfoIcon;
 
