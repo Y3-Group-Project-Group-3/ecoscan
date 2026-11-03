@@ -31,7 +31,7 @@ public class CpuWorkload {
     private static final int TEST_UNITS = 5000;
     private static final int WARMUP_UNITS = 1000;
     private static final int RUNS =5; // Increased number of runs for better accuracy
-    //private static final int RUNS = 3; 
+    //private static final int RUNS = 3;
 
 
     public CpuTestResult run() throws Exception {
