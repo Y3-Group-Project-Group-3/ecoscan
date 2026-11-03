@@ -62,8 +62,8 @@ public class HistoryListSection extends JPanel {
 
         for (ScanRecord scan : scans) {
             listItemsPanel.add(new ScanRow(
-                    scan.getDate(), scan.getDevice(), scan.getUse(),
-                    scan.getScore(), scan.getCo2(), scan.getResult()
+                    scan.getDate(), scan.getDevice(),
+                    scan.getType(), scan.getCo2()
             ));
         }
 
@@ -72,13 +72,12 @@ public class HistoryListSection extends JPanel {
 
     public JPanel createListHeaderRow() {
 
-        JPanel header = new JPanel(new GridLayout(1, 7, 10, 0));
+        JPanel header = new JPanel(new GridLayout(1, 5, 10, 0));
         header.setBackground(new Color(243, 244, 246));
         header.setBorder(new EmptyBorder(12, 15, 12, 15));
 
         String[] titles = {
-                "DATE", "DEVICE", "USE",
-                "SCORE", "CO₂", "RESULT", ""
+                "DATE", "DEVICE", "TYPE", "CO₂", ""
         };
 
         for (String title : titles) {

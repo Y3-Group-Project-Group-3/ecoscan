@@ -11,7 +11,7 @@ public class ScanHistory {
 
     // data/scan_history.csv in the project folder
     private static final Path FILE = Paths.get("data", "scan_history.csv");
-    private static final String HEADER = "date,device,use,score,co2,result";
+    private static final String HEADER = "date,device,type,co2";
 
     // Reads the app's own history file
     public List<ScanRecord> getScans() {
@@ -35,10 +35,10 @@ public class ScanHistory {
             for (int i = 1; i < lines.size(); i++) {
                 String[] values = lines.get(i).split(",");
 
-                if (values.length == 6) {
+                if (values.length == 4) {
                     scans.add(new ScanRecord(
                             values[0], values[1], values[2],
-                            values[3], values[4], values[5]
+                            values[3]
                     ));
                 }
             }

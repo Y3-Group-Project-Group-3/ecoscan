@@ -14,18 +14,18 @@ public class ScanRow extends JPanel {
 
     private final ScanRecord scan;
 
+    private boolean selected = false;
+
     public ScanRow(
             String date,
             String device,
-            String use,
-            String score,
-            String co2,
-            String result
+            String type,
+            String co2
     ) {
 
-        scan = new ScanRecord(date, device, use, score, co2, result);
+        scan = new ScanRecord(date, device, type, co2);
 
-        setLayout(new GridLayout(1, 7, 10, 0));
+        setLayout(new GridLayout(1, 5, 10, 0));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
         setPreferredSize(new Dimension(700, 50));
         setBackground(Color.WHITE);
@@ -35,16 +35,8 @@ public class ScanRow extends JPanel {
 
         add(createCell(date, font));
         add(createCell(device, font));
-        add(createCell(use, font));
-        add(createCell(score, font));
+        add(createCell(type, font));
         add(createCell(co2, font));
-
-        JPanel resultPanel = new JPanel(
-                new FlowLayout(FlowLayout.LEFT, 0, 0)
-        );
-        resultPanel.setOpaque(false);
-        resultPanel.add(ResultBadge.createBadge(result));
-        add(resultPanel);
 
         JPanel buttonPanel = new JPanel(
                 new FlowLayout(FlowLayout.LEFT, 0, 0)
@@ -71,4 +63,11 @@ public class ScanRow extends JPanel {
 
     public ScanRecord getScan() {return scan;}
 
+    // selected row?
+    public boolean isSelected() {return selected;}
+
+    // Selected row turns light green
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+        setBackground(selected ? new Color(0xEAF5EE) : Color.WHITE);}
 }
