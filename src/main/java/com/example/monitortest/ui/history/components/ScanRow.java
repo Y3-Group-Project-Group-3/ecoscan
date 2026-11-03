@@ -1,6 +1,7 @@
 package com.example.monitortest.ui.history.components;
 
 import com.example.monitortest.ui.theme.UIUtility;
+import com.example.monitortest.model.ScanRecord;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -11,6 +12,8 @@ public class ScanRow extends JPanel {
 
     private JButton viewButton;
 
+    private final ScanRecord scan;
+
     public ScanRow(
             String date,
             String device,
@@ -19,6 +22,9 @@ public class ScanRow extends JPanel {
             String co2,
             String result
     ) {
+
+        scan = new ScanRecord(date, device, use, score, co2, result);
+
         setLayout(new GridLayout(1, 7, 10, 0));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
         setPreferredSize(new Dimension(700, 50));
@@ -62,4 +68,7 @@ public class ScanRow extends JPanel {
     public JButton getViewButton() {
         return viewButton;
     }
+
+    public ScanRecord getScan() {return scan;}
+
 }
