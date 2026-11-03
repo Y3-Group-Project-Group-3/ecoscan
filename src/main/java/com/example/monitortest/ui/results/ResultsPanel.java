@@ -3,16 +3,32 @@ package com.example.monitortest.ui.results;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
+import java.util.UUID;
 
 import com.example.monitortest.hardware.model.HardwareInfo;
 import com.example.monitortest.ui.common.FitWidthPanel;
+import com.example.monitortest.ui.history.model.SavedScan;
+import com.example.monitortest.ui.history.storage.CsvUtility;
+import com.example.monitortest.ui.history.storage.SavedScanCsvMapper;
+import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
 import com.example.monitortest.ui.results.sections.ComponentSection;
 import com.example.monitortest.ui.results.sections.ImpactSection;
 import com.example.monitortest.ui.results.components.EmissionProjectionPanel;
 import com.example.monitortest.ui.results.sections.ResultsToolbar;
 import static com.example.monitortest.ui.theme.AppTheme.*;
+
+
+import com.example.monitortest.ui.history.model.SavedScan;
+import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
+
 
 public class ResultsPanel extends JPanel {
 
@@ -139,7 +155,7 @@ public class ResultsPanel extends JPanel {
 
 
     // Refreshes all Results Page sections after a successful hardware scan.
-    public void updateHardwareInfo(HardwareInfo info) {
+    public void updateHardwareInfo(HardwareInfo info) throws IOException {
 
         // Update the Component Breakdown and power summary.
         componentSection.updateComponentSection(info);
@@ -150,5 +166,34 @@ public class ResultsPanel extends JPanel {
 
         // Display when the latest scan results were applied.
         updateScanInfoFooter();
+
+
+// TEMPORARY TEST: Confirm that the existing scan history remains readable.
+        ScanHistoryCsvRepository repository = new ScanHistoryCsvRepository();
+
+        try {
+
+            // Load the records saved during our previous test.
+            List<SavedScan> scans = repository.loadAll();
+
+            System.out.println("Saved scans: " + scans.size());
+
+            // Display the names and dates of the stored records.
+            for (SavedScan scan : scans) {
+                System.out.println(
+                        scan.getName() + " - " + scan.getScannedAt()
+                );
+            }
+
+        } catch (IOException e) {
+
+            // Report any failure to read the existing CSV file.
+            e.printStackTrace();
+        }
+
+
     }
+
+
+
 }
