@@ -2,6 +2,10 @@ package com.example.monitortest.ui.history.sections;
 
 import com.example.monitortest.ui.theme.UIUtility;
 import com.example.monitortest.ui.history.components.ScanRow;
+import com.example.monitortest.model.ScanHistory;
+import com.example.monitortest.model.ScanRecord;
+
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -13,6 +17,7 @@ import static com.example.monitortest.ui.theme.AppTheme.*;
 public class HistoryListSection extends JPanel {
 
     private JPanel listItemsPanel;
+    private final ScanHistory scanHistory = new ScanHistory();
 
     public HistoryListSection() {
         setLayout(new BorderLayout());
@@ -27,26 +32,8 @@ public class HistoryListSection extends JPanel {
         );
         listItemsPanel.setBackground(Color.WHITE);
 
-        // Temporary scan records
-        listItemsPanel.add(new ScanRow(
-                "1 Oct 2026", "My PC", "Home",
-                "78/100", "209 kg/year", "KEEP"
-        ));
-
-        listItemsPanel.add(new ScanRow(
-                "12 Aug 2026", "My PC", "Home",
-                "70/100", "214 kg/year", "KEEP"
-        ));
-
-        listItemsPanel.add(new ScanRow(
-                "5 Jul 2026", "Work PC", "Office",
-                "64/100", "258 kg/year", "UPGRADE"
-        ));
-
-        listItemsPanel.add(new ScanRow(
-                "20 Apr 2026", "Reception PC", "Office",
-                "48/100", "290 kg/year", "REPLACE"
-        ));
+        // scan records from scan_history.csv
+        showScans(scanHistory.getScans());
 
         JScrollPane scrollPane = new JScrollPane(listItemsPanel);
         scrollPane.setBorder(null);
@@ -68,6 +55,20 @@ public class HistoryListSection extends JPanel {
 
         add(infoLabel, BorderLayout.SOUTH);
     }
+
+    public void showScans(List<ScanRecord> scans) {
+
+        listItemsPanel.removeAll();
+
+        for (ScanRecord scan : scans) {
+            listItemsPanel.add(new ScanRow(
+                    scan.getDate(), scan.getDevice(), scan.getUse(),
+                    scan.getScore(), scan.getCo2(), scan.getResult()
+            ));
+        }
+
+        listItemsPanel.revalidate();
+        listItemsPanel.repaint(); }
 
     public JPanel createListHeaderRow() {
 
