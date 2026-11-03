@@ -5,10 +5,9 @@ import com.example.monitortest.ui.livemonitor.components.PowerGraphPanel;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.ui.loading.components.Spinner;
 import com.example.monitortest.ui.livemonitor.components.CarbonEmissionsPanel;
-import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsTracker;
 import com.example.monitortest.hardware.monitoring.LiveMonitorAvailability;
 import com.example.monitortest.services.startup.ApplicationProcessManager;
-import com.example.monitortest.ui.livemonitor.components.EmissionComparisonPanel;
+import com.example.monitortest.ui.livemonitor.components.comparison.EmissionComparisonPanel;
 
 import javax.swing.*;
 import java.awt.*;

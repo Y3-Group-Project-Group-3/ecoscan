@@ -4,7 +4,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.util.Map;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import static java.awt.Component.LEFT_ALIGNMENT;
@@ -24,50 +23,21 @@ public final class UIUtility {
     }
 
 
-//    smooth()
-    /** Copy of the Graphics with smooth (anti-aliased) shapes and text. Remember to dispose() it. */
-    public static Graphics2D smooth(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        // Use the operating system's text smoothing if available (sharper on Windows)
-        Object desktopHints = Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints");
-        if (desktopHints instanceof Map<?, ?> hints) g2.addRenderingHints(hints);
-        return g2;
-    }
-
-
-//    label()
-
-
     /*******
      * These will need to be standardised and merge at some point
      * I think its just the alignment thats different so that should be simple to have as a parameter
      */
     /** A JLabel with the given font and colour, centred when used in a vertical BoxLayout. */
-    public static JLabel label(
-            String text,
-            int style,
-            float size,
-            Color color)
-    {
+    public static JLabel label( String text, int style, float size, Color color){
         JLabel l = new JLabel(text);
         l.setFont(font(style, size));
         l.setForeground(color);
         return l;
     }
 
-    public static JLabel label(
-            String text,
-            int style,
-            float size,
-            Color color,
-            float alignment)
-    {
+    public static JLabel label( String text, int style, float size, Color color, float alignment) {
         JLabel label = label(text, style, size, color);
         label.setAlignmentX(alignment);
-
         return label;
     }
 

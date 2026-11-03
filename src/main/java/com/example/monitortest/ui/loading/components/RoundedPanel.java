@@ -1,11 +1,10 @@
 package com.example.monitortest.ui.loading.components;
 
+import com.example.monitortest.ui.common.GraphicsUtils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
-
-import static com.example.monitortest.ui.theme.UIUtility.smooth;
-
 
 // Custom JPanel that draws a rounded background with a configurable border colour and corner radius.
 public class RoundedPanel extends JPanel {
@@ -25,7 +24,8 @@ public class RoundedPanel extends JPanel {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Graphics2D g2 = smooth(g);
+        // Create an independent graphics context with smooth rendering.
+        Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
 
         // Create a rounded rectangle within the panel bounds.
         RoundRectangle2D shape = new RoundRectangle2D.Float( 0.5f, 0.5f, getWidth() - 1, getHeight() - 1, arc, arc );

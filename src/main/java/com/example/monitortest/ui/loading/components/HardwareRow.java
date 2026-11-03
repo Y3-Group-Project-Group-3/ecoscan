@@ -7,7 +7,8 @@ import java.awt.geom.RoundRectangle2D;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import static com.example.monitortest.ui.theme.UIUtility.font;
-import static com.example.monitortest.ui.theme.UIUtility.smooth;
+
+import com.example.monitortest.ui.common.GraphicsUtils;
 import com.example.monitortest.ui.common.LineIcon;
 
 
@@ -104,7 +105,8 @@ public class HardwareRow extends JPanel {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Graphics2D g2 = smooth(g);
+        // Create an independent graphics context with smooth rendering.
+        Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
         int w = getWidth(), h = getHeight();
 
         if (status == Status.DETECTING) {
