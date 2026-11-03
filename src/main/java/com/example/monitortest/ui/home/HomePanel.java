@@ -82,8 +82,18 @@ public class HomePanel extends JPanel {
         column.add(cardRow);
 
         // ---- Main action ----
-        column.add(Box.createVerticalStrut(24));
+        // Kept close to the cards (20 px) so the button reads as the next step after choosing a usage type
+        column.add(Box.createVerticalStrut(20));
         scanButton = new PrimaryButton("Scan Computer", new LineIcon("SCAN", 15, Color.WHITE));
+
+        // Fixed size makes the button more prominent and keeps it in exactly the same place,
+        // whichever usage card is selected (the cards only repaint, they never resize)
+        Dimension scanButtonSize = new Dimension(260, 50);
+        scanButton.setPreferredSize(scanButtonSize);
+        scanButton.setMinimumSize(scanButtonSize);
+        scanButton.setMaximumSize(scanButtonSize);
+
+        // Centred directly beneath the four usage cards
         column.add(UIUtility.alignComponent(scanButton, FlowLayout.CENTER));
 
         // ---- Privacy note ----
@@ -97,12 +107,14 @@ public class HomePanel extends JPanel {
         historyButton = new JButton("View Scan History");
         column.add(UIUtility.alignComponent(historyButton, FlowLayout.CENTER));
 
-        // Place the column at the top-centre of the page
+        // Place the column at the top-centre of the page.
+        // The top inset (80 px, previously 56 px) moves the whole group slightly lower for better visual balance
+        // without changing how its elements line up with each other.
         GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.NORTH;
         c.weightx = 1;
         c.weighty = 1;
-        c.insets = new Insets(56, 32, 32, 32);
+        c.insets = new Insets(80, 32, 32, 32);
         page.add(column, c);
 
 
