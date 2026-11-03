@@ -33,8 +33,8 @@ public class ComponentSection {
 
 
 
-    // Builds the initial Component Breakdown with placeholder values.
-    // Hardware information is supplied separately after a scan completes.
+    // Creates the Component Breakdown container and power summary.
+    // Hardware rows are populated when completed scan results are received.
     public JPanel createComponentSection() {
 
         JPanel section = column();
@@ -60,25 +60,19 @@ public class ComponentSection {
             }
         };
 
-        // Keep a reference so the rows can be refreshed after scanning.
-        componentList = list;
-        // Remove references to any rows from a previous construction.
-        componentRows.clear();
+
+        // Configure the container for vertically stacked hardware rows.
         list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
         list.setAlignmentX(LEFT_ALIGNMENT);
 
-        // Keep a reference to the list for future hardware updates.
+        // Store the component list so it can be updated after each scan.
         componentList = list;
 
-        // Configure the component container before the first scan.
-        list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
-        list.setAlignmentX(LEFT_ALIGNMENT);
-
-        // Remove any references to previously constructed component rows.
+        // Clear references to rows from any previous construction.
         componentRows.clear();
 
-        // Add the initially empty component list to the section.
-        // The updater will populate it after a successful scan.
+        // Add the initially empty list to the Component Breakdown.
+        // Hardware rows are inserted after a successful scan.
         section.add(list);
 
         /******************** Power Summary  **********************************/
@@ -103,7 +97,7 @@ public class ComponentSection {
     // Passes completed hardware scan results to the Component Breakdown updater.
     public void updateComponentSection(HardwareInfo info) {
 
-        // Preserve the existing public interface used by ScanEventListener.
+        // Update the component rows when the section and scan data are available.
         if (componentSectionUpdater != null && info != null) {
             componentSectionUpdater.updateComponentSection(info);
         }

@@ -3,8 +3,6 @@ package com.example.monitortest.ui.results.components;
 import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsCalculator;
 import com.example.monitortest.hardware.model.HardwareInfo;
 
-import com.example.monitortest.ui.livemonitor.components.EmissionMilestone;
-import com.example.monitortest.ui.livemonitor.components.EmissionMilestones;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.ui.theme.AppTheme;
 import com.example.monitortest.ui.common.InfoIcon;
@@ -12,23 +10,15 @@ import com.example.monitortest.ui.common.InfoIcon;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.List;
 
 import static com.example.monitortest.ui.theme.AppTheme.BORDER_COLOR;
 
 // Displays projected emissions milestones using a fixed hardware scan power reading.
 public class EmissionProjectionPanel extends RoundedPanel {
 
-    private final List<EmissionMilestone> milestones = EmissionMilestones.getMilestones();
-
-    private final JLabel milestoneLabel;
-    private final JLabel emissionsLabel;
-
     // Explains the projected emissions and selected milestone comparison.
     private final JLabel projectionExplanation;
     private final JLabel milestoneExplanation;
-
-    private final JSlider milestoneSlider;
 
     // The power reading supplied by the latest hardware scan.
     private double powerWatts = Double.NaN;
@@ -100,48 +90,13 @@ public class EmissionProjectionPanel extends RoundedPanel {
         // Display the CO₂e tooltip beside the comparison explanation.
         explanationPanel.add(milestoneExplanationRow);
 
-        // Display the selected milestone and its emissions value.
-        // Create the milestone information on the left side of the header.
-        JPanel milestoneInfo = new JPanel();
-        milestoneInfo.setLayout(new BoxLayout(milestoneInfo, BoxLayout.Y_AXIS));
-        milestoneInfo.setOpaque(false);
-
-        JLabel milestoneTitle = new JLabel("SELECTED MILESTONE");
-        milestoneTitle.setForeground(AppTheme.TEXT_MUTED);
-
-        milestoneLabel = new JLabel();
-        milestoneLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-
-        emissionsLabel = new JLabel();
-        emissionsLabel.setForeground(AppTheme.TEXT_MUTED);
-
-        // Keep the labels aligned to the left.
-        milestoneTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
-        milestoneLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        emissionsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        milestoneInfo.add(milestoneTitle);
-        milestoneInfo.add(Box.createVerticalStrut(8));
-        milestoneInfo.add(milestoneLabel);
-        milestoneInfo.add(Box.createVerticalStrut(6));
-        milestoneInfo.add(emissionsLabel);
-
-        // Each slider position represents one milestone, not a fixed number of grams.
-        milestoneSlider = new JSlider(0, milestones.size() - 1, 0);
-        milestoneSlider.setOpaque(false);
-        milestoneSlider.setPaintTicks(true);
-        milestoneSlider.setMajorTickSpacing(1);
-        milestoneSlider.setSnapToTicks(true);
-
-        milestoneSlider.addChangeListener(e -> updateProjection());
-
         // Arrange the comparison ruler above the milestone selection slider.
         JPanel scaleContainer = new JPanel();
         scaleContainer.setLayout(new BoxLayout(scaleContainer, BoxLayout.Y_AXIS));
         scaleContainer.setOpaque(false);
 
         projectionScale.setAlignmentX(Component.LEFT_ALIGNMENT);
-        milestoneSlider.setAlignmentX(Component.LEFT_ALIGNMENT);
+//        milestoneSlider.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Give the ruler sufficient space for its graphics.
         projectionScale.setPreferredSize(new Dimension(0, 360));
@@ -152,18 +107,12 @@ public class EmissionProjectionPanel extends RoundedPanel {
 
         add(scaleContainer, BorderLayout.CENTER);
 
-        // Display the selected milestone beneath the explanation.
-        JPanel heading = new JPanel(new BorderLayout());
-        heading.setOpaque(false);
-
-        heading.add(milestoneInfo, BorderLayout.WEST);
-
         // Place the explanation above the milestone and time information.
         JPanel upperContent = new JPanel();
         upperContent.setLayout(new BoxLayout(upperContent, BoxLayout.Y_AXIS));
         upperContent.setOpaque(false);
 
-        heading.setAlignmentX(Component.LEFT_ALIGNMENT);
+//        heading.setAlignmentX(Component.LEFT_ALIGNMENT);
         explanationPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Display the explanation directly above the comparison ruler.
@@ -225,11 +174,6 @@ public class EmissionProjectionPanel extends RoundedPanel {
     // Updates the comparison ruler using the selected timescale and scan power.
     private void updateProjectionScale() {
 
-        // Keep the highlighted milestone synchronised with the slider.
-        projectionScale.setSelectedMilestoneIndex(
-                milestoneSlider.getValue()
-        );
-
         // Do not display a projected emissions marker without valid power data.
         if (!Double.isFinite(powerWatts) || powerWatts < 0) {
             projectionScale.setProjectedEmissions(Double.NaN);
@@ -246,8 +190,6 @@ public class EmissionProjectionPanel extends RoundedPanel {
 
     // Updates the explanation using the current scan power, period and milestone.
     private void updateExplanation() {
-
-        EmissionMilestone milestone = milestones.get(milestoneSlider.getValue());
 
         // Reject unavailable or invalid power readings.
         // Zero watts is valid and produces zero projected emissions.
@@ -297,7 +239,6 @@ public class EmissionProjectionPanel extends RoundedPanel {
         };
     }
 
-
     // Formats projected emissions with precision appropriate to their size.
     private String formatEmissions(double grams) {
 
@@ -318,27 +259,5 @@ public class EmissionProjectionPanel extends RoundedPanel {
         }
 
         return String.format("%.4f g", grams);
-    }
-
-
-    // Formats projected seconds into a readable duration.
-    private String formatDuration(double seconds) {
-        if (seconds >= 365 * 24 * 3600) {
-            return String.format("%.1f years", seconds / (365 * 24 * 3600));
-        }
-
-        if (seconds >= 24 * 3600) {
-            return String.format("%.1f days", seconds / (24 * 3600));
-        }
-
-        if (seconds >= 3600) {
-            return String.format("%.1f hours", seconds / 3600);
-        }
-
-        if (seconds >= 60) {
-            return String.format("%.1f minutes", seconds / 60);
-        }
-
-        return String.format("%.1f seconds", seconds);
     }
 }

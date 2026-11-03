@@ -114,19 +114,16 @@ public class ScanEventListener implements ActionListener {
         SwingWorker<HardwareInfo, ScanProgress> worker =
                 new SwingWorker<>() {
 
+
                     @Override
                     protected HardwareInfo doInBackground() {
-                        try {
-                            // Perform the hardware scan and publish component status updates.
-                            return hardwareInfoService.getHardwareInfo((component, status) -> {
-                                publish(new ScanProgress(component, status));
-                            });
-                        }
-                        finally {
-                            // The background hardware operation has finished.
-                            scanRunning = false;
-                        }
+                        // Perform hardware detection on a background thread.
+                        // Keep scanRunning true until the UI completion workflow finishes.
+                        return hardwareInfoService.getHardwareInfo((component, status) -> {
+                            publish(new ScanProgress(component, status));
+                        });
                     }
+
 
 
                     @Override
@@ -168,6 +165,13 @@ public class ScanEventListener implements ActionListener {
                             // Retrieve the completed hardware scan results.
                             HardwareInfo info = get();
 
+
+                            // Reject unsuccessful scans that return no hardware information.
+                            if (info == null) {
+                                throw new IllegalStateException( "Hardware scan completed without returning hardware information." );
+                            }
+
+
                             // Ensure the progress display reaches 100% after a successful scan.
                             activeLoadingPanel.setProgress(100);
 
@@ -187,6 +191,9 @@ public class ScanEventListener implements ActionListener {
                                 // Restore scanning and navigation after the loading transition.
                                 refreshButton.setEnabled(true);
                                 navBar.setNavigationEnabled(true);
+
+                                // The completed scan and its loading transition have finished.
+                                scanRunning = false;
                             });
 
                             // Ensure the transition happens only once.
@@ -210,6 +217,9 @@ public class ScanEventListener implements ActionListener {
                             // Restore scanning and navigation after a failed scan.
                             refreshButton.setEnabled(true);
                             navBar.setNavigationEnabled(true);
+
+                            // Allow another scan after the failure has been handled.
+                            scanRunning = false;
                         }
                     }
 
