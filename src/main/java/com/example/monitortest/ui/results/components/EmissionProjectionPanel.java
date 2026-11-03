@@ -236,14 +236,8 @@ public class EmissionProjectionPanel extends RoundedPanel {
             return;
         }
 
-        // Determine the duration represented by the Environmental Impact selection.
-        double durationSeconds = switch (timescale) {
-            case "Second" -> 1.0;
-            case "Hour" -> 3600.0;
-            case "Month" -> 30 * 86400.0;
-            case "Year" -> 365 * 86400.0;
-            default -> 86400.0;
-        };
+        // Retrieve the duration represented by the selected timescale.
+        double durationSeconds = getProjectionDurationSeconds();
 
         // Use the same calculator as the Environmental Impact section.
         double projectedGrams = calculator.calculateEmissions( powerWatts, durationSeconds );
@@ -255,21 +249,16 @@ public class EmissionProjectionPanel extends RoundedPanel {
 
         EmissionMilestone milestone = milestones.get(milestoneSlider.getValue());
 
-        // Avoid presenting projections when no valid power reading is available.
-        if (!Double.isFinite(powerWatts) || powerWatts <= 0) {
-            projectionExplanation.setText("A valid scanned power reading is required.");
+        // Reject unavailable or invalid power readings.
+        // Zero watts is valid and produces zero projected emissions.
+        if (!Double.isFinite(powerWatts) || powerWatts < 0) {
+            projectionExplanation.setText( "A valid scanned power reading is required." );
             milestoneExplanation.setText("");
             return;
         }
 
-        // Match the durations used by the existing comparison ruler.
-        double durationSeconds = switch (timescale) {
-            case "Second" -> 1.0;
-            case "Hour" -> 3600.0;
-            case "Month" -> 30 * 86400.0;
-            case "Year" -> 365 * 86400.0;
-            default -> 86400.0;
-        };
+        // Use the same projection duration as the comparison ruler.
+        double durationSeconds = getProjectionDurationSeconds();
 
         // Calculate projected emissions using the shared calculator.
         double projectedGrams = calculator.calculateEmissions(powerWatts, durationSeconds);
@@ -294,6 +283,20 @@ public class EmissionProjectionPanel extends RoundedPanel {
         milestoneExplanation.setText( "The scale below compares your PC's projected CO₂e emissions with everyday activities and products."
         );
     }
+
+
+    // Converts the selected projection period into seconds.
+    // Month and Year use the existing fixed-duration assumptions.
+    private double getProjectionDurationSeconds() {
+        return switch (timescale) {
+            case "Second" -> 1.0;
+            case "Hour" -> 3600.0;
+            case "Month" -> 30 * 86400.0;
+            case "Year" -> 365 * 86400.0;
+            default -> 86400.0;
+        };
+    }
+
 
     // Formats projected emissions with precision appropriate to their size.
     private String formatEmissions(double grams) {
