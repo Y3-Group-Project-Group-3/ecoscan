@@ -23,10 +23,8 @@ public class VerticalDivider extends JComponent {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        Graphics2D g2 = (Graphics2D) g.create();
-
-        // Enable smooth line rendering.
-        g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+        // Create an independent graphics context with antialiasing enabled.
+        Graphics2D g2 = GraphicsUtils.createSmoothGraphics(g);
 
         g2.setColor(BORDER_COLOR);
         g2.setStroke(new BasicStroke(1.5f));

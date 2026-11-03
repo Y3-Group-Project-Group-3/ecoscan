@@ -2,9 +2,8 @@ package com.example.monitortest.ui.controller;
 
 import com.example.monitortest.hardware.detection.ScanHardware;
 import com.example.monitortest.hardware.model.HardwareInfo;
-import com.example.monitortest.ui.results.sections.ComponentSection;
-import com.example.monitortest.ui.results.sections.HardwareInfoSection;
 import com.example.monitortest.ui.nav.NavBar;
+
 // Hook in loading page
 import com.example.monitortest.ui.loading.LoadingPanel;
 import com.example.monitortest.ui.results.ResultsPanel;
@@ -172,9 +171,7 @@ public class ScanEventListener implements ActionListener {
                             // Ensure the progress display reaches 100% after a successful scan.
                             activeLoadingPanel.setProgress(100);
 
-                            // Update the results sections with the latest hardware information.
-//                            HardwareInfoSection.updateHardwareInfo(info);
-                            ComponentSection.updateComponentSection(info);
+                            // Send the completed scan to the Results Page for all section updates.
                             resultsPanel.updateHardwareInfo(info);
 
                             // Keep the completed loading page visible for two seconds.

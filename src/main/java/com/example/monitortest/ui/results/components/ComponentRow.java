@@ -141,6 +141,9 @@ public class ComponentRow {
         expandableContent.setVisible(openAtStart);
         item.add(expandableContent, BorderLayout.CENTER);
 
+        // Store the expandable content so its visibility can be checked on refresh.
+        item.putClientProperty("expandableContent", expandableContent);
+
 
         header.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {

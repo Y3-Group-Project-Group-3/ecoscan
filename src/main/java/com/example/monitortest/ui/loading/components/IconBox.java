@@ -1,12 +1,10 @@
-
 package com.example.monitortest.ui.loading.components;
+import com.example.monitortest.ui.common.GraphicsUtils;
 import com.example.monitortest.ui.common.LineIcon;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
-
-import static com.example.monitortest.ui.theme.UIUtility.smooth;
 
 /**
  * Displays a hardware icon inside a rounded square.
@@ -32,7 +30,8 @@ public class IconBox extends JComponent {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Graphics2D g2 = smooth(g);
+        // Create an independent graphics context with smooth rendering.
+        Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
 
         // Draw the rounded background.
         g2.setColor(getBackground());

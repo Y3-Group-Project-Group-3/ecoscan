@@ -36,10 +36,7 @@ public class ComponentSectionUpdater {
 
 
 
-    /**
-     * Will update the existing rows using the latest scan results.
-     * The implementation will be moved here in the next step.
-     */
+    // Updates the hardware breakdown and power summary using completed scan data.
     public void updateComponentSection(HardwareInfo info) {
 
 
@@ -60,7 +57,7 @@ public class ComponentSectionUpdater {
         }
         // Replace the existing CPU row with the latest scan results.
         JPanel cpuRow = componentRow(
-                componentList, "CPU", info.getCpuName(), "MEASURED", info.getCpuName(), cpuPowerText, "—", cpuShareText, false
+                componentList, "CPU", info.getCpuName(), "MEASURED", info.getCpuName(), cpuPowerText, "—", cpuShareText, isRowExpanded("CPU")
         );
 
         replaceComponentRow("CPU", cpuRow);
@@ -78,7 +75,7 @@ public class ComponentSectionUpdater {
 
         // Replace the hardcoded GPU row with the latest scan results.
         JPanel gpuRow = componentRow(
-                componentList, "GPU", info.getGpuName(), "MEASURED", info.getGpuName(), gpuPowerText, "—", gpuShareText, false
+                componentList, "GPU", info.getGpuName(), "MEASURED", info.getGpuName(), gpuPowerText, "—", gpuShareText, isRowExpanded("GPU")
         );
 
         replaceComponentRow("GPU", gpuRow);
@@ -102,8 +99,6 @@ public class ComponentSectionUpdater {
         // Build the RAM breakdown using its dedicated UI class.
         JPanel memoryDetailsPanel = MemoryDetailsPanel.createMemoryDetails(info);
 
-        // Calculate the total estimated power of all supported RAM modules.
-        double estimatedRamPower = info.getEstimatedRamPower();
 
         // Display whether the RAM estimate covers every detected module.
         String ramPowerContribution = formatPowerEstimate( info.getEstimatedRamPower(), info.hasCompleteRamPowerEstimate() );
@@ -118,11 +113,12 @@ public class ComponentSectionUpdater {
                 "Not available",
                 ramAdditionalInfo,
                 ramPowerContribution,
-                false,
+                // Preserve the RAM expansion state when rebuilding its details.
+                isRowExpanded("RAM"),
                 memoryDetailsPanel
         );
 
-        //Updates placeholders when scan is complete
+        // Insert or refresh the RAM row using completed scan results.
         replaceComponentRow("RAM", ramRow);
 
 
@@ -159,7 +155,8 @@ public class ComponentSectionUpdater {
                 "Not measured",
                 storageAdditionalInfo,
                 storagePowerContribution,
-                false,
+                // Preserve the Storage expansion state when rebuilding its details.
+                isRowExpanded("Storage"),
                 storageDetailsPanel
         );
 
@@ -179,30 +176,57 @@ public class ComponentSectionUpdater {
     }
 
 
-    // Replace an existing component row while preserving its position.
+
+    // Inserts a component row on the first scan or replaces it on refresh.
     private void replaceComponentRow(String componentName, JPanel newRow) {
 
-        // Retrieve the existing row from the component map.
+        // Retrieve the existing component row, if one is displayed.
         JPanel oldRow = componentRows.get(componentName);
 
-        if (oldRow == null || componentList == null) {
-            return;
+        if (oldRow == null) {
+            // First scan: add the component to the empty list.
+            componentList.add(newRow);
+        } else {
+            // Subsequent scans: locate the component's existing position.
+            int index = componentList.getComponentZOrder(oldRow);
+            if (index >= 0) {
+                // Replace the previous row while preserving its position.
+                componentList.remove(oldRow);
+                componentList.add(newRow, index);
+            } else {
+                // Recover gracefully if the previous row is no longer attached.
+                componentList.add(newRow);
+            }
         }
 
-        // Find the existing row's position in the list.
-        int index = componentList.getComponentZOrder(oldRow);
-
-        if (index < 0) {
-            return;
-        }
-
-        // Replace the old row with the updated component.
-        componentList.remove(oldRow);
-        componentList.add(newRow, index);
-
-        // Update the reference so future scans replace the correct row.
+        // Store the latest row reference for future refresh operations.
         componentRows.put(componentName, newRow);
     }
+
+
+    // Determines whether an existing component row is currently expanded.
+    private boolean isRowExpanded(String componentName) {
+
+        // Retrieve the component row from the latest scan.
+        JPanel row = componentRows.get(componentName);
+
+        // New rows are collapsed by default.
+        if (row == null) {
+            return false;
+        }
+
+        // Retrieve the expandable content stored by ComponentRow.
+        Object content = row.getClientProperty("expandableContent");
+
+        // Preserve the existing visibility when a row is replaced.
+        if (content instanceof JPanel expandableContent) {
+            return expandableContent.isVisible();
+        }
+
+        return false;
+    }
+
+
 
 
     // Format a power estimate based on detected hardware coverage.

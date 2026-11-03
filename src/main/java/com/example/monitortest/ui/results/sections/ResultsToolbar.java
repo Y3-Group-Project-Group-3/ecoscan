@@ -10,12 +10,15 @@ import com.example.monitortest.ui.common.VerticalDivider;
 import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
 import org.kordamp.ikonli.swing.FontIcon;
 
+import com.example.monitortest.ui.common.GraphicsUtils;
+
 
 // Constructs the fixed toolbar displayed at the top of the Results page.
 public class ResultsToolbar {
 
     // Creates the toolbar containing power mode controls and refresh action.
-    public static JPanel createToolbar(JButton refreshButton) {
+// Builds the toolbar using controls supplied by the Results page.
+    public static JPanel createToolbar( JButton refreshButton, JPanel powerModeControls) {
 
         JPanel toolbar = new JPanel(new BorderLayout(16, 0));
         toolbar.setBackground(CARD_BG);
@@ -37,11 +40,9 @@ public class ResultsToolbar {
         JPanel toolbarActions = new JPanel( new FlowLayout(FlowLayout.RIGHT, 12, 0) );
         toolbarActions.setOpaque(false);
 
-        // Reuse the existing power mode controls.
-        JPanel controls = ComponentSection.getPowerModeControls();
-
-        if (controls != null) {
-            toolbarActions.add(controls);
+        // Display the power mode controls supplied by ResultsPanel.
+        if (powerModeControls != null) {
+            toolbarActions.add(powerModeControls);
         }
 
         // Separate toolbar actions using a reusable vertical divider.
@@ -64,10 +65,8 @@ public class ResultsToolbar {
             @Override
             protected void paintComponent(Graphics g) {
 
-                Graphics2D g2 = (Graphics2D) g.create();
-
-                // Smooth the rounded button edges.
-                g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+                // Create a smooth graphics context for the custom button background.
+                Graphics2D g2 = GraphicsUtils.createSmoothGraphics(g);
 
                 // Apply a subtle green tint when hovering.
                 Color background = getModel().isRollover() ? new Color(240, 249, 244) : Color.WHITE;
@@ -84,10 +83,8 @@ public class ResultsToolbar {
             @Override
             protected void paintBorder(Graphics g) {
 
-                Graphics2D g2 = (Graphics2D) g.create();
-
-                // Smooth the border and highlight it on hover.
-                g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+                // Create a smooth graphics context for the rounded button border.
+                Graphics2D g2 = GraphicsUtils.createSmoothGraphics(g);
                 g2.setColor( getModel().isRollover() ? GREEN : BORDER_COLOR );
                 g2.setStroke(new BasicStroke(1f));
                 g2.drawRoundRect( 0, 0, getWidth() - 1, getHeight() - 1, 12, 12 );

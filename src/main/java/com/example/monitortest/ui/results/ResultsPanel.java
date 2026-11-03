@@ -3,6 +3,8 @@ package com.example.monitortest.ui.results;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import com.example.monitortest.hardware.model.HardwareInfo;
 import com.example.monitortest.ui.common.FitWidthPanel;
@@ -10,27 +12,57 @@ import com.example.monitortest.ui.results.sections.ComponentSection;
 import com.example.monitortest.ui.results.sections.ImpactSection;
 import com.example.monitortest.ui.results.components.EmissionProjectionPanel;
 import com.example.monitortest.ui.results.sections.ResultsToolbar;
-
 import static com.example.monitortest.ui.theme.AppTheme.*;
-import static com.example.monitortest.ui.results.sections.ComponentSection.createComponentSection;
 
 public class ResultsPanel extends JPanel {
 
     // Displays emissions projections based on the latest hardware scan.
     private final EmissionProjectionPanel projectionPanel = new EmissionProjectionPanel();
+
     // Keep a reference so the environmental impact values can be updated.
     private final ImpactSection impactSection = new ImpactSection();
+
+    // Owns the Component Breakdown displayed on this Results Page.
+    private final ComponentSection componentSection = new ComponentSection();
+
+    // Displays the completion time of the most recent successful scan.
+    private final JLabel scanInfoLabel = new JLabel();
+
+    // Formats scan timestamps using the user's local date and time.
+    private static final DateTimeFormatter SCAN_TIME_FORMAT = DateTimeFormatter.ofPattern("d MMM uuuu 'at' HH:mm");
+
     private final JButton refreshButton = ResultsToolbar.createRefreshButton();
 
-    // Creates the scan information footer at the bottom of Results.
+
+    // Creates the footer displaying information about the latest scan.
     private JPanel createScanInfoFooter() {
+
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         footer.setOpaque(false);
-        JLabel scanInfo = new JLabel( "Scanned 1 Oct 2026   •   My PC   •   Home use" );
-        scanInfo.setForeground(TEXT_MUTED);
-        footer.add(scanInfo);
+
+        // Configure the scan information label.
+        scanInfoLabel.setForeground(TEXT_MUTED);
+
+        // The timestamp is populated after a successful hardware scan.
+        footer.add(scanInfoLabel);
+
         return footer;
     }
+
+
+    // Updates the footer when a completed hardware scan is applied.
+    private void updateScanInfoFooter() {
+
+        // Capture the current local date and time.
+        LocalDateTime scanTime = LocalDateTime.now();
+
+        // Format the timestamp for display in the Results footer.
+        String formattedTime = scanTime.format(SCAN_TIME_FORMAT);
+
+        scanInfoLabel.setText("Scanned " + formattedTime);
+    }
+
+
 
     public ResultsPanel() {
         setLayout(new BorderLayout());
@@ -43,12 +75,16 @@ public class ResultsPanel extends JPanel {
         scroll.setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
         scroll.getVerticalScrollBar().setUnitIncrement(16);
 
-        // Keep the Results toolbar visible while the page scrolls.
-        add(ResultsToolbar.createToolbar(refreshButton), BorderLayout.NORTH);
+        // Retrieve the power controls from this Results Page's Component Breakdown.
+        JPanel powerModeControls = componentSection.getPowerModeControls();
+
+        // Construct the fixed toolbar using the existing controls and refresh button.
+        add( ResultsToolbar.createToolbar(refreshButton, powerModeControls), BorderLayout.NORTH );
 
         add(scroll, BorderLayout.CENTER);
 
-
+        // Connect the Results sections after their UI components are initialised.
+        configureSectionListeners();
     }
 
     private JPanel createMainContentPanel() {
@@ -62,21 +98,13 @@ public class ResultsPanel extends JPanel {
         main.add(impactSection.createImpactSection());
         main.add(Box.createVerticalStrut(28));
 
-        // Keep the scan projection period synchronised with Environmental Impact.
-        impactSection.setTimescaleListener(projectionPanel::setTimescale);
-
         // Display the new emissions milestone projection.
         projectionPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         main.add(projectionPanel);
         main.add(Box.createVerticalStrut(28));
 
-        main.add(createComponentSection());
-
-        // Keep the power summary, emissions projection and environmental impact in sync.
-        ComponentSection.setPowerModeListener(includeEstimates -> {
-            projectionPanel.setIncludeEstimates(includeEstimates);
-            impactSection.setIncludeEstimates(includeEstimates);
-        });
+        // Add this Results Page's Component Breakdown.
+        main.add(componentSection.createComponentSection());
 
         /***************** Footer ************/
         // Separate the scan metadata from the main results.
@@ -89,14 +117,38 @@ public class ResultsPanel extends JPanel {
         return main;
     }
 
+
+    // Connects interactions between the Results Page sections.
+    private void configureSectionListeners() {
+
+        // Synchronise the emissions projection with the selected timescale.
+        impactSection.setTimescaleListener(projectionPanel::setTimescale);
+
+        // Keep environmental calculations in sync with the selected power mode.
+        componentSection.setPowerModeListener(includeEstimates -> {
+            projectionPanel.setIncludeEstimates(includeEstimates);
+            impactSection.setIncludeEstimates(includeEstimates);
+        });
+    }
+
+
     // Returns the Results toolbar refresh button for listener registration.
     public JButton getRefreshButton() {
         return refreshButton;
     }
 
-    // Refresh both environmental sections using the latest hardware scan.
+
+    // Refreshes all Results Page sections after a successful hardware scan.
     public void updateHardwareInfo(HardwareInfo info) {
+
+        // Update the Component Breakdown and power summary.
+        componentSection.updateComponentSection(info);
+
+        // Update environmental impact and emissions projections.
         projectionPanel.updateHardwareInfo(info);
         impactSection.updateHardwareInfo(info);
+
+        // Display when the latest scan results were applied.
+        updateScanInfoFooter();
     }
 }

@@ -1,6 +1,5 @@
 package com.example.monitortest.ui.common;
 
-import com.example.monitortest.ui.theme.UIUtility;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,7 +29,8 @@ public  class LineIcon implements Icon {
     public int getIconHeight() { return size; }
 
     public void paintIcon(Component c, Graphics g, int x, int y) {
-        Graphics2D g2 = UIUtility.smooth(g);
+        // Create a smooth graphics context for drawing the vector icon.
+        Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
         g2.translate(x, y);
         g2.scale(size / 24.0, size / 24.0);
         g2.setColor(color);
