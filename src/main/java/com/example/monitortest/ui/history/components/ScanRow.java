@@ -14,8 +14,7 @@ public class ScanRow extends JPanel {
     // Creates one history row containing the scan date, CO₂ and View button.
     public ScanRow(
             String date,
-            String name,
-            String co2
+            String name
     ) {
         setLayout(new GridLayout(1, 4, 10, 0));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
@@ -28,7 +27,6 @@ public class ScanRow extends JPanel {
         // Add the scan information in the same order as the header.
         add(createCell(date, font));
         add(createCell(name, font));
-        add(createCell(co2, font));
 
         JPanel buttonPanel = new JPanel( new FlowLayout(FlowLayout.LEFT, 0, 0) );
         buttonPanel.setOpaque(false);

@@ -10,6 +10,8 @@ import javax.swing.border.EmptyBorder;
 
 public class HistoryPanel extends JPanel {
 
+    private final HistoryListSection historyListSection = new HistoryListSection();
+
     // Theme Colors
     // TODO Move these into the apptheme class at some point
     private static final Color BG_COLOR = new Color(0xF5F5FA);
@@ -37,8 +39,8 @@ public class HistoryPanel extends JPanel {
         JPanel center = new JPanel(new BorderLayout(0, 20));
         center.setOpaque(false);
 
-        // ...
-        center.add( new HistoryListSection(), BorderLayout.CENTER );
+        // Display the existing History list component.
+        center.add(historyListSection, BorderLayout.CENTER);
 
         // ...
         center.add( new HistoryActionsSection(), BorderLayout.SOUTH );
@@ -49,4 +51,8 @@ public class HistoryPanel extends JPanel {
         return main;
     }
 
+    // Reloads saved scans whenever the History Page is opened.
+    public void refreshHistory() {
+        historyListSection.refreshScans();
+    }
 }

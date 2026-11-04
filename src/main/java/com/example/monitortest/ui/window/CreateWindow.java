@@ -128,10 +128,21 @@ public class CreateWindow {
 
         final NavBar[] navRef = new NavBar[1];
 
+        // Handles navigation between EcoScan's main pages.
         java.util.function.Consumer<String> navigate = page -> {
+
+            // Reload saved scans whenever the user opens the History Page.
+            if ("history".equals(page)) {
+                historyPanel.refreshHistory();
+            }
+
+            // Display the requested page.
             cardLayout.show(mainPanel, page);
+
+            // Update the navigation bar's selected page indicator.
             navRef[0].setActivePage(page);
         };
+
 
         NavBar navBar = new NavBar(navigate);
         navRef[0] = navBar;
