@@ -3,12 +3,16 @@ package com.example.monitortest.ui.history;
 import com.example.monitortest.ui.history.sections.HistoryActionsSection;
 import com.example.monitortest.ui.history.sections.HistoryHeaderSection;
 import com.example.monitortest.ui.history.sections.HistoryListSection;
+import com.example.monitortest.ui.history.model.SavedScan;
 
+import java.util.function.Consumer;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 public class HistoryPanel extends JPanel {
+
+    private final HistoryListSection historyListSection = new HistoryListSection();
 
     // Theme Colors
     // TODO Move these into the apptheme class at some point
@@ -37,8 +41,8 @@ public class HistoryPanel extends JPanel {
         JPanel center = new JPanel(new BorderLayout(0, 20));
         center.setOpaque(false);
 
-        // ...
-        center.add( new HistoryListSection(), BorderLayout.CENTER );
+        // Display the existing History list component.
+        center.add(historyListSection, BorderLayout.CENTER);
 
         // ...
         center.add( new HistoryActionsSection(), BorderLayout.SOUTH );
@@ -47,6 +51,18 @@ public class HistoryPanel extends JPanel {
         main.add(center, BorderLayout.CENTER);
 
         return main;
+    }
+
+    // Reloads saved scans whenever the History Page is opened.
+    public void refreshHistory() {
+        historyListSection.refreshScans();
+    }
+
+
+    // Registers the action used to open a saved scan from History.
+    // Passes the listener to the History list component.
+    public void setViewScanListener(Consumer<SavedScan> listener) {
+        historyListSection.setViewScanListener(listener);
     }
 
 }

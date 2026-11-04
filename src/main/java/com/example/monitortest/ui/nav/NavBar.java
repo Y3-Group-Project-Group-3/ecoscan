@@ -95,9 +95,7 @@ public class NavBar extends JPanel {
         boolean isAdministrator = elevationManager.isRunningAsAdministrator();
 
         // Choose the status indicator colour based on the privilege level.
-        Color statusColor = isAdministrator
-                ? new Color(0x22C55E)  // Green: administrator privileges.
-                : new Color(0xF59E0B); // Amber: standard privileges.
+        Color statusColor = isAdministrator ? new Color(0x22C55E)  : new Color(0xF59E0B);
 
         // Version label with administrator privilege indicator.
         JLabel version = new JLabel( "Version 1.0.0", new Dot(6, statusColor), SwingConstants.LEFT );

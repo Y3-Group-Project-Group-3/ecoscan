@@ -110,6 +110,18 @@ public class ComponentSection {
         }
     }
 
+
+    // Allows the Results Page to restore a saved power calculation mode.
+    // Delegates the operation to the component that owns the controls.
+    public void setIncludeEstimates(boolean includeEstimates) {
+
+        // Update the existing power mode controls when available.
+        if (powerSummaryPanel != null) {
+            powerSummaryPanel.setIncludeEstimates(includeEstimates);
+        }
+    }
+
+
     // Provides access to the existing power mode controls.
     // Allows ResultsPanel to display them in its fixed toolbar.
     public JPanel getPowerModeControls() {

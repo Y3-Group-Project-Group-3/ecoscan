@@ -11,15 +11,12 @@ public class ScanRow extends JPanel {
 
     private JButton viewButton;
 
+    // Creates one history row containing the scan date, CO₂ and View button.
     public ScanRow(
             String date,
-            String device,
-            String use,
-            String score,
-            String co2,
-            String result
+            String name
     ) {
-        setLayout(new GridLayout(1, 7, 10, 0));
+        setLayout(new GridLayout(1, 4, 10, 0));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
         setPreferredSize(new Dimension(700, 50));
         setBackground(Color.WHITE);
@@ -27,22 +24,11 @@ public class ScanRow extends JPanel {
 
         Font font = UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE);
 
+        // Add the scan information in the same order as the header.
         add(createCell(date, font));
-        add(createCell(device, font));
-        add(createCell(use, font));
-        add(createCell(score, font));
-        add(createCell(co2, font));
+        add(createCell(name, font));
 
-        JPanel resultPanel = new JPanel(
-                new FlowLayout(FlowLayout.LEFT, 0, 0)
-        );
-        resultPanel.setOpaque(false);
-        resultPanel.add(ResultBadge.createBadge(result));
-        add(resultPanel);
-
-        JPanel buttonPanel = new JPanel(
-                new FlowLayout(FlowLayout.LEFT, 0, 0)
-        );
+        JPanel buttonPanel = new JPanel( new FlowLayout(FlowLayout.LEFT, 0, 0) );
         buttonPanel.setOpaque(false);
 
         viewButton = new JButton("View");

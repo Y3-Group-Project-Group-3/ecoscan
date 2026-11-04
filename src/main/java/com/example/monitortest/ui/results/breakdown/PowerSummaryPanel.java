@@ -22,6 +22,9 @@ public class PowerSummaryPanel extends JPanel {
 
     // Holds the power mode controls so they can be displayed in the fixed toolbar.
     private final JPanel togglePanel;
+    // Retain access to the power mode controls for programmatic selection.
+    private final JRadioButton measuredOnlyButton;
+    private final JRadioButton combinedButton;
 
 
     // Creates the power summary with its calculation mode controls.
@@ -36,9 +39,10 @@ public class PowerSummaryPanel extends JPanel {
         setAlignmentX(Component.LEFT_ALIGNMENT);
 
 
-        // Create the power calculation mode controls.
-        JRadioButton measuredOnlyButton = new JRadioButton("Measured only", true);
-        JRadioButton combinedButton = new JRadioButton("Measured + estimates");
+
+        // Create the controls used to select the power calculation mode.
+        measuredOnlyButton = new JRadioButton("Measured only", true);
+        combinedButton = new JRadioButton("Measured + estimates");
 
         // Apply the initial appearance of both power modes.
         stylePowerModeButton(measuredOnlyButton, true);
@@ -151,6 +155,25 @@ public class PowerSummaryPanel extends JPanel {
     public void setPowerModeListener(Consumer<Boolean> listener) {
         this.powerModeListener = listener;
     }
+
+        // Selects the requested power calculation mode programmatically.
+    // Reuses the existing button listeners to update the UI and calculations.
+    public void setIncludeEstimates(boolean includeEstimates) {
+
+        // Avoid triggering unnecessary updates when the mode is unchanged.
+        if (this.includeEstimates == includeEstimates) {
+            return;
+        }
+
+        // Select the corresponding mode using its existing action listener.
+        if (includeEstimates) {
+            combinedButton.doClick();
+        } else {
+            measuredOnlyButton.doClick();
+        }
+    }
+
+
 
     // Returns the existing power mode controls for placement in the Results toolbar.
     public JPanel getPowerModeControls() {
