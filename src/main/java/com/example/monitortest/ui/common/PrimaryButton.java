@@ -12,16 +12,22 @@ import java.awt.geom.RoundRectangle2D;
 
 public class PrimaryButton extends JButton {
 
+    // Button colours, matched to the Home screen design.
+    private static final Color FILL = new Color(0x189557);
+    private static final Color FILL_HOVER = new Color(0x137A47);
+    // Corner radius of the button.
+    private static final int RADIUS = 12;
+
     private boolean hover;
 
     public PrimaryButton(String text, Icon icon) {
         super(text, icon);
 
         setIconTextGap(8);
-        setFont(UIUtility.font(Font.BOLD, AppTheme.FONT_BODY_SIZE));
+        setFont(buttonFont());
         setForeground(Color.WHITE);
 
-        setBorder(new EmptyBorder(10, 30, 10, 30));
+        setBorder(new EmptyBorder(0, 40, 0, 40));
 
         setContentAreaFilled(false);
         setBorderPainted(false);
@@ -45,21 +51,28 @@ public class PrimaryButton extends JButton {
         });
     }
 
+    // Segoe UI Semibold (as in the design) where Windows has it, otherwise the app's bold font.
+    private static Font buttonFont() {
+        for (String family : GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()) {
+            if (family.equals("Segoe UI Semibold")) {
+                return new Font(family, Font.PLAIN, 12).deriveFont(AppTheme.FONT_CARD_TITLE_SIZE);
+            }
+        }
+        return UIUtility.font(Font.BOLD, AppTheme.FONT_BODY_SIZE);
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         // Create a smooth graphics context for the rounded button background.
         Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
 
-        if (hover || isFocusOwner()) {
-            g2.setColor(AppTheme.BUTTON_GREEN_HOVER);
-        } else {
-            g2.setColor(AppTheme.BUTTON_GREEN);
-        }
+        // Flat green, a little darker on hover or keyboard focus.
+        g2.setColor(hover || isFocusOwner() ? FILL_HOVER : FILL);
 
         g2.fill(new RoundRectangle2D.Float(
                 0, 0,
                 getWidth(), getHeight(),
-                14, 14
+                RADIUS, RADIUS
         ));
 
         g2.dispose();
