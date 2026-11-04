@@ -9,8 +9,9 @@ import java.awt.geom.RoundRectangle2D;
 // Custom JPanel that draws a rounded background with a configurable border colour and corner radius.
 public class RoundedPanel extends JPanel {
 
-    private final Color fill;
-    private final Color border;
+    // Colours can be updated without recreating the rounded panel.
+    private Color fill;
+    private Color border;
     private final int arc;
 
     public RoundedPanel(Color fill, Color border, int arc) {
@@ -21,6 +22,20 @@ public class RoundedPanel extends JPanel {
         // Allow the custom rounded background to be visible.
         setOpaque(false);
     }
+
+
+    // Updates the rounded panel's fill and border colours.
+    // Repaints the component without rebuilding its contents.
+    public void setPanelColors(Color fill, Color border) {
+
+        // Store the new appearance.
+        this.fill = fill;
+        this.border = border;
+
+        // Refresh the panel using the updated colours.
+        repaint();
+    }
+
 
     @Override
     protected void paintComponent(Graphics g) {

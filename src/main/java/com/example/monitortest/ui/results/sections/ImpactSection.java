@@ -43,6 +43,9 @@ public class ImpactSection {
     // Notifies the Results page when the selected projection period changes.
     private Consumer<String> timescaleListener;
 
+    // Holds the rounded scan type and timestamp badge.
+    private JPanel scanInfoBadge;
+
     // energy, CO2, lifespan + timescale buttons
     public JPanel createImpactSection() {
         JPanel section = column();
@@ -61,6 +64,22 @@ public class ImpactSection {
         // Make Scan Results the main page heading.
         titles.add(label("Scan Results", Font.BOLD, 30, TEXT_MAIN));
         titles.add(Box.createVerticalStrut(6));
+
+
+        // Display the rounded scan badge beneath the Scan Results heading.
+        if (scanInfoBadge != null) {
+
+            // Align the badge to the left rather than stretching across the header.
+            scanInfoBadge.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            // Prevent BoxLayout from expanding the badge horizontally.
+            Dimension preferredSize = scanInfoBadge.getPreferredSize();
+            scanInfoBadge.setMaximumSize(preferredSize);
+
+            titles.add(scanInfoBadge);
+            titles.add(Box.createVerticalStrut(6));
+        }
+
 
         // Briefly describe the information presented on this page.
         titles.add(label( "Your hardware power and environmental impact overview", Font.PLAIN, FONT_SMALL_SIZE, TEXT_MUTED ));
@@ -324,5 +343,12 @@ public class ImpactSection {
 
         return includeEstimates ? hardwareInfo.getCombinedComponentPower() : hardwareInfo.getTotalMeasuredPower();
     }
+
+
+    // Receives the rounded scan information badge from ResultsPanel.
+    public void setScanInfoBadge(JPanel scanInfoBadge) {
+        this.scanInfoBadge = scanInfoBadge;
+    }
+
 
 }

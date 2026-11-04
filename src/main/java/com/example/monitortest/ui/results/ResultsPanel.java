@@ -16,10 +16,8 @@ import com.example.monitortest.ui.results.sections.ComponentSection;
 import com.example.monitortest.ui.results.sections.ImpactSection;
 import com.example.monitortest.ui.results.components.EmissionProjectionPanel;
 import com.example.monitortest.ui.results.sections.ResultsToolbar;
+import com.example.monitortest.ui.loading.components.RoundedPanel;
 import static com.example.monitortest.ui.theme.AppTheme.*;
-import com.example.monitortest.ui.history.model.SavedScan;
-
-import java.util.List;
 
 public class ResultsPanel extends JPanel {
 
@@ -35,11 +33,17 @@ public class ResultsPanel extends JPanel {
     // Displays the completion time of the most recent successful scan.
     private final JLabel scanInfoLabel = new JLabel();
 
-    // Formats scan timestamps using the user's local date and time.
-    private static final DateTimeFormatter SCAN_TIME_FORMAT = DateTimeFormatter.ofPattern("d MMM uuuu 'at' HH:mm");
+    // Rounded container for the scan type and recording timestamp.
+    private final RoundedPanel scanInfoBadge = new RoundedPanel(
+            new Color(0xDCFCE7),
+            new Color(0x86EFAC),
+            18
+    );
+
+    // Formats the original scan date and time for display.
+    private static final DateTimeFormatter SCAN_TIME_FORMAT = DateTimeFormatter.ofPattern("d MMM uuuu, HH:mm");
 
     private final JButton refreshButton = ResultsToolbar.createRefreshButton();
-
 
     /************************************** csv ************************/
     // Save action for the currently displayed hardware scan.
@@ -64,33 +68,27 @@ public class ResultsPanel extends JPanel {
     private final ScanHistoryCsvRepository scanRepository = new ScanHistoryCsvRepository();
     /**************************************************************************/
 
+    // Updates the scan information displayed on the Results Page.
+    // Shows the original timestamp of the latest completed scan.
+    // fka updateScanInfoFooter
+    private void updateLatestScanInfo() {
 
-    // Creates the footer displaying information about the latest scan.
-    private JPanel createScanInfoFooter() {
+        // Do not display scan information before a scan is available.
+        if (currentScanTime == null) {
+            return;
+        }
 
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        footer.setOpaque(false);
+        // Format the original scan timestamp.
+        String formattedTime = currentScanTime.format(SCAN_TIME_FORMAT);
 
-        // Configure the scan information label.
-        scanInfoLabel.setForeground(TEXT_MUTED);
+        // Identify the displayed results as the latest hardware scan.
+        scanInfoLabel.setText( "Latest Scan  •  Recorded at " + formattedTime );
 
-        // The timestamp is populated after a successful hardware scan.
-        footer.add(scanInfoLabel);
+        // Apply the green background.
+        styleScanInfoLabel(false);
 
-        return footer;
-    }
-
-
-    // Updates the footer when a completed hardware scan is applied.
-    private void updateScanInfoFooter() {
-
-        // Use the timestamp associated with the displayed hardware scan.
-        LocalDateTime scanTime = currentScanTime;
-
-        // Format the timestamp for display in the Results footer.
-        String formattedTime = scanTime.format(SCAN_TIME_FORMAT);
-
-        scanInfoLabel.setText("Scanned " + formattedTime);
+        // Ensure the badge fits its updated timestamp.
+        refreshScanInfoBadgeSize();
     }
 
 
@@ -98,6 +96,12 @@ public class ResultsPanel extends JPanel {
     public ResultsPanel() {
         setLayout(new BorderLayout());
         setBackground(BG_COLOR);
+
+        // Prepare the rounded scan badge before constructing the header.
+        configureScanInfoBadge();
+
+        // Position the rounded badge inside the Impact Section header.
+        impactSection.setScanInfoBadge(scanInfoBadge);
 
         JScrollPane scroll = new JScrollPane(createMainContentPanel());
 
@@ -151,14 +155,6 @@ public class ResultsPanel extends JPanel {
 
         // Add this Results Page's Component Breakdown.
         main.add(componentSection.createComponentSection());
-
-        /***************** Footer ************/
-        // Separate the scan metadata from the main results.
-        main.add(Box.createVerticalStrut(24));
-
-        JPanel scanFooter = createScanInfoFooter();
-        scanFooter.setAlignmentX(Component.LEFT_ALIGNMENT);
-        main.add(scanFooter);
 
         return main;
     }
@@ -286,7 +282,14 @@ public class ResultsPanel extends JPanel {
 
         // Show the saved scan's original timestamp and user-defined name.
         String formattedTime = savedScan.getScannedAt().format(SCAN_TIME_FORMAT);
-        scanInfoLabel.setText( "Saved Scan: " + savedScan.getName() + " | Scanned " + formattedTime );
+        // Identify historical results and preserve their original timestamp.
+        scanInfoLabel.setText( "Historical Scan  •  Recorded at " + formattedTime );
+
+        // Apply the grey background.
+        styleScanInfoLabel(true);
+
+        // Ensure the badge fits its updated timestamp.
+        refreshScanInfoBadgeSize();
 
         // Prevent saving a historical record as if it were a new scan.
         saveButton.setEnabled(false);
@@ -312,10 +315,66 @@ public class ResultsPanel extends JPanel {
         displayHardwareInfo(currentHardwareInfo);
 
         // Restore the latest scan's original timestamp.
-        updateScanInfoFooter();
+        updateLatestScanInfo();
 
         // The latest completed scan is eligible to be saved.
         saveButton.setEnabled(true);
+    }
+
+
+    /************* Colour Scan Information Label  *******************/
+    // Updates the scan badge colours based on the type of scan displayed.
+    // Latest scans use green; historical scans use grey.
+    private void styleScanInfoLabel(boolean historical) {
+
+        // Choose a background and outline for the scan type.
+        Color background = historical ? new Color(0xE5E7EB) : new Color(0xDCFCE7);
+        Color borderColor = historical ? new Color(0xD1D5DB) : new Color(0x86EFAC);
+        Color textColor = historical ? new Color(0x4B5563) : new Color(0x166534);
+
+        // Update the existing rounded panel without recreating it.
+        scanInfoBadge.setPanelColors(background, borderColor);
+
+        // Keep the label transparent and update its text colour.
+        scanInfoLabel.setOpaque(false);
+        scanInfoLabel.setForeground(textColor);
+    }
+
+
+    /************* Round the Scan Information Label  *******************/
+    // Configures the rounded scan information badge.
+    // Keeps the label transparent so the rounded background remains visible.
+    private void configureScanInfoBadge() {
+
+        // Place the label inside its rounded container.
+        scanInfoBadge.setLayout(new BorderLayout());
+
+        // Prevent the label from painting a rectangular background.
+        scanInfoLabel.setOpaque(false);
+
+        // Add padding between the text and the badge edges.
+        scanInfoLabel.setBorder(new EmptyBorder(7, 12, 7, 12));
+
+        // Add the existing scan information label to the rounded container.
+        scanInfoBadge.add(scanInfoLabel, BorderLayout.CENTER);
+
+        // Keep the badge aligned to its preferred content width.
+        scanInfoBadge.setAlignmentX(Component.LEFT_ALIGNMENT);
+    }
+
+
+
+    // Updates the badge size after its text changes.
+    // Ensures long timestamps are not clipped by the header's BoxLayout.
+    private void refreshScanInfoBadgeSize() {
+
+        // Recalculate the preferred size based on the current label text.
+        Dimension preferredSize = scanInfoBadge.getPreferredSize();
+        scanInfoBadge.setMaximumSize(preferredSize);
+
+        // Refresh the parent layout and badge appearance.
+        scanInfoBadge.revalidate();
+        scanInfoBadge.repaint();
     }
 
 
@@ -326,7 +385,7 @@ public class ResultsPanel extends JPanel {
     /*********************** UPDATE PAGE ***********************************/
     // Displays a newly completed hardware scan.
     // The latest scan is retained independently of any historical scans.
-    public void updateHardwareInfo(HardwareInfo info) throws IOException {
+    public void updateHardwareInfo(HardwareInfo info){
 
         // A new hardware scan replaces the historical viewing state.
         viewingSavedScan = false;
@@ -342,35 +401,10 @@ public class ResultsPanel extends JPanel {
         displayHardwareInfo(info);
 
         // Update the footer using the new scan's timestamp.
-        updateScanInfoFooter();
+        updateLatestScanInfo();
 
         // A new scan is eligible to be saved.
         saveButton.setEnabled(true);
-
-
-// TEMPORARY TEST: Confirm that the existing scan history remains readable.
-        ScanHistoryCsvRepository repository = new ScanHistoryCsvRepository();
-
-        try {
-
-            // Load the records saved during our previous test.
-            List<SavedScan> scans = repository.loadAll();
-
-            System.out.println("Saved scans: " + scans.size());
-
-            // Display the names and dates of the stored records.
-            for (SavedScan scan : scans) {
-                System.out.println(
-                        scan.getName() + " - " + scan.getScannedAt()
-                );
-            }
-
-        } catch (IOException e) {
-
-            // Report any failure to read the existing CSV file.
-            e.printStackTrace();
-        }
-
 
     }
 
