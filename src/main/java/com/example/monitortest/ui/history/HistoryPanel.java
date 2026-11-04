@@ -3,7 +3,9 @@ package com.example.monitortest.ui.history;
 import com.example.monitortest.ui.history.sections.HistoryActionsSection;
 import com.example.monitortest.ui.history.sections.HistoryHeaderSection;
 import com.example.monitortest.ui.history.sections.HistoryListSection;
+import com.example.monitortest.ui.history.model.SavedScan;
 
+import java.util.function.Consumer;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -55,4 +57,12 @@ public class HistoryPanel extends JPanel {
     public void refreshHistory() {
         historyListSection.refreshScans();
     }
+
+
+    // Registers the action used to open a saved scan from History.
+    // Passes the listener to the History list component.
+    public void setViewScanListener(Consumer<SavedScan> listener) {
+        historyListSection.setViewScanListener(listener);
+    }
+
 }

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -22,14 +23,14 @@ public class HistoryListSection extends JPanel {
 
     private JPanel listItemsPanel;
 
-
     // Retrieves saved hardware scans from the CSV history file.
     private final ScanHistoryCsvRepository scanRepository = new ScanHistoryCsvRepository();
 
     // Formats scan timestamps for the History table.
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM uuuu");
 
-
+    // Notifies the parent History Page when a saved scan is selected.
+    private Consumer<SavedScan> viewScanListener;
 
 
     public HistoryListSection() {
@@ -99,10 +100,23 @@ public class HistoryListSection extends JPanel {
                     // Format the original scan date for display.
                     String date = scan.getScannedAt().format(DATE_FORMAT);
 
-                    // Display the date and user-defined scan name.
-                    ScanRow row = new ScanRow( date, scan.getName() );
+                    // Create the row displaying the saved scan's date and name.
+                    ScanRow row = new ScanRow(date, scan.getName());
 
+                    // Associate this row's View Scan button with its saved record.
+                    // Each iteration of the loop refers to a particular SavedScan object.
+                    // The button's listener captures that reference, meaning clicking View Scan for Gaming PC
+                    // selects the Gaming PC record rather than whichever record was last loaded.
+                    row.getViewButton().addActionListener(e -> {
+                        // Forward the selected scan when a listener has been registered.
+                        if (viewScanListener != null) {
+                            viewScanListener.accept(scan);
+                        }
+                    });
+
+                    // Add the configured row to the History list.
                     listItemsPanel.add(row);
+
                 }
             }
 
@@ -145,5 +159,12 @@ public class HistoryListSection extends JPanel {
 
         return header;
     }
+
+
+    // Registers the action to perform when the user selects a saved scan.
+    public void setViewScanListener(Consumer<SavedScan> listener) {
+        this.viewScanListener = listener;
+    }
+
 
 }

@@ -6,35 +6,20 @@ import javax.swing.border.EmptyBorder;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
 import java.util.UUID;
 
 import com.example.monitortest.hardware.model.HardwareInfo;
 import com.example.monitortest.ui.common.FitWidthPanel;
 import com.example.monitortest.ui.history.model.SavedScan;
-import com.example.monitortest.ui.history.storage.CsvUtility;
-import com.example.monitortest.ui.history.storage.SavedScanCsvMapper;
 import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
 import com.example.monitortest.ui.results.sections.ComponentSection;
 import com.example.monitortest.ui.results.sections.ImpactSection;
 import com.example.monitortest.ui.results.components.EmissionProjectionPanel;
 import com.example.monitortest.ui.results.sections.ResultsToolbar;
 import static com.example.monitortest.ui.theme.AppTheme.*;
-
 import com.example.monitortest.ui.history.model.SavedScan;
-import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
 
-import java.io.IOException;
-import java.util.UUID;
-
-
-import com.example.monitortest.ui.history.model.SavedScan;
-import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
-
-import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
-
 
 public class ResultsPanel extends JPanel {
 
@@ -68,6 +53,12 @@ public class ResultsPanel extends JPanel {
 
     // Tracks whether estimated RAM and storage power are included.
     private boolean includeEstimates = false;
+
+    // Preserves the power mode selected for the latest hardware scan.
+    private boolean latestScanIncludeEstimates = false;
+
+    // Distinguishes historical results from the latest hardware scan.
+    private boolean viewingSavedScan = false;
 
     // Handles saving and loading hardware scans from CSV.
     private final ScanHistoryCsvRepository scanRepository = new ScanHistoryCsvRepository();
@@ -184,6 +175,13 @@ public class ResultsPanel extends JPanel {
             // Preserve the setting for the saved scan.
             this.includeEstimates = includeEstimates;
 
+            // Preserve mode changes only when displaying the latest scan.
+            // Historical scan selections must not overwrite this preference.
+            // switching calculation modes while viewing history won't overwrite the latest scan's preferred mode.
+            if (!viewingSavedScan) {
+                latestScanIncludeEstimates = includeEstimates;
+            }
+
             // Update the existing Results Page sections.
             projectionPanel.setIncludeEstimates(includeEstimates);
             impactSection.setIncludeEstimates(includeEstimates);
@@ -253,26 +251,100 @@ public class ResultsPanel extends JPanel {
 
 
 
+    // Displays hardware information across all Results Page sections.
+    // Used by both newly completed scans and saved historical scans.
+    private void displayHardwareInfo(HardwareInfo info) {
+
+        // Update the hardware component breakdown and power summary.
+        componentSection.updateComponentSection(info);
+
+        // Update the environmental impact and emissions projections.
+        projectionPanel.updateHardwareInfo(info);
+        impactSection.updateHardwareInfo(info);
+    }
+
+
+    /********************************* DISPLAY SAVED SCAN  ***************************/
+    // Displays a saved hardware scan without performing another scan.
+    // Preserves the latest completed scan for later restoration.
+    public void displaySavedScan(SavedScan savedScan) {
+
+        // Prevent a missing saved record from being displayed.
+        if (savedScan == null) {
+            throw new IllegalArgumentException( "Saved scan cannot be null." );
+        }
+
+        // Enter historical viewing mode before changing the power controls.
+        // This protects the latest scan's preferred calculation mode.
+        viewingSavedScan = true;
+
+        // Restore the power mode that was selected when this scan was saved.
+        componentSection.setIncludeEstimates(savedScan.isIncludeEstimates());
+
+        // Display the original hardware information from CSV.
+        displayHardwareInfo(savedScan.getHardwareInfo());
+
+        // Show the saved scan's original timestamp and user-defined name.
+        String formattedTime = savedScan.getScannedAt().format(SCAN_TIME_FORMAT);
+        scanInfoLabel.setText( "Saved Scan: " + savedScan.getName() + " | Scanned " + formattedTime );
+
+        // Prevent saving a historical record as if it were a new scan.
+        saveButton.setEnabled(false);
+    }
+
+    /********************************* SHOW LATEST SCAN AFTER VIEWING HISTORY ***************************/
+    // Restores the latest completed hardware scan after viewing history.
+    // Does not rescan hardware or replace the original scan timestamp.
+    public void restoreLatestScan() {
+
+        // Avoid modifying the Results Page when no latest scan exists.
+        if (currentHardwareInfo == null || currentScanTime == null) {
+            return;
+        }
+
+        // Return to the normal hardware scan viewing mode.
+        viewingSavedScan = false;
+
+        // Restore the power calculation mode used by the latest scan.
+        componentSection.setIncludeEstimates(latestScanIncludeEstimates);
+
+        // Restore the latest hardware information and calculations.
+        displayHardwareInfo(currentHardwareInfo);
+
+        // Restore the latest scan's original timestamp.
+        updateScanInfoFooter();
+
+        // The latest completed scan is eligible to be saved.
+        saveButton.setEnabled(true);
+    }
+
+
+
+
+
 
     /*********************** UPDATE PAGE ***********************************/
-    // Refreshes all Results Page sections after a successful hardware scan.
+    // Displays a newly completed hardware scan.
+    // The latest scan is retained independently of any historical scans.
     public void updateHardwareInfo(HardwareInfo info) throws IOException {
 
-        // Preserve the completed scan and its timestamp for saving.
+        // A new hardware scan replaces the historical viewing state.
+        viewingSavedScan = false;
+
+        // The newly completed scan adopts the currently selected power mode.
+        latestScanIncludeEstimates = includeEstimates;
+
+        // Preserve the latest completed hardware scan and timestamp.
         currentHardwareInfo = info;
         currentScanTime = LocalDateTime.now();
 
-        // Update the Component Breakdown and power summary.
-        componentSection.updateComponentSection(info);
+        // Display the newly collected hardware information.
+        displayHardwareInfo(info);
 
-        // Update environmental impact and emissions projections.
-        projectionPanel.updateHardwareInfo(info);
-        impactSection.updateHardwareInfo(info);
-
-        // Display when the latest scan results were applied.
+        // Update the footer using the new scan's timestamp.
         updateScanInfoFooter();
 
-        // Allow the user to save the successfully completed hardware scan.
+        // A new scan is eligible to be saved.
         saveButton.setEnabled(true);
 
 
@@ -301,6 +373,8 @@ public class ResultsPanel extends JPanel {
 
 
     }
+
+
 
 
 

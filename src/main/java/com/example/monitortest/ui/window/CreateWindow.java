@@ -128,24 +128,45 @@ public class CreateWindow {
 
         final NavBar[] navRef = new NavBar[1];
 
-        // Handles navigation between EcoScan's main pages.
+        // Handles navigation between EcoScan's main application pages.
         java.util.function.Consumer<String> navigate = page -> {
 
-            // Reload saved scans whenever the user opens the History Page.
-            if ("history".equals(page)) {
-                historyPanel.refreshHistory();
-            }
+            // Reload saved records whenever the History Page is opened.
+            if ("history".equals(page)) { historyPanel.refreshHistory(); }
 
-            // Display the requested page.
+            // Restore the latest scan when Results is opened through navigation.
+            if ("results".equals(page)) { resultsPanel.restoreLatestScan(); }
+
+            // Display the selected page.
             cardLayout.show(mainPanel, page);
 
-            // Update the navigation bar's selected page indicator.
+            // Update the active sidebar navigation indicator.
             navRef[0].setActivePage(page);
         };
 
 
+
         NavBar navBar = new NavBar(navigate);
         navRef[0] = navBar;
+
+        /******************** CSV ***************************/
+        // Opens a saved hardware scan from the History Page.
+        historyPanel.setViewScanListener(savedScan -> {
+
+            // Display the selected historical hardware information.
+            resultsPanel.displaySavedScan(savedScan);
+
+            // Historical results also make the Results Page available.
+            navBar.setResultsVisible(true);
+
+            // Switch to the Results Page without starting a new hardware scan.
+            cardLayout.show(mainPanel, "results");
+
+            // Highlight Results in the navigation sidebar.
+            navBar.setActivePage("results");
+        });
+
+
         // Main window container
         JPanel rootPanel = new JPanel(new BorderLayout());
 
