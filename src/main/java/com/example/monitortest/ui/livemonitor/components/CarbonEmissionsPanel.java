@@ -1,5 +1,6 @@
 package com.example.monitortest.ui.livemonitor.components;
 
+import com.example.monitortest.hardware.demo.MacDemoConfig;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.ui.common.InfoTooltip;
 import com.example.monitortest.ui.common.InfoIcon;
@@ -15,6 +16,9 @@ public class CarbonEmissionsPanel extends RoundedPanel {
 
     private final JLabel totalEmissionsLabel = new JLabel("0.0000 g");
     private final JLabel averageEmissionsLabel = new JLabel("0.000000 g/s");
+
+    // Describes the total emissions value shown in the panel.
+    private JLabel totalEmissionsTitle;
 
     public CarbonEmissionsPanel() {
         super(Color.WHITE, new Color(226, 232, 240), 16);
@@ -65,6 +69,12 @@ public class CarbonEmissionsPanel extends RoundedPanel {
         panel.setOpaque(false);
 
         JLabel titleLabel = new JLabel(title);
+
+        // Retain the total emissions heading for demonstration mode.
+        if ("Total Emissions".equals(title)) {
+            totalEmissionsTitle = titleLabel;
+        }
+
         titleLabel.setFont(font(Font.PLAIN, 13));
         titleLabel.setForeground(TEXT_MUTED);
 
@@ -102,4 +112,18 @@ public class CarbonEmissionsPanel extends RoundedPanel {
         totalEmissionsLabel.setText( String.format("%.4f g CO₂e", totalGrams) );
         averageEmissionsLabel.setText( String.format("%.6f g CO₂e/s", averageGramsPerSecond) );
     }
+
+
+    // Identifies the total emissions as a hypothetical demonstration value.
+    // Does not alter the real Windows emissions calculation or display.
+    public void showDemoMode() {
+
+        // Explain that the displayed total represents a fixed example period.
+        if (totalEmissionsTitle != null) {
+            // Keep the displayed demonstration duration consistent with the calculation.
+            totalEmissionsTitle.setText( String.format( "Illustrative Total (%.0f seconds)", MacDemoConfig.EMISSIONS_DEMO_DURATION_SECONDS )
+            );
+        }
+    }
+
 }

@@ -1,11 +1,12 @@
 package com.example.monitortest.ui.window;
 
+import com.example.monitortest.hardware.monitoring.LiveMonitorSnapshot;
 import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsTracker;
 import com.example.monitortest.hardware.monitoring.LiveMonitorAvailability;
 import com.example.monitortest.hardware.monitoring.LiveMonitoringService;
+import com.example.monitortest.hardware.monitoring.MacLiveMonitorDemoProvider;
 import com.example.monitortest.hardware.detection.ScanHardware;
 
-import io.github.pandalxb.jlibrehardwaremonitor.manager.powershell.PowerShellOperations;
 import com.example.monitortest.services.startup.ApplicationElevationManager;
 import com.example.monitortest.services.startup.ApplicationProcessManager;
 
@@ -112,12 +113,41 @@ public class CreateWindow {
         });
 
 
+        /************** MAC OS Dummy Interface ***********************************/
         // Determine whether the current environment supports live monitoring.
         LiveMonitorAvailability.Status monitoringStatus = LiveMonitorAvailability.check();
-        // Display an explanation when live monitoring is unavailable.
-        if (monitoringStatus != LiveMonitorAvailability.Status.AVAILABLE) {
+
+        // Only display the unavailable message when monitoring cannot be shown.
+        // macOS retains the existing Live Monitor interface for demonstration data.
+        if (monitoringStatus != LiveMonitorAvailability.Status.AVAILABLE && monitoringStatus != LiveMonitorAvailability.Status.MAC_DEMO) {
             liveMonitorPanel.showUnavailableState(monitoringStatus);
         }
+
+        // Populate the macOS Live Monitor with static demonstration readings.
+        // The Windows hardware monitoring service remains unchanged.
+        if (monitoringStatus == LiveMonitorAvailability.Status.MAC_DEMO) {
+
+            // Clearly identify that this page displays simulated data.
+            liveMonitorPanel.showDemoMode();
+
+            // Read the configurable CPU and GPU power values.
+            MacLiveMonitorDemoProvider demoProvider = new MacLiveMonitorDemoProvider();
+            LiveMonitorSnapshot demoSnapshot = demoProvider.createSnapshot();
+
+            // Populate the existing power cards and stop their loading indicators.
+            liveMonitorPanel.updatePowerReadings(demoSnapshot);
+
+            // Keep both demonstration graphs visible using fixed power values.
+            liveMonitorPanel.showDemoGraphs(demoSnapshot);
+
+            // Display a static emissions ruler with the PC before the first milestone.
+            liveMonitorPanel.showDemoComparison();
+
+            // Display hypothetical carbon emissions for the demo power values.
+            liveMonitorPanel.showDemoEmissions(demoSnapshot);
+        }
+
+
 
         // Register screens with the CardLayout.
         mainPanel.add(homePanel, "home");
@@ -185,7 +215,9 @@ public class CreateWindow {
         // Update both power measurements and emissions after each snapshot.
         final LiveMonitoringService[] monitoringRef = new LiveMonitoringService[1];
 
-        LiveMonitoringService monitoringService = new LiveMonitoringService(snapshot -> {
+        // Create the real monitoring service only on supported Windows systems.
+        // macOS uses static demonstration data and does not require hardware sensors.
+        LiveMonitoringService monitoringService = monitoringStatus == LiveMonitorAvailability.Status.AVAILABLE ? new LiveMonitoringService(snapshot -> {
             // Update the CPU/GPU cards and graphs.
             liveMonitorPanel.updatePowerReadings(snapshot);
 
@@ -195,7 +227,7 @@ public class CreateWindow {
             // Update the carbon emissions panel.
             liveMonitorPanel.updateCarbonEmissions( tracker.getTotalEmissionsGrams(), tracker.getAverageEmissionsPerSecond() );
 
-        });
+        }) : null;
 
         monitoringRef[0] = monitoringService;
 
@@ -246,8 +278,11 @@ public class CreateWindow {
                 // Prevent new manual hardware scans during shutdown.
                 scanEventListener.beginShutdown();
 
-                // Stop scheduling new live monitoring readings.
-                monitoringService.stop();
+                // Stop real monitoring only when the service exists.
+                // macOS Demo Mode does not create a monitoring service.
+                if (monitoringService != null) {
+                    monitoringService.stop();
+                }
 
                 // Wait for monitoring to finish without blocking Swing.
                 SwingWorker<Boolean, Void> shutdownWorker = new SwingWorker<>() {
@@ -255,8 +290,14 @@ public class CreateWindow {
                     @Override
                     protected Boolean doInBackground() {
 
-                        // Wait for live monitoring to finish.
-                        boolean monitoringStopped = monitoringService.awaitTermination( 10, java.util.concurrent.TimeUnit.SECONDS );
+
+                        // Wait for live monitoring only when the Windows service exists.
+                        // No monitoring service means there is nothing to stop.
+                        boolean monitoringStopped = true;
+
+                        if (monitoringService != null) {
+                            monitoringStopped = monitoringService.awaitTermination( 10, java.util.concurrent.TimeUnit.SECONDS );
+                        }
 
                         // Wait for any active manual hardware scan to finish.
                         while (scanEventListener.isScanRunning()) {
@@ -279,10 +320,6 @@ public class CreateWindow {
                         }
 
                         try {
-                            // Both hardware operations have finished.
-                            // Close the shared PowerShell session.
-//                            PowerShellOperations.closeSession();
-
                             return true;
                         }
                         catch (Exception exception) {

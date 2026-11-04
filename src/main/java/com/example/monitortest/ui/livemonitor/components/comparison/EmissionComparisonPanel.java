@@ -1,5 +1,6 @@
 package com.example.monitortest.ui.livemonitor.components.comparison;
 
+import com.example.monitortest.hardware.demo.MacDemoConfig;
 import com.example.monitortest.ui.livemonitor.components.EmissionMilestone;
 import com.example.monitortest.ui.livemonitor.components.EmissionMilestones;
 import com.example.monitortest.ui.livemonitor.components.comparison.ComparisonMilestoneInteraction.MilestoneHitArea;
@@ -21,6 +22,12 @@ public class EmissionComparisonPanel extends JPanel {
     // Track whether the panel has received its first valid emissions reading.
     private boolean isLoading = true;
 
+
+    /********************* MAC ***********************/
+    // Identifies whether the comparison ruler is displaying static demo data.
+    private boolean demoMode = false;
+
+
     // Reuse the application's existing animated loading spinner.
     private final Spinner loadingSpinner = new Spinner();
 
@@ -41,6 +48,10 @@ public class EmissionComparisonPanel extends JPanel {
     // Stores milestone interaction regions from the latest drawing pass.
     // An empty list means no milestone is currently interactive.
     private List<MilestoneHitArea> milestoneHitAreas = List.of();
+
+
+
+
 
     public EmissionComparisonPanel() {
 
@@ -127,6 +138,25 @@ public class EmissionComparisonPanel extends JPanel {
     }
 
 
+    /**************** MAC ******************/
+    // Displays the emissions comparison ruler using static demonstration data.
+    // Does not start the normal emissions accumulation or animation controllers.
+    public void showDemoMode() {
+
+        // Enable the static macOS demonstration state.
+        demoMode = true;
+        isLoading = false;
+
+        // Remove the initial hardware-reading loading indicator.
+        loadingSpinner.stop();
+        loadingSpinner.setVisible(false);
+
+        // Render the existing ruler and PC marker immediately.
+        repaint();
+    }
+
+
+
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -174,8 +204,13 @@ public class EmissionComparisonPanel extends JPanel {
             return;
         }
 
-        // Apply the current fade-in opacity from the animation controller.
-        g2.setComposite( AlphaComposite.getInstance( AlphaComposite.SRC_OVER, animationController.getRulerOpacity() ) );
+
+        // Use full opacity for macOS Demo Mode.
+        // Windows continues using its existing animated fade-in opacity.
+        if (!demoMode) {
+            g2.setComposite( AlphaComposite.getInstance( AlphaComposite.SRC_OVER, animationController.getRulerOpacity() ));
+        }
+
 
         // Draw the comparison panel's title.
         g2.setFont(font(Font.BOLD, 15));
@@ -196,12 +231,31 @@ public class EmissionComparisonPanel extends JPanel {
         // Draw the horizontal emissions ruler using the dedicated painter.
         ComparisonRulerPainter.paintRuler(g2, startX, endX, rulerY);
 
-        // Use one consistent animated scale for this painting operation.
-        double scaleMaximumGrams = animationController.getScaleMaximumGrams();
+
+        // Keep the demo ruler at a fixed scale that shows the first milestone.
+        // Windows continues using the animated scale.
+        double scaleMaximumGrams;
+
+
+        if (demoMode) {
+            // Use the first milestone to establish a meaningful demo scale.
+            double firstMilestoneGrams = milestones.isEmpty() ? 1.0 : milestones.get(0).emissionsGrams();
+            scaleMaximumGrams = Math.max( 1.0, firstMilestoneGrams / MacDemoConfig.FIRST_MILESTONE_POSITION );
+        } else {
+            // Preserve the existing animated Windows ruler scale.
+            scaleMaximumGrams = animationController.getScaleMaximumGrams();
+        }
+
 
         // Draw dynamically spaced tick marks for the current animated scale.
         ComparisonRulerPainter.paintTicks( g2, startX, endX, rulerY, getWidth(), scaleMaximumGrams );
 
+
+        // Use the first milestone in demo mode.
+        // Windows continues using the scale controller's next milestone.
+        double nextMilestoneGrams = demoMode && !milestones.isEmpty()
+                ? milestones.get(0).emissionsGrams()
+                : scaleController.getNextMilestoneGrams();
 
         // Draw milestones and store the hit areas for mouse interaction.
         milestoneHitAreas = ComparisonMilestonePainter.paint(
@@ -211,8 +265,13 @@ public class EmissionComparisonPanel extends JPanel {
         // Calculate the available width of the emissions ruler.
         int rulerWidth = endX - startX;
 
-        // Position the PC using the controller's animated emissions total.
-        double progress = animationController.getDisplayedEmissionsGrams() / scaleMaximumGrams;
+
+        // Use a fixed PC position in demo mode.
+        // Windows continues positioning the PC using accumulated emissions.
+        double progress = demoMode
+                ? MacDemoConfig.COMPARISON_PC_POSITION
+                : animationController.getDisplayedEmissionsGrams() / scaleMaximumGrams;
+
 
         // Keep the PC marker within the visible ruler for now.
         // Automatic zooming will replace this temporary restriction.
@@ -220,8 +279,15 @@ public class EmissionComparisonPanel extends JPanel {
 
         int pcX = startX + (int) Math.round(progress * rulerWidth);
 
-        // Draw the PC marker using its animated position and measured emissions.
-        ComparisonPcPainter.paint( g2, pcX, rulerY, getWidth(), totalEmissionsGrams );
+
+        // Use a simulated emissions value consistent with the demo marker.
+        // Windows continues displaying the actual accumulated session estimate.
+        double displayedEmissionsGrams = demoMode
+                ? progress * scaleMaximumGrams
+                : totalEmissionsGrams;
+
+        ComparisonPcPainter.paint( g2, pcX, rulerY, getWidth(), displayedEmissionsGrams );
+
 
         // Release the temporary graphics context.
         g2.dispose();
