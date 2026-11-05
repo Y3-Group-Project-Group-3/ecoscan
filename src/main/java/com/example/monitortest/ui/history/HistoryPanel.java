@@ -4,13 +4,17 @@ import com.example.monitortest.ui.history.sections.HistoryActionsSection;
 import com.example.monitortest.ui.history.sections.HistoryHeaderSection;
 import com.example.monitortest.ui.history.sections.HistoryListSection;
 import com.example.monitortest.ui.history.model.SavedScan;
+import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.function.Consumer;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class HistoryPanel extends JPanel {
 
@@ -122,11 +126,66 @@ public class HistoryPanel extends JPanel {
             }
         });
 
+        // Export the saved scans to a CSV file when the Export Results button is clicked.
+        actionsSection.getExportButton().addActionListener(e -> exportScans());
+
         // ...
         main.add(center, BorderLayout.CENTER);
 
         return main;
     }
+
+
+    // Lets the user choose where to save a copy of the scan history as a CSV file.
+    private void exportScans() {
+
+        // Inform the user when there are no saved scans to export.
+        if (!historyListSection.hasScans()) {
+            JOptionPane.showMessageDialog( this,
+                    "There are no saved scans to export.",
+                    "Export scans", JOptionPane.INFORMATION_MESSAGE );
+            return;
+        }
+
+        // Open a save dialog limited to CSV files.
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Export scans");
+        fileChooser.setFileFilter( new FileNameExtensionFilter("CSV files (*.csv)", "csv") );
+        fileChooser.setSelectedFile( new File("ecoscan-scans.csv") );
+
+        // Stop when the user cancels the dialog.
+        if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        // Add the .csv extension when the user leaves it out.
+        File exportFile = fileChooser.getSelectedFile();
+
+        if (!exportFile.getName().toLowerCase().endsWith(".csv")) {
+            exportFile = new File( exportFile.getParentFile(), exportFile.getName() + ".csv" );
+        }
+
+        try {
+
+            // Copy the saved scan history to the chosen file.
+            new ScanHistoryCsvRepository().exportTo( exportFile.toPath() );
+
+            JOptionPane.showMessageDialog( this,
+                    "Scans exported to " + exportFile.getName(),
+                    "Export scans", JOptionPane.INFORMATION_MESSAGE );
+
+        } catch (IOException ex) {
+
+            // Inform the user that the export could not be completed.
+            JOptionPane.showMessageDialog( this,
+                    "Unable to export the saved scans.",
+                    "Export scans", JOptionPane.ERROR_MESSAGE );
+
+            // Print the underlying error for debugging.
+            ex.printStackTrace();
+        }
+    }
+
 
     // Reloads saved scans whenever the History Page is opened.
     public void refreshHistory() {
