@@ -8,7 +8,9 @@ import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.print.PrinterException;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.LinkedHashMap;
@@ -302,6 +304,50 @@ public class HistoryListSection extends JPanel {
 
         // Rebuild the History table from the updated CSV.
         refreshScans();
+    }
+
+
+    // Prints the scans currently shown in the History table.
+    // Only the date and name are printed, matching what the user sees.
+    public void printScans() {
+
+        // Copy the displayed scans into rows for a simple printable table.
+        String[] columns = { "Date", "Name" };
+        Object[][] data = new Object[rows.size()][columns.length];
+
+        int index = 0;
+
+        for (SavedScan scan : rows.values()) {
+            data[index][0] = scan.getScannedAt().format(DATE_FORMAT);
+            data[index][1] = scan.getName();
+            index++;
+        }
+
+        JTable table = new JTable(data, columns);
+
+        // Give the table and its header a size so they print correctly off-screen.
+        table.setSize( table.getPreferredSize() );
+        table.getTableHeader().setSize( table.getTableHeader().getPreferredSize() );
+
+        try {
+
+            // Open the system print dialog and print the table across the page width.
+            table.print(
+                    JTable.PrintMode.FIT_WIDTH,
+                    new MessageFormat("EcoScan - Previous Scans"),
+                    new MessageFormat("Page {0}")
+            );
+
+        } catch (PrinterException e) {
+
+            // Inform the user that the list could not be printed.
+            JOptionPane.showMessageDialog( this,
+                    "Unable to print the saved scans.",
+                    "Print scans", JOptionPane.ERROR_MESSAGE );
+
+            // Print the underlying error for debugging.
+            e.printStackTrace();
+        }
     }
 
 
