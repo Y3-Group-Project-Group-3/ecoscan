@@ -44,8 +44,54 @@ public class HistoryPanel extends JPanel {
         // Display the existing History list component.
         center.add(historyListSection, BorderLayout.CENTER);
 
-        // ...
-        center.add( new HistoryActionsSection(), BorderLayout.SOUTH );
+        // Display the History action buttons.
+        HistoryActionsSection actionsSection = new HistoryActionsSection();
+        center.add( actionsSection, BorderLayout.SOUTH );
+
+        // Delete the selected scans when the Delete Selected button is clicked.
+        actionsSection.getDeleteButton().addActionListener(e -> {
+
+            // Ask the user to select a scan first when nothing is selected.
+            if (!historyListSection.hasSelection()) {
+                JOptionPane.showMessageDialog( this,
+                        "Select one or more scans to delete.",
+                        "Delete scans", JOptionPane.INFORMATION_MESSAGE );
+                return;
+            }
+
+            // Confirm before removing the scans from the saved history.
+            int answer = JOptionPane.showConfirmDialog( this,
+                    "Delete the selected scans?", "Delete scans",
+                    JOptionPane.OK_CANCEL_OPTION );
+
+            // Remove the selected scans once the user confirms.
+            if (answer == JOptionPane.OK_OPTION) {
+                historyListSection.deleteSelected();
+            }
+        });
+
+        // Delete every saved scan when the Delete All button is clicked.
+        actionsSection.getDeleteAllButton().addActionListener(e -> {
+
+            // Inform the user when there are no saved scans to delete.
+            if (!historyListSection.hasScans()) {
+                JOptionPane.showMessageDialog( this,
+                        "There are no saved scans to delete.",
+                        "Delete all scans", JOptionPane.INFORMATION_MESSAGE );
+                return;
+            }
+
+            // Confirm before removing every scan from the saved history.
+            int answer = JOptionPane.showConfirmDialog( this,
+                    "Delete all saved scans? This cannot be undone.",
+                    "Delete all scans", JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.WARNING_MESSAGE );
+
+            // Remove every saved scan once the user confirms.
+            if (answer == JOptionPane.OK_OPTION) {
+                historyListSection.deleteAll();
+            }
+        });
 
         // ...
         main.add(center, BorderLayout.CENTER);
