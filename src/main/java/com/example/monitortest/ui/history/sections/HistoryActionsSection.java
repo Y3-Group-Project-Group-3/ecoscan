@@ -11,6 +11,7 @@ public class HistoryActionsSection extends JPanel {
     private JButton exportButton;
     private JButton printButton;
     private JButton deleteButton;
+    private JButton deleteAllButton;
 
     public HistoryActionsSection() {
         setLayout(new BorderLayout());
@@ -30,11 +31,14 @@ public class HistoryActionsSection extends JPanel {
         leftButtons.add(printButton);
 
         JPanel rightButtons = new JPanel(
-                new FlowLayout(FlowLayout.RIGHT, 0, 0)
+                new FlowLayout(FlowLayout.RIGHT, 10, 0)
         );
         rightButtons.setOpaque(false);
 
+        deleteAllButton = createPillButton("🗑️ Delete All");
         deleteButton = createPillButton("🗑️ Delete Selected");
+
+        rightButtons.add(deleteAllButton);
         rightButtons.add(deleteButton);
 
         add(leftButtons, BorderLayout.WEST);
@@ -42,7 +46,23 @@ public class HistoryActionsSection extends JPanel {
     }
 
 
+    public JButton getImportButton() {
+        return importButton;
+    }
+
+    public JButton getExportButton() {
+        return exportButton;
+    }
+
+    public JButton getPrintButton() {
+        return printButton;
+    }
+
     public JButton getDeleteButton() {
         return deleteButton;
+    }
+
+    public JButton getDeleteAllButton() {
+        return deleteAllButton;
     }
 }

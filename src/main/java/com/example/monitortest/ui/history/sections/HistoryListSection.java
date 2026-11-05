@@ -6,7 +6,16 @@ import com.example.monitortest.ui.history.components.ScanRow;
 import com.example.monitortest.ui.history.model.SavedScan;
 import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.print.PrinterException;
 import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Set;
+import java.util.UUID;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
@@ -31,6 +40,15 @@ public class HistoryListSection extends JPanel {
 
     // Notifies the parent History Page when a saved scan is selected.
     private Consumer<SavedScan> viewScanListener;
+
+    // Links each displayed row to the saved scan it represents.
+    private final Map<ScanRow, SavedScan> rows = new LinkedHashMap<>();
+
+    // Text currently typed into the History search box.
+    private String searchText = "";
+
+    // Displays the newest scans first unless the user chooses oldest first.
+    private boolean newestFirst = true;
 
 
     public HistoryListSection() {
@@ -58,7 +76,7 @@ public class HistoryListSection extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
 
         JLabel infoLabel = new JLabel(
-                "Select a row to delete it, or choose View to open the full breakdown."
+                "Select one or more rows (Cmd/Ctrl-click) to delete them, or choose View to open the full breakdown."
         );
 
         infoLabel.setFont(UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE));
@@ -77,18 +95,32 @@ public class HistoryListSection extends JPanel {
 
         // Remove the previously displayed rows before rebuilding the list.
         listItemsPanel.removeAll();
+        rows.clear();
 
         try {
 
             // Load the saved records from EcoScan's CSV repository.
             List<SavedScan> scans = scanRepository.loadAll();
 
-            // Display the most recent hardware scans first.
-            scans.sort( Comparator.comparing(SavedScan::getScannedAt).reversed() );
+            // Sort the scans by date using the order chosen in the sort dropdown.
+            Comparator<SavedScan> byDate = Comparator.comparing(SavedScan::getScannedAt);
+            scans.sort( newestFirst ? byDate.reversed() : byDate );
 
-            // Show a helpful message when no scans have been saved yet.
+            // Remember whether any scans exist before the search filter is applied.
+            boolean hasSavedScans = !scans.isEmpty();
+
+            // Only keep the scans that match the current search text.
+            scans.removeIf( scan -> !matchesSearch(scan) );
+
+            // Show a helpful message when no scans have been saved yet,
+            // or when no saved scans match the search.
             if (scans.isEmpty()) {
-                JLabel emptyLabel = new JLabel( "No saved hardware scans available." );
+
+                String message = hasSavedScans
+                        ? "No saved scans match your search."
+                        : "No saved hardware scans available.";
+
+                JLabel emptyLabel = new JLabel( message );
                 emptyLabel.setBorder(new EmptyBorder(15, 15, 15, 15));
                 listItemsPanel.add(emptyLabel);
 
@@ -104,15 +136,18 @@ public class HistoryListSection extends JPanel {
                     ScanRow row = new ScanRow(date, scan.getName());
 
                     // Associate this row's View Scan button with its saved record.
-                    // Each iteration of the loop refers to a particular SavedScan object.
-                    // The button's listener captures that reference, meaning clicking View Scan for Gaming PC
-                    // selects the Gaming PC record rather than whichever record was last loaded.
                     row.getViewButton().addActionListener(e -> {
                         // Forward the selected scan when a listener has been registered.
                         if (viewScanListener != null) {
                             viewScanListener.accept(scan);
                         }
                     });
+
+                    // Allow the row to be selected for deletion.
+                    addSelection(row);
+
+                    // Remember which saved scan this row represents.
+                    rows.put(row, scan);
 
                     // Add the configured row to the History list.
                     listItemsPanel.add(row);
@@ -138,6 +173,183 @@ public class HistoryListSection extends JPanel {
         listItemsPanel.revalidate();
         listItemsPanel.repaint();
     }
+
+
+    // Updates the search text and reloads the History table.
+    public void setSearchText(String text) {
+        this.searchText = text.trim().toLowerCase();
+        refreshScans();
+    }
+
+
+    // Updates the sort order and reloads the History table.
+    public void setNewestFirst(boolean newestFirst) {
+        this.newestFirst = newestFirst;
+        refreshScans();
+    }
+
+
+    // Returns true when the scan's name or date contains the search text.
+    private boolean matchesSearch(SavedScan scan) {
+
+        // Every scan matches when the search box is empty.
+        if (searchText.isEmpty()) {
+            return true;
+        }
+
+        String name = scan.getName().toLowerCase();
+        String date = scan.getScannedAt().format(DATE_FORMAT).toLowerCase();
+
+        return name.contains(searchText) || date.contains(searchText);
+    }
+
+
+    // Makes a History row selectable.
+    // A single click selects one row, Cmd/Ctrl-click selects several rows.
+    private void addSelection(ScanRow row) {
+
+        row.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+                // Cmd (Mac) or Ctrl (Windows) allows more than one row to be selected.
+                boolean multiSelect = e.isMetaDown() || e.isControlDown();
+
+                // Clear the previous selection for a normal click.
+                if (!multiSelect) {
+                    for (ScanRow otherRow : rows.keySet()) {
+                        otherRow.setSelected(false);
+                    }
+                }
+
+                // Select the clicked row, or toggle it during multi-select.
+                row.setSelected( !row.isSelected() || !multiSelect );
+            }
+        });
+    }
+
+
+    // Returns true when at least one History row is selected.
+    public boolean hasSelection() {
+
+        for (ScanRow row : rows.keySet()) {
+            if (row.isSelected()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    // Returns true when the History list contains at least one saved scan.
+    public boolean hasScans() {
+        return !rows.isEmpty();
+    }
+
+
+    // Deletes the selected hardware scans and refreshes the History table.
+    public void deleteSelected() {
+
+        // Collect the ids of every selected saved scan.
+        Set<UUID> selectedIds = new HashSet<>();
+
+        for (Map.Entry<ScanRow, SavedScan> entry : rows.entrySet()) {
+            if (entry.getKey().isSelected()) {
+                selectedIds.add( entry.getValue().getId() );
+            }
+        }
+
+        // Nothing to delete when no rows are selected.
+        if (selectedIds.isEmpty()) {
+            return;
+        }
+
+        deleteScans( selectedIds, "Unable to delete the selected scans." );
+    }
+
+
+    // Deletes every saved hardware scan and refreshes the History table.
+    public void deleteAll() {
+
+        // Collect the ids of every displayed saved scan.
+        Set<UUID> allIds = new HashSet<>();
+
+        for (SavedScan scan : rows.values()) {
+            allIds.add( scan.getId() );
+        }
+
+        deleteScans( allIds, "Unable to delete the saved scans." );
+    }
+
+
+    // Removes the given scans from the CSV file, then reloads the History table.
+    // Displays an error message without changing the list if deletion fails.
+    private void deleteScans(Set<UUID> ids, String errorMessage) {
+
+        try {
+
+            // Remove the scans from EcoScan's CSV repository.
+            scanRepository.deleteByIds(ids);
+
+        } catch (IOException e) {
+
+            // Inform the user that the saved history could not be updated.
+            JOptionPane.showMessageDialog( this, errorMessage, "Delete scans", JOptionPane.ERROR_MESSAGE );
+
+            // Print the underlying error for debugging.
+            e.printStackTrace();
+        }
+
+        // Rebuild the History table from the updated CSV.
+        refreshScans();
+    }
+
+
+    // Prints the scans currently shown in the History table.
+    // Only the date and name are printed, matching what the user sees.
+    public void printScans() {
+
+        // Copy the displayed scans into rows for a simple printable table.
+        String[] columns = { "Date", "Name" };
+        Object[][] data = new Object[rows.size()][columns.length];
+
+        int index = 0;
+
+        for (SavedScan scan : rows.values()) {
+            data[index][0] = scan.getScannedAt().format(DATE_FORMAT);
+            data[index][1] = scan.getName();
+            index++;
+        }
+
+        JTable table = new JTable(data, columns);
+
+        // Give the table and its header a size so they print correctly off-screen.
+        table.setSize( table.getPreferredSize() );
+        table.getTableHeader().setSize( table.getTableHeader().getPreferredSize() );
+
+        try {
+
+            // Open the system print dialog and print the table across the page width.
+            table.print(
+                    JTable.PrintMode.FIT_WIDTH,
+                    new MessageFormat("EcoScan - Previous Scans"),
+                    new MessageFormat("Page {0}")
+            );
+
+        } catch (PrinterException e) {
+
+            // Inform the user that the list could not be printed.
+            JOptionPane.showMessageDialog( this,
+                    "Unable to print the saved scans.",
+                    "Print scans", JOptionPane.ERROR_MESSAGE );
+
+            // Print the underlying error for debugging.
+            e.printStackTrace();
+        }
+    }
+
 
     public JPanel createListHeaderRow() {
 
@@ -165,6 +377,5 @@ public class HistoryListSection extends JPanel {
     public void setViewScanListener(Consumer<SavedScan> listener) {
         this.viewScanListener = listener;
     }
-
 
 }

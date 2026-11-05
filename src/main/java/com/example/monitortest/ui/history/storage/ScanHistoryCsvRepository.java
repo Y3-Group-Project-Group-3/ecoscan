@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 
@@ -177,6 +179,62 @@ public class ScanHistoryCsvRepository {
             // Remove the temporary file if writing or replacement fails.
             Files.deleteIfExists(temporaryFile);
         }
+    }
+
+
+
+    // Deletes the selected hardware scans from the CSV file.
+// Uses a temporary file to protect existing history during writing.
+    public void deleteByIds(Set<UUID> ids) throws IOException {
+
+        // Load the existing records.
+        List<SavedScan> scans = loadAll();
+
+        // Remove every scan whose id was selected for deletion.
+        scans.removeIf( scan -> ids.contains(scan.getId()) );
+
+        // Convert the remaining scans into CSV records.
+        List<String> csvRows = new ArrayList<>();
+
+        for (SavedScan scan : scans) {
+            csvRows.add(SavedScanCsvMapper.toCsvRow(scan));
+        }
+
+        // Ensure the EcoScan data directory exists.
+        Files.createDirectories(csvPath.getParent());
+
+        // Create a temporary file in the same directory as scans.csv.
+        Path temporaryFile = Files.createTempFile( csvPath.getParent(), "scans-", ".tmp" );
+
+        try {
+
+            // Write the updated records without changing the existing CSV.
+            Files.write( temporaryFile, csvRows, StandardCharsets.UTF_8 );
+
+            // Atomically replace the existing file when supported.
+            Files.move( temporaryFile, csvPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING );
+
+        } finally {
+
+            // Remove the temporary file if writing or replacement fails.
+            Files.deleteIfExists(temporaryFile);
+        }
+    }
+
+
+
+    // Copies the saved scan history to a CSV file chosen by the user.
+// The exported file uses the same format, so it can be imported again later.
+    public void exportTo(Path exportPath) throws IOException {
+
+        // Create an empty history file first if no scans have been saved yet.
+        if (Files.notExists(csvPath)) {
+            Files.createDirectories(csvPath.getParent());
+            Files.createFile(csvPath);
+        }
+
+        // Copy the history file, replacing any existing file at the chosen location.
+        Files.copy( csvPath, exportPath, StandardCopyOption.REPLACE_EXISTING );
     }
 
 

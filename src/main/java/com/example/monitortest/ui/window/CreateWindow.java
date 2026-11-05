@@ -11,6 +11,7 @@ import com.example.monitortest.services.startup.ApplicationElevationManager;
 import com.example.monitortest.services.startup.ApplicationProcessManager;
 
 import com.example.monitortest.ui.history.HistoryPanel;
+import com.example.monitortest.ui.history.SessionRecorder;
 import com.example.monitortest.ui.home.HomePanel;
 import com.example.monitortest.ui.nav.NavBar;
 import com.example.monitortest.ui.loading.LoadingPanel;
@@ -259,6 +260,10 @@ public class CreateWindow {
         frame.setContentPane(rootPanel);
         navigate.accept("home");
 
+        // Start recording this Live Monitor session.
+        // The session is saved to History when EcoScan closes.
+        SessionRecorder sessionRecorder = new SessionRecorder();
+
         // Prevent multiple shutdown requests from running simultaneously.
         final boolean[] shuttingDown = {false};
 
@@ -274,6 +279,9 @@ public class CreateWindow {
 
 
                 shuttingDown[0] = true;
+
+                // Save this session's total emissions before monitoring stops.
+                sessionRecorder.saveSession( monitoringService, monitoringStatus == LiveMonitorAvailability.Status.MAC_DEMO );
 
                 // Prevent new manual hardware scans during shutdown.
                 scanEventListener.beginShutdown();
@@ -368,4 +376,3 @@ public class CreateWindow {
     }
 
 }
-
