@@ -16,6 +16,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
 
@@ -140,6 +142,20 @@ public class SessionListSection extends JPanel {
         // Add the session information in the same order as the header.
         row.add( createCell( session.getStartedAt().format(DATE_FORMAT), font ) );
         row.add( createCell( formatEmissions(session.getTotalEmissionsGrams()), font ) );
+
+        // Highlight the row in light grey while the mouse is over it.
+        row.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                row.setBackground(new Color(0xF7F8FA));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                row.setBackground(Color.WHITE);
+            }
+        });
 
         return row;
     }

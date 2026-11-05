@@ -4,6 +4,8 @@ import com.example.monitortest.ui.theme.UIUtility;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
 
@@ -11,6 +13,9 @@ public class ScanRow extends JPanel {
 
     private JButton viewButton;
     private boolean selected = false;
+
+    // Tracks whether the mouse is currently over the row.
+    private boolean hovered = false;
 
     // Creates one history row containing the scan date, CO₂ and View button.
     public ScanRow(
@@ -37,6 +42,27 @@ public class ScanRow extends JPanel {
         buttonPanel.add(viewButton);
 
         add(buttonPanel);
+
+        // Highlight the row while the mouse is over it.
+        // The View button shares the listener so moving onto it keeps the highlight.
+        MouseAdapter hoverListener = new MouseAdapter() {
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                hovered = true;
+                updateBackground();
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // Only remove the highlight once the mouse has left the whole row.
+                hovered = getMousePosition(true) != null;
+                updateBackground();
+            }
+        };
+
+        addMouseListener(hoverListener);
+        viewButton.addMouseListener(hoverListener);
     }
 
     private JLabel createCell(String text, Font font) {
@@ -58,6 +84,18 @@ public class ScanRow extends JPanel {
     // Selected rows turn light green
     public void setSelected(boolean selected) {
         this.selected = selected;
-        setBackground(selected ? new Color(0xEAF5EE) : Color.WHITE);
+        updateBackground();
+    }
+
+    // Selected rows stay light green, hovered rows turn light grey, others stay white.
+    private void updateBackground() {
+
+        if (selected) {
+            setBackground(new Color(0xEAF5EE));
+        } else if (hovered) {
+            setBackground(new Color(0xF7F8FA));
+        } else {
+            setBackground(Color.WHITE);
+        }
     }
 }
