@@ -45,6 +45,9 @@ public class HistoryListSection extends JPanel {
     // Text currently typed into the History search box.
     private String searchText = "";
 
+    // Displays the newest scans first unless the user chooses oldest first.
+    private boolean newestFirst = true;
+
 
     public HistoryListSection() {
         setLayout(new BorderLayout());
@@ -97,8 +100,9 @@ public class HistoryListSection extends JPanel {
             // Load the saved records from EcoScan's CSV repository.
             List<SavedScan> scans = scanRepository.loadAll();
 
-            // Display the most recent hardware scans first.
-            scans.sort( Comparator.comparing(SavedScan::getScannedAt).reversed() );
+            // Sort the scans by date using the order chosen in the sort dropdown.
+            Comparator<SavedScan> byDate = Comparator.comparing(SavedScan::getScannedAt);
+            scans.sort( newestFirst ? byDate.reversed() : byDate );
 
             // Remember whether any scans exist before the search filter is applied.
             boolean hasSavedScans = !scans.isEmpty();
@@ -172,6 +176,13 @@ public class HistoryListSection extends JPanel {
     // Updates the search text and reloads the History table.
     public void setSearchText(String text) {
         this.searchText = text.trim().toLowerCase();
+        refreshScans();
+    }
+
+
+    // Updates the sort order and reloads the History table.
+    public void setNewestFirst(boolean newestFirst) {
+        this.newestFirst = newestFirst;
         refreshScans();
     }
 
