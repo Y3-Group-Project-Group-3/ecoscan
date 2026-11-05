@@ -81,6 +81,12 @@ public class HistoryActionsSection extends JPanel {
 
             @Override
             public void mouseEntered(MouseEvent e) {
+
+                // Disabled buttons don't react to hover.
+                if (!button.isEnabled()) {
+                    return;
+                }
+
                 button.setBackground(hoverBackground);
                 button.setForeground(hoverAccent);
                 button.setBorder( createButtonBorder(hoverAccent) );
@@ -88,6 +94,15 @@ public class HistoryActionsSection extends JPanel {
 
             @Override
             public void mouseExited(MouseEvent e) {
+                button.setBackground(Color.WHITE);
+                button.setForeground(TEXT_MAIN);
+                button.setBorder( createButtonBorder(BORDER_COLOR) );
+            }
+        });
+
+        // Remove the hover styling if the button is disabled while the mouse is over it.
+        button.addPropertyChangeListener("enabled", e -> {
+            if (!button.isEnabled()) {
                 button.setBackground(Color.WHITE);
                 button.setForeground(TEXT_MAIN);
                 button.setBorder( createButtonBorder(BORDER_COLOR) );

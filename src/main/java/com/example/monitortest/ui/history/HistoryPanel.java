@@ -155,10 +155,28 @@ public class HistoryPanel extends JPanel {
             historyListSection.printScans();
         });
 
+        // Enable each button only when it can be used.
+        // Updated whenever the scans or the selected rows change.
+        historyListSection.setStateChangeListener( () -> updateButtonStates(actionsSection) );
+        updateButtonStates(actionsSection);
+
         // ...
         main.add(center, BorderLayout.CENTER);
 
         return main;
+    }
+
+
+    // Disables the buttons that have nothing to act on.
+    // Import always stays enabled so sessions can be added at any time.
+    private void updateButtonStates(HistoryActionsSection actionsSection) {
+
+        boolean hasScans = historyListSection.hasScans();
+
+        actionsSection.getDeleteButton().setEnabled( historyListSection.hasSelection() );
+        actionsSection.getDeleteAllButton().setEnabled(hasScans);
+        actionsSection.getExportButton().setEnabled(hasScans);
+        actionsSection.getPrintButton().setEnabled(hasScans);
     }
 
 
