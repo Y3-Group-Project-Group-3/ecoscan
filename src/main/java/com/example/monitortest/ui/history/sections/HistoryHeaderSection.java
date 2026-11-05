@@ -59,11 +59,16 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import static com.example.monitortest.ui.theme.UIUtility.*;
 
 public class HistoryHeaderSection extends JPanel {
+
+    // Hint text displayed in the search box until the user starts typing.
+    private static final String SEARCH_PLACEHOLDER = "🔍  Search scans";
 
     private JTextField searchField;
     private JComboBox<String> sortCombo;
@@ -84,12 +89,34 @@ public class HistoryHeaderSection extends JPanel {
         );
         controls.setOpaque(false);
 
-        searchField = new JTextField("🔍  Search scans");
+        searchField = new JTextField(SEARCH_PLACEHOLDER);
+        searchField.setForeground(TEXT_MUTED);
         searchField.setPreferredSize(new Dimension(180, 32));
         searchField.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(BORDER_COLOR, 1, true),
                 new EmptyBorder(5, 8, 5, 8)
         ));
+
+        // Clear the hint text when the user clicks into the search box.
+        // Restore the hint text when the search box is left empty.
+        searchField.addFocusListener(new FocusAdapter() {
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (searchField.getText().equals(SEARCH_PLACEHOLDER)) {
+                    searchField.setText("");
+                    searchField.setForeground(TEXT_MAIN);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (searchField.getText().isBlank()) {
+                    searchField.setForeground(TEXT_MUTED);
+                    searchField.setText(SEARCH_PLACEHOLDER);
+                }
+            }
+        });
 
         sortCombo = new JComboBox<>(
                 new String[]{"↓↑ Newest first", "↓↑ Oldest first"}
@@ -105,6 +132,18 @@ public class HistoryHeaderSection extends JPanel {
 
     public JTextField getSearchField() {
         return searchField;
+    }
+
+    // Returns the text typed into the search box, ignoring the hint text.
+    public String getSearchText() {
+
+        String text = searchField.getText();
+
+        if (text.equals(SEARCH_PLACEHOLDER)) {
+            return "";
+        }
+
+        return text.trim();
     }
 
     public JComboBox<String> getSortCombo() {
