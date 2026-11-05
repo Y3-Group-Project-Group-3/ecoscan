@@ -44,8 +44,31 @@ public class HistoryPanel extends JPanel {
         // Display the existing History list component.
         center.add(historyListSection, BorderLayout.CENTER);
 
-        // ...
-        center.add( new HistoryActionsSection(), BorderLayout.SOUTH );
+        // Display the History action buttons.
+        HistoryActionsSection actionsSection = new HistoryActionsSection();
+        center.add( actionsSection, BorderLayout.SOUTH );
+
+        // Delete the selected scans when the Delete Selected button is clicked.
+        actionsSection.getDeleteButton().addActionListener(e -> {
+
+            // Ask the user to select a scan first when nothing is selected.
+            if (!historyListSection.hasSelection()) {
+                JOptionPane.showMessageDialog( this,
+                        "Select one or more scans to delete.",
+                        "Delete scans", JOptionPane.INFORMATION_MESSAGE );
+                return;
+            }
+
+            // Confirm before removing the scans from the saved history.
+            int answer = JOptionPane.showConfirmDialog( this,
+                    "Delete the selected scans?", "Delete scans",
+                    JOptionPane.OK_CANCEL_OPTION );
+
+            // Remove the selected scans once the user confirms.
+            if (answer == JOptionPane.OK_OPTION) {
+                historyListSection.deleteSelected();
+            }
+        });
 
         // ...
         main.add(center, BorderLayout.CENTER);

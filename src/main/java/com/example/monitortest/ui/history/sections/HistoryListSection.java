@@ -6,7 +6,14 @@ import com.example.monitortest.ui.history.components.ScanRow;
 import com.example.monitortest.ui.history.model.SavedScan;
 import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Set;
+import java.util.UUID;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
@@ -31,6 +38,9 @@ public class HistoryListSection extends JPanel {
 
     // Notifies the parent History Page when a saved scan is selected.
     private Consumer<SavedScan> viewScanListener;
+
+    // Rows on screen, linked to the scan they show
+    private final Map<ScanRow, SavedScan> rows = new LinkedHashMap<>();
 
 
     public HistoryListSection() {
@@ -58,7 +68,7 @@ public class HistoryListSection extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
 
         JLabel infoLabel = new JLabel(
-                "Select a row to delete it, or choose View to open the full breakdown."
+                "Select one or more rows (Cmd/Ctrl-click) to delete them, or choose View to open the full breakdown."
         );
 
         infoLabel.setFont(UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE));
@@ -77,6 +87,7 @@ public class HistoryListSection extends JPanel {
 
         // Remove the previously displayed rows before rebuilding the list.
         listItemsPanel.removeAll();
+        rows.clear();
 
         try {
 
@@ -104,15 +115,16 @@ public class HistoryListSection extends JPanel {
                     ScanRow row = new ScanRow(date, scan.getName());
 
                     // Associate this row's View Scan button with its saved record.
-                    // Each iteration of the loop refers to a particular SavedScan object.
-                    // The button's listener captures that reference, meaning clicking View Scan for Gaming PC
-                    // selects the Gaming PC record rather than whichever record was last loaded.
                     row.getViewButton().addActionListener(e -> {
                         // Forward the selected scan when a listener has been registered.
                         if (viewScanListener != null) {
                             viewScanListener.accept(scan);
                         }
                     });
+
+                    // Make the row selectable (click / Cmd-Ctrl-click)
+                    addSelection(row);
+                    rows.put(row, scan);
 
                     // Add the configured row to the History list.
                     listItemsPanel.add(row);
@@ -137,6 +149,60 @@ public class HistoryListSection extends JPanel {
         // Update the Swing layout after changing the displayed rows.
         listItemsPanel.revalidate();
         listItemsPanel.repaint();
+    }
+
+    // Click selects one row, Cmd/Ctrl-click selects more than one
+    private void addSelection(ScanRow row) {
+        row.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                boolean multi = e.isMetaDown() || e.isControlDown();
+
+                if (!multi) {
+                    for (ScanRow r : rows.keySet()) {
+                        r.setSelected(false);
+                    }
+                }
+                row.setSelected(!row.isSelected() || !multi);
+            }
+        });
+    }
+
+    // True if at least one row is selected
+    public boolean hasSelection() {
+        for (ScanRow row : rows.keySet()) {
+            if (row.isSelected()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Deletes the selected scans from the CSV, then reloads the list
+    public void deleteSelected() {
+
+        Set<UUID> ids = new HashSet<>();
+
+        for (Map.Entry<ScanRow, SavedScan> entry : rows.entrySet()) {
+            if (entry.getKey().isSelected()) {
+                ids.add(entry.getValue().getId());
+            }
+        }
+
+        if (ids.isEmpty()) {
+            return;
+        }
+
+        try {
+            scanRepository.deleteByIds(ids);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Unable to delete the selected scans.",
+                    "Delete scans", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+
+        refreshScans();
     }
 
     public JPanel createListHeaderRow() {
@@ -165,6 +231,5 @@ public class HistoryListSection extends JPanel {
     public void setViewScanListener(Consumer<SavedScan> listener) {
         this.viewScanListener = listener;
     }
-
 
 }
