@@ -10,6 +10,7 @@ import static com.example.monitortest.ui.theme.AppTheme.*;
 public class ScanRow extends JPanel {
 
     private JButton viewButton;
+    private boolean selected = false;
 
     // Creates one history row containing the scan date, CO₂ and View button.
     public ScanRow(
@@ -47,5 +48,16 @@ public class ScanRow extends JPanel {
 
     public JButton getViewButton() {
         return viewButton;
+    }
+
+    // Is this row selected?
+    public boolean isSelected() {
+        return selected;
+    }
+
+    // Selected rows turn light green
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+        setBackground(selected ? new Color(0xEAF5EE) : Color.WHITE);
     }
 }
