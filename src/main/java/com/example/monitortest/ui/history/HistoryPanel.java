@@ -3,6 +3,7 @@ package com.example.monitortest.ui.history;
 import com.example.monitortest.ui.history.sections.HistoryActionsSection;
 import com.example.monitortest.ui.history.sections.HistoryHeaderSection;
 import com.example.monitortest.ui.history.sections.HistoryListSection;
+import com.example.monitortest.ui.history.sections.SessionListSection;
 import com.example.monitortest.ui.history.model.SavedScan;
 import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
 
@@ -19,6 +20,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class HistoryPanel extends JPanel {
 
     private final HistoryListSection historyListSection = new HistoryListSection();
+
+    // Displays the total emissions recorded for each Live Monitor session.
+    private final SessionListSection sessionListSection = new SessionListSection();
 
     // Theme Colors
     // TODO Move these into the apptheme class at some point
@@ -74,8 +78,13 @@ public class HistoryPanel extends JPanel {
         JPanel center = new JPanel(new BorderLayout(0, 20));
         center.setOpaque(false);
 
-        // Display the existing History list component.
-        center.add(historyListSection, BorderLayout.CENTER);
+        // Display the saved scans above the Live Monitor sessions.
+        JPanel lists = new JPanel(new GridLayout(2, 1, 0, 20));
+        lists.setOpaque(false);
+        lists.add(historyListSection);
+        lists.add(sessionListSection);
+
+        center.add(lists, BorderLayout.CENTER);
 
         // Display the History action buttons.
         HistoryActionsSection actionsSection = new HistoryActionsSection();
@@ -128,6 +137,9 @@ public class HistoryPanel extends JPanel {
 
         // Export the saved scans to a CSV file when the Export Results button is clicked.
         actionsSection.getExportButton().addActionListener(e -> exportScans());
+
+        // Import Live Monitor sessions from a CSV file when the Import Results button is clicked.
+        actionsSection.getImportButton().addActionListener(e -> importSessions());
 
         // Print the History list when the Print List button is clicked.
         actionsSection.getPrintButton().addActionListener(e -> {
@@ -201,9 +213,50 @@ public class HistoryPanel extends JPanel {
     }
 
 
-    // Reloads saved scans whenever the History Page is opened.
+    // Lets the user choose a sessions CSV file and adds its sessions to the Sessions table.
+    private void importSessions() {
+
+        // Open a file dialog limited to CSV files.
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Import sessions");
+        fileChooser.setFileFilter( new FileNameExtensionFilter("CSV files (*.csv)", "csv") );
+
+        // Stop when the user cancels the dialog.
+        if (fileChooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File importFile = fileChooser.getSelectedFile();
+
+        try {
+
+            // Add the sessions to EcoScan's history and refresh the table.
+            int imported = sessionListSection.importSessions( importFile.toPath() );
+
+            // Tell the user how many sessions were added.
+            String message = imported == 0
+                    ? "No sessions were found in " + importFile.getName() + "."
+                    : imported + " session(s) imported from " + importFile.getName() + ".";
+
+            JOptionPane.showMessageDialog( this, message, "Import sessions", JOptionPane.INFORMATION_MESSAGE );
+
+        } catch (IOException ex) {
+
+            // Inform the user that the import could not be completed.
+            JOptionPane.showMessageDialog( this,
+                    "Unable to import sessions from " + importFile.getName() + ".",
+                    "Import sessions", JOptionPane.ERROR_MESSAGE );
+
+            // Print the underlying error for debugging.
+            ex.printStackTrace();
+        }
+    }
+
+
+    // Reloads saved scans and sessions whenever the History Page is opened.
     public void refreshHistory() {
         historyListSection.refreshScans();
+        sessionListSection.refreshSessions();
     }
 
 
