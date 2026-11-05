@@ -42,6 +42,9 @@ public class HistoryListSection extends JPanel {
     // Links each displayed row to the saved scan it represents.
     private final Map<ScanRow, SavedScan> rows = new LinkedHashMap<>();
 
+    // Text currently typed into the History search box.
+    private String searchText = "";
+
 
     public HistoryListSection() {
         setLayout(new BorderLayout());
@@ -97,9 +100,21 @@ public class HistoryListSection extends JPanel {
             // Display the most recent hardware scans first.
             scans.sort( Comparator.comparing(SavedScan::getScannedAt).reversed() );
 
-            // Show a helpful message when no scans have been saved yet.
+            // Remember whether any scans exist before the search filter is applied.
+            boolean hasSavedScans = !scans.isEmpty();
+
+            // Only keep the scans that match the current search text.
+            scans.removeIf( scan -> !matchesSearch(scan) );
+
+            // Show a helpful message when no scans have been saved yet,
+            // or when no saved scans match the search.
             if (scans.isEmpty()) {
-                JLabel emptyLabel = new JLabel( "No saved hardware scans available." );
+
+                String message = hasSavedScans
+                        ? "No saved scans match your search."
+                        : "No saved hardware scans available.";
+
+                JLabel emptyLabel = new JLabel( message );
                 emptyLabel.setBorder(new EmptyBorder(15, 15, 15, 15));
                 listItemsPanel.add(emptyLabel);
 
@@ -151,6 +166,28 @@ public class HistoryListSection extends JPanel {
         // Update the Swing layout after changing the displayed rows.
         listItemsPanel.revalidate();
         listItemsPanel.repaint();
+    }
+
+
+    // Updates the search text and reloads the History table.
+    public void setSearchText(String text) {
+        this.searchText = text.trim().toLowerCase();
+        refreshScans();
+    }
+
+
+    // Returns true when the scan's name or date contains the search text.
+    private boolean matchesSearch(SavedScan scan) {
+
+        // Every scan matches when the search box is empty.
+        if (searchText.isEmpty()) {
+            return true;
+        }
+
+        String name = scan.getName().toLowerCase();
+        String date = scan.getScannedAt().format(DATE_FORMAT).toLowerCase();
+
+        return name.contains(searchText) || date.contains(searchText);
     }
 
 
