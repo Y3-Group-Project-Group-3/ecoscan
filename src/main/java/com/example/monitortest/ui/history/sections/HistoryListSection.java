@@ -50,6 +50,9 @@ public class HistoryListSection extends JPanel {
     // Displays the newest scans first unless the user chooses oldest first.
     private boolean newestFirst = true;
 
+    // Notifies the History Page when the rows or selection change.
+    private Runnable stateChangeListener;
+
 
     public HistoryListSection() {
         setLayout(new BorderLayout());
@@ -172,6 +175,9 @@ public class HistoryListSection extends JPanel {
         // Update the Swing layout after changing the displayed rows.
         listItemsPanel.revalidate();
         listItemsPanel.repaint();
+
+        // Let the History Page update its buttons.
+        notifyStateChanged();
     }
 
 
@@ -225,6 +231,9 @@ public class HistoryListSection extends JPanel {
 
                 // Select the clicked row, or toggle it during multi-select.
                 row.setSelected( !row.isSelected() || !multiSelect );
+
+                // Let the History Page update its buttons.
+                notifyStateChanged();
             }
         });
     }
@@ -370,6 +379,20 @@ public class HistoryListSection extends JPanel {
         }
 
         return header;
+    }
+
+
+    // Registers the action to run when the rows or selection change.
+    public void setStateChangeListener(Runnable listener) {
+        this.stateChangeListener = listener;
+    }
+
+
+    // Runs the state change action when one has been registered.
+    private void notifyStateChanged() {
+        if (stateChangeListener != null) {
+            stateChangeListener.run();
+        }
     }
 
 
