@@ -9,6 +9,8 @@ import java.util.function.Consumer;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class HistoryPanel extends JPanel {
 
@@ -35,7 +37,27 @@ public class HistoryPanel extends JPanel {
         main.setBorder(new EmptyBorder(25, 25, 25, 25));
 
         // Header
-        main.add( new HistoryHeaderSection(), BorderLayout.NORTH);
+        HistoryHeaderSection headerSection = new HistoryHeaderSection();
+        main.add( headerSection, BorderLayout.NORTH);
+
+        // Filter the History list whenever the search text changes.
+        headerSection.getSearchField().getDocument().addDocumentListener(new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                historyListSection.setSearchText( headerSection.getSearchText() );
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                historyListSection.setSearchText( headerSection.getSearchText() );
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                historyListSection.setSearchText( headerSection.getSearchText() );
+            }
+        });
 
         // List and action buttons
         JPanel center = new JPanel(new BorderLayout(0, 20));
