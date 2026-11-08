@@ -1,7 +1,12 @@
+
 package com.example.monitortest.ui.history.components;
 
+import com.example.monitortest.ui.common.OutlinedActionButton;
 import com.example.monitortest.ui.theme.UIUtility;
-import com.example.monitortest.model.ScanRecord;
+
+import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
+import org.kordamp.ikonli.swing.FontIcon;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -10,72 +15,51 @@ import java.awt.event.MouseEvent;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
 
+// Displays an individual saved hardware scan.
+// Contains the scan date, name, and View action.
 public class ScanRow extends JPanel {
 
-    private JButton viewButton;
-    private boolean selected = false;
+    private final JButton viewButton;
 
-    // Tracks whether the mouse is currently over the row.
+    // Tracks the row's selection and mouse hover state.
+    private boolean selected = false;
     private boolean hovered = false;
 
-    // Creates one history row containing the scan date, CO₂ and View button.
-    public ScanRow( String date, String name ) {
+    // Colours used to distinguish hovered and selected rows.
+    private static final Color HOVER_COLOR = new Color(0xF7F8FA);
+    private static final Color SELECTED_COLOR = new Color(0xEAF5EE);
 
-    private final ScanRecord scan;
+    // Creates a three-column row matching the History table header.
+    public ScanRow(String date, String name) {
 
-    private boolean selected = false;
-
-    public ScanRow(
-            String date,
-            String device,
-            String type,
-            String co2
-    ) {
-
-        scan = new ScanRecord(date, device, type, co2);
-
-        setLayout(new GridLayout(1, 5, 10, 0));
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        setPreferredSize(new Dimension(700, 50));
-        setBackground(Color.WHITE);
-
-        // Give each row enough height for the rounded action button.
+        setLayout(new GridLayout(1, 3, 10, 0));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 54));
         setPreferredSize(new Dimension(700, 54));
+        setBackground(Color.WHITE);
 
-        // Match the padding of the table header.
+        // Match the spacing used by HistoryTableHeader.
         setBorder(new EmptyBorder(10, 18, 10, 18));
 
-        Font font = UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE);
+        Font font = UIUtility.font( "SansSerif", Font.PLAIN, FONT_LABEL_SIZE );
 
-        // Add the scan information in the same order as the header.
+        // Display the scan information.
         add(createCell(date, font));
-        add(createCell(device, font));
-        add(createCell(type, font));
-        add(createCell(co2, font));
+        add(createCell(name, font));
 
-        JPanel buttonPanel = new JPanel(
-                new FlowLayout(FlowLayout.LEFT, 0, 0)
-        );
+        // Place the View button in the final column.
+        JPanel buttonPanel = new JPanel( new FlowLayout(FlowLayout.LEFT, 0, 0) );
         buttonPanel.setOpaque(false);
 
-        // Reuse the rounded secondary action button.
         viewButton = new OutlinedActionButton("View");
-
-        // Add a consistent icon to indicate the scan can be opened.
         viewButton.setIcon( FontIcon.of(FontAwesomeSolid.EYE, 13, GREEN) );
         viewButton.setIconTextGap(6);
-
-        // Keep the action compact enough for the table row.
         viewButton.setPreferredSize(new Dimension(88, 32));
 
         buttonPanel.add(viewButton);
-
-
         add(buttonPanel);
 
-        // Highlight the row while the mouse is over it.
-        // The View button shares the listener so moving onto it keeps the highlight.
+        // Keep hover highlighting consistent when moving
+        // between the row and its View button.
         MouseAdapter hoverListener = new MouseAdapter() {
 
             @Override
@@ -86,7 +70,8 @@ public class ScanRow extends JPanel {
 
             @Override
             public void mouseExited(MouseEvent e) {
-                // Only remove the highlight once the mouse has left the whole row.
+
+                // Check whether the pointer remains inside this row.
                 hovered = getMousePosition(true) != null;
                 updateBackground();
             }
@@ -96,24 +81,42 @@ public class ScanRow extends JPanel {
         viewButton.addMouseListener(hoverListener);
     }
 
+    // Creates an individual text cell with shared application styling.
     private JLabel createCell(String text, Font font) {
+
         JLabel label = new JLabel(text);
         label.setFont(font);
         label.setForeground(TEXT_MAIN);
+
         return label;
     }
 
+    // Updates the row background based on selection and hover state.
+    // Selected rows take priority over hover highlighting.
+    private void updateBackground() {
+
+        if (selected) {
+            setBackground(SELECTED_COLOR);
+        } else if (hovered) {
+            setBackground(HOVER_COLOR);
+        } else {
+            setBackground(Color.WHITE);
+        }
+    }
+
+    // Returns the View button so HistoryListSection can attach navigation.
     public JButton getViewButton() {
         return viewButton;
     }
 
-    public ScanRecord getScan() {return scan;}
+    // Returns whether this row is currently selected.
+    public boolean isSelected() {
+        return selected;
+    }
 
-    // selected row?
-    public boolean isSelected() {return selected;}
-
-    // Selected row turns light green
+    // Updates selection and immediately refreshes the row appearance.
     public void setSelected(boolean selected) {
         this.selected = selected;
-        setBackground(selected ? new Color(0xEAF5EE) : Color.WHITE);}
+        updateBackground();
+    }
 }

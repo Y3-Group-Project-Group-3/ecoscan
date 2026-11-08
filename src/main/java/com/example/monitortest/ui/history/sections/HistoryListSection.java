@@ -2,8 +2,6 @@ package com.example.monitortest.ui.history.sections;
 
 import com.example.monitortest.ui.theme.UIUtility;
 import com.example.monitortest.ui.history.components.ScanRow;
-import com.example.monitortest.model.ScanHistory;
-import com.example.monitortest.model.ScanRecord;
 
 import java.util.List;
 
@@ -26,7 +24,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -38,7 +35,6 @@ import java.awt.*;
 public class HistoryListSection extends RoundedPanel {
 
     private JPanel listItemsPanel;
-    private final ScanHistory scanHistory = new ScanHistory();
 
     // Retrieves saved hardware scans from the CSV history file.
     private final ScanHistoryCsvRepository scanRepository = new ScanHistoryCsvRepository();
@@ -110,14 +106,8 @@ public class HistoryListSection extends RoundedPanel {
         listItemsPanel.setLayout( new BoxLayout(listItemsPanel, BoxLayout.Y_AXIS) );
         listItemsPanel.setBackground(Color.WHITE);
 
-        // scan records from scan_history.csv
-        showScans(scanHistory.getScans());
-
-        JScrollPane scrollPane = new JScrollPane(listItemsPanel);
-        scrollPane.setBorder(null);
-        scrollPane.setHorizontalScrollBarPolicy(
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-        );
+        // Load saved hardware scans from the current CSV repository.
+        refreshScans();
 
         // Create a transparent scroll pane that respects the rounded card.
         JScrollPane scrollPane = UIUtility.createCardScrollPane(listItemsPanel);
@@ -130,7 +120,6 @@ public class HistoryListSection extends RoundedPanel {
         );
 
         infoLabel.setFont(UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE));
-        infoLabel.setForeground(new Color(75, 85, 99));
 
         // Keep the footer from covering the card's rounded bottom corners.
         infoLabel.setOpaque(false);
@@ -366,32 +355,36 @@ public class HistoryListSection extends RoundedPanel {
         deleteScans( selectedIds, "Unable to delete the selected scans." );
     }
 
-    public void showScans(List<ScanRecord> scans) {
 
-        listItemsPanel.removeAll();
+    // Deletes every saved hardware scan, including scans hidden by search.
+    // Uses the repository rather than the currently displayed rows.
+    public void deleteAll() {
 
-        for (ScanRecord scan : scans) {
-            listItemsPanel.add(new ScanRow( scan.getDate(), scan.getDevice(), scan.getType(), scan.getCo2() ));
-        }
-        listItemsPanel.revalidate();
-        listItemsPanel.repaint(); }
+        try {
 
-    public JPanel createListHeaderRow() {
+            // Retrieve the complete scan history from the CSV repository.
+            List<SavedScan> allScans = scanRepository.loadAll();
 
-        JPanel header = new JPanel(new GridLayout(1, 5, 10, 0));
-        header.setBackground(new Color(243, 244, 246));
-        header.setBorder(new EmptyBorder(12, 15, 12, 15));
+            // Collect the IDs of every saved hardware scan.
+            Set<UUID> allIds = new HashSet<>();
 
-        String[] titles = {
-                "DATE", "DEVICE", "TYPE", "CO₂", ""
-        };
+            for (SavedScan scan : allScans) {
+                allIds.add(scan.getId());
+            }
 
-            // Reuse the existing persistence and refresh operation.
+            // Avoid unnecessary repository operations when history is empty.
+            if (allIds.isEmpty()) {
+                return;
+            }
+
+            // Reuse the existing deletion and refresh functionality.
             deleteScans( allIds, "Unable to delete the saved scans." );
 
         } catch (IOException | IllegalArgumentException e) {
-            // Inform the user when the complete scan history cannot be loaded.
+
+            // Report a failure to load the complete scan history.
             JOptionPane.showMessageDialog( this, "Unable to load the saved scans for deletion.", "Delete all scans", JOptionPane.ERROR_MESSAGE );
+
             e.printStackTrace();
         }
     }
@@ -418,9 +411,6 @@ public class HistoryListSection extends RoundedPanel {
         // Reload the History table after a successful deletion.
         refreshScans();
 
-
-        // Rebuild the History table from the updated CSV.
-        refreshScans();
     }
 
 
