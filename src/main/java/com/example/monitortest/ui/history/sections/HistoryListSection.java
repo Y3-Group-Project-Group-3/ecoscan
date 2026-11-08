@@ -39,7 +39,7 @@ public class HistoryListSection extends JPanel {
     // Notifies the parent History Page when a saved scan is selected.
     private Consumer<SavedScan> viewScanListener;
 
-    // Rows on screen, linked to the scan they show
+    // Links each displayed row to the saved scan it represents.
     private final Map<ScanRow, SavedScan> rows = new LinkedHashMap<>();
 
 
@@ -122,8 +122,10 @@ public class HistoryListSection extends JPanel {
                         }
                     });
 
-                    // Make the row selectable (click / Cmd-Ctrl-click)
+                    // Allow the row to be selected for deletion.
                     addSelection(row);
+
+                    // Remember which saved scan this row represents.
                     rows.put(row, scan);
 
                     // Add the configured row to the History list.
@@ -151,59 +153,109 @@ public class HistoryListSection extends JPanel {
         listItemsPanel.repaint();
     }
 
-    // Click selects one row, Cmd/Ctrl-click selects more than one
+
+    // Makes a History row selectable.
+    // A single click selects one row, Cmd/Ctrl-click selects several rows.
     private void addSelection(ScanRow row) {
+
         row.addMouseListener(new MouseAdapter() {
+
             @Override
             public void mousePressed(MouseEvent e) {
-                boolean multi = e.isMetaDown() || e.isControlDown();
 
-                if (!multi) {
-                    for (ScanRow r : rows.keySet()) {
-                        r.setSelected(false);
+                // Cmd (Mac) or Ctrl (Windows) allows more than one row to be selected.
+                boolean multiSelect = e.isMetaDown() || e.isControlDown();
+
+                // Clear the previous selection for a normal click.
+                if (!multiSelect) {
+                    for (ScanRow otherRow : rows.keySet()) {
+                        otherRow.setSelected(false);
                     }
                 }
-                row.setSelected(!row.isSelected() || !multi);
+
+                // Select the clicked row, or toggle it during multi-select.
+                row.setSelected( !row.isSelected() || !multiSelect );
             }
         });
     }
 
-    // True if at least one row is selected
+
+    // Returns true when at least one History row is selected.
     public boolean hasSelection() {
+
         for (ScanRow row : rows.keySet()) {
             if (row.isSelected()) {
                 return true;
             }
         }
+
         return false;
     }
 
-    // Deletes the selected scans from the CSV, then reloads the list
+
+    // Returns true when the History list contains at least one saved scan.
+    public boolean hasScans() {
+        return !rows.isEmpty();
+    }
+
+
+    // Deletes the selected hardware scans and refreshes the History table.
     public void deleteSelected() {
 
-        Set<UUID> ids = new HashSet<>();
+        // Collect the ids of every selected saved scan.
+        Set<UUID> selectedIds = new HashSet<>();
 
         for (Map.Entry<ScanRow, SavedScan> entry : rows.entrySet()) {
             if (entry.getKey().isSelected()) {
-                ids.add(entry.getValue().getId());
+                selectedIds.add( entry.getValue().getId() );
             }
         }
 
-        if (ids.isEmpty()) {
+        // Nothing to delete when no rows are selected.
+        if (selectedIds.isEmpty()) {
             return;
         }
 
+        deleteScans( selectedIds, "Unable to delete the selected scans." );
+    }
+
+
+    // Deletes every saved hardware scan and refreshes the History table.
+    public void deleteAll() {
+
+        // Collect the ids of every displayed saved scan.
+        Set<UUID> allIds = new HashSet<>();
+
+        for (SavedScan scan : rows.values()) {
+            allIds.add( scan.getId() );
+        }
+
+        deleteScans( allIds, "Unable to delete the saved scans." );
+    }
+
+
+    // Removes the given scans from the CSV file, then reloads the History table.
+    // Displays an error message without changing the list if deletion fails.
+    private void deleteScans(Set<UUID> ids, String errorMessage) {
+
         try {
+
+            // Remove the scans from EcoScan's CSV repository.
             scanRepository.deleteByIds(ids);
+
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(this,
-                    "Unable to delete the selected scans.",
-                    "Delete scans", JOptionPane.ERROR_MESSAGE);
+
+            // Inform the user that the saved history could not be updated.
+            JOptionPane.showMessageDialog( this, errorMessage, "Delete scans", JOptionPane.ERROR_MESSAGE );
+
+            // Print the underlying error for debugging.
             e.printStackTrace();
         }
 
+        // Rebuild the History table from the updated CSV.
         refreshScans();
     }
+
 
     public JPanel createListHeaderRow() {
 

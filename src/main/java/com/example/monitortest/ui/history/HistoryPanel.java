@@ -70,6 +70,29 @@ public class HistoryPanel extends JPanel {
             }
         });
 
+        // Delete every saved scan when the Delete All button is clicked.
+        actionsSection.getDeleteAllButton().addActionListener(e -> {
+
+            // Inform the user when there are no saved scans to delete.
+            if (!historyListSection.hasScans()) {
+                JOptionPane.showMessageDialog( this,
+                        "There are no saved scans to delete.",
+                        "Delete all scans", JOptionPane.INFORMATION_MESSAGE );
+                return;
+            }
+
+            // Confirm before removing every scan from the saved history.
+            int answer = JOptionPane.showConfirmDialog( this,
+                    "Delete all saved scans? This cannot be undone.",
+                    "Delete all scans", JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.WARNING_MESSAGE );
+
+            // Remove every saved scan once the user confirms.
+            if (answer == JOptionPane.OK_OPTION) {
+                historyListSection.deleteAll();
+            }
+        });
+
         // ...
         main.add(center, BorderLayout.CENTER);
 
