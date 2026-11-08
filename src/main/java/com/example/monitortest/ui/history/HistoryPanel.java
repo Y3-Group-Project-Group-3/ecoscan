@@ -129,6 +129,20 @@ public class HistoryPanel extends JPanel {
         // Export the saved scans to a CSV file when the Export Results button is clicked.
         actionsSection.getExportButton().addActionListener(e -> exportScans());
 
+        // Print the History list when the Print List button is clicked.
+        actionsSection.getPrintButton().addActionListener(e -> {
+
+            // Inform the user when there are no saved scans to print.
+            if (!historyListSection.hasScans()) {
+                JOptionPane.showMessageDialog( this,
+                        "There are no saved scans to print.",
+                        "Print scans", JOptionPane.INFORMATION_MESSAGE );
+                return;
+            }
+
+            historyListSection.printScans();
+        });
+
         // ...
         main.add(center, BorderLayout.CENTER);
 
