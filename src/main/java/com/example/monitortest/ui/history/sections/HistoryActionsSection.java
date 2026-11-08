@@ -46,6 +46,10 @@ public class HistoryActionsSection extends JPanel {
     }
 
 
+    public JButton getExportButton() {
+        return exportButton;
+    }
+
     public JButton getDeleteButton() {
         return deleteButton;
     }

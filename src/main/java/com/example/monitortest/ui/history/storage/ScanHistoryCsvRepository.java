@@ -223,4 +223,20 @@ public class ScanHistoryCsvRepository {
 
 
 
+    // Copies the saved scan history to a CSV file chosen by the user.
+// The exported file uses the same format, so it can be imported again later.
+    public void exportTo(Path exportPath) throws IOException {
+
+        // Create an empty history file first if no scans have been saved yet.
+        if (Files.notExists(csvPath)) {
+            Files.createDirectories(csvPath.getParent());
+            Files.createFile(csvPath);
+        }
+
+        // Copy the history file, replacing any existing file at the chosen location.
+        Files.copy( csvPath, exportPath, StandardCopyOption.REPLACE_EXISTING );
+    }
+
+
+
 }
