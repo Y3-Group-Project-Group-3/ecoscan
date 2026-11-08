@@ -1,10 +1,7 @@
 package com.example.monitortest.ui.history.components;
 
 import com.example.monitortest.ui.theme.UIUtility;
-import com.example.monitortest.ui.common.OutlinedActionButton;
-import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
-import org.kordamp.ikonli.swing.FontIcon;
-
+import com.example.monitortest.model.ScanRecord;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -24,9 +21,22 @@ public class ScanRow extends JPanel {
     // Creates one history row containing the scan date, CO₂ and View button.
     public ScanRow( String date, String name ) {
 
-        // Match the three columns used by HistoryListSection:
-        // Date, Name and Action.
-        setLayout(new GridLayout(1, 3, 10, 0));
+    private final ScanRecord scan;
+
+    private boolean selected = false;
+
+    public ScanRow(
+            String date,
+            String device,
+            String type,
+            String co2
+    ) {
+
+        scan = new ScanRecord(date, device, type, co2);
+
+        setLayout(new GridLayout(1, 5, 10, 0));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        setPreferredSize(new Dimension(700, 50));
         setBackground(Color.WHITE);
 
         // Give each row enough height for the rounded action button.
@@ -40,9 +50,13 @@ public class ScanRow extends JPanel {
 
         // Add the scan information in the same order as the header.
         add(createCell(date, font));
-        add(createCell(name, font));
+        add(createCell(device, font));
+        add(createCell(type, font));
+        add(createCell(co2, font));
 
-        JPanel buttonPanel = new JPanel( new FlowLayout(FlowLayout.LEFT, 0, 0) );
+        JPanel buttonPanel = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 0, 0)
+        );
         buttonPanel.setOpaque(false);
 
         // Reuse the rounded secondary action button.
@@ -93,26 +107,13 @@ public class ScanRow extends JPanel {
         return viewButton;
     }
 
-    // Is this row selected?
-    public boolean isSelected() {
-        return selected;
-    }
+    public ScanRecord getScan() {return scan;}
 
-    // Selected rows turn light green
+    // selected row?
+    public boolean isSelected() {return selected;}
+
+    // Selected row turns light green
     public void setSelected(boolean selected) {
         this.selected = selected;
-        updateBackground();
-    }
-
-    // Selected rows stay light green, hovered rows turn light grey, others stay white.
-    private void updateBackground() {
-
-        if (selected) {
-            setBackground(new Color(0xEAF5EE));
-        } else if (hovered) {
-            setBackground(new Color(0xF7F8FA));
-        } else {
-            setBackground(Color.WHITE);
-        }
-    }
+        setBackground(selected ? new Color(0xEAF5EE) : Color.WHITE);}
 }

@@ -2,6 +2,10 @@ package com.example.monitortest.ui.history.sections;
 
 import com.example.monitortest.ui.theme.UIUtility;
 import com.example.monitortest.ui.history.components.ScanRow;
+import com.example.monitortest.model.ScanHistory;
+import com.example.monitortest.model.ScanRecord;
+
+import java.util.List;
 
 import com.example.monitortest.ui.history.model.SavedScan;
 import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
@@ -34,6 +38,7 @@ import java.awt.*;
 public class HistoryListSection extends RoundedPanel {
 
     private JPanel listItemsPanel;
+    private final ScanHistory scanHistory = new ScanHistory();
 
     // Retrieves saved hardware scans from the CSV history file.
     private final ScanHistoryCsvRepository scanRepository = new ScanHistoryCsvRepository();
@@ -105,8 +110,14 @@ public class HistoryListSection extends RoundedPanel {
         listItemsPanel.setLayout( new BoxLayout(listItemsPanel, BoxLayout.Y_AXIS) );
         listItemsPanel.setBackground(Color.WHITE);
 
-        // Populate the History table using records saved to CSV.
-        refreshScans();
+        // scan records from scan_history.csv
+        showScans(scanHistory.getScans());
+
+        JScrollPane scrollPane = new JScrollPane(listItemsPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setHorizontalScrollBarPolicy(
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+        );
 
         // Create a transparent scroll pane that respects the rounded card.
         JScrollPane scrollPane = UIUtility.createCardScrollPane(listItemsPanel);
@@ -355,26 +366,25 @@ public class HistoryListSection extends RoundedPanel {
         deleteScans( selectedIds, "Unable to delete the selected scans." );
     }
 
-    // Deletes every saved hardware scan, including scans hidden by search.
-    // Uses the repository rather than the currently displayed UI rows.
-    public void deleteAll() {
+    public void showScans(List<ScanRecord> scans) {
 
-        try {
+        listItemsPanel.removeAll();
 
-            // Retrieve all saved scans regardless of the active search filter.
-            List<SavedScan> allScans = scanRepository.loadAll();
+        for (ScanRecord scan : scans) {
+            listItemsPanel.add(new ScanRow( scan.getDate(), scan.getDevice(), scan.getType(), scan.getCo2() ));
+        }
+        listItemsPanel.revalidate();
+        listItemsPanel.repaint(); }
 
-            // Collect the identifiers of every stored scan.
-            Set<UUID> allIds = new HashSet<>();
+    public JPanel createListHeaderRow() {
 
-            for (SavedScan scan : allScans) {
-                allIds.add(scan.getId());
-            }
+        JPanel header = new JPanel(new GridLayout(1, 5, 10, 0));
+        header.setBackground(new Color(243, 244, 246));
+        header.setBorder(new EmptyBorder(12, 15, 12, 15));
 
-            // Nothing to delete when the repository contains no scans.
-            if (allIds.isEmpty()) {
-                return;
-            }
+        String[] titles = {
+                "DATE", "DEVICE", "TYPE", "CO₂", ""
+        };
 
             // Reuse the existing persistence and refresh operation.
             deleteScans( allIds, "Unable to delete the saved scans." );
@@ -405,7 +415,7 @@ public class HistoryListSection extends RoundedPanel {
             return;
         }
 
-// Reload the History table after a successful deletion.
+        // Reload the History table after a successful deletion.
         refreshScans();
 
 
@@ -439,10 +449,6 @@ public class HistoryListSection extends RoundedPanel {
     public void setStateChangeListener(Runnable listener) {
         this.stateChangeListener = listener;
     }
-
-
-
-
 
     // Runs the state change action when one has been registered.
     private void notifyStateChanged() {
