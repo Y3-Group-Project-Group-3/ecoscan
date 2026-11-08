@@ -59,6 +59,13 @@ public class HistoryPanel extends JPanel {
             }
         });
 
+        // Re-sort the History list whenever a different sort option is chosen.
+        // The first option is "Newest first", the second is "Oldest first".
+        headerSection.getSortCombo().addActionListener(e -> {
+            boolean newestFirst = headerSection.getSortCombo().getSelectedIndex() == 0;
+            historyListSection.setNewestFirst( newestFirst );
+        });
+
         // List and action buttons
         JPanel center = new JPanel(new BorderLayout(0, 20));
         center.setOpaque(false);
