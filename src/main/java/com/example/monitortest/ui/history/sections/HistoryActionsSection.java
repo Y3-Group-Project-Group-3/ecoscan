@@ -1,15 +1,9 @@
 package com.example.monitortest.ui.history.sections;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
-import static com.example.monitortest.ui.theme.UIUtility.createPillButton;
 import com.example.monitortest.ui.common.OutlinedActionButton;
 
 import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
@@ -25,13 +19,14 @@ public class HistoryActionsSection extends JPanel {
     private JButton exportButton;
     private JButton printButton;
     private JButton deleteButton;
-    private JButton deleteAllButton;
 
     public HistoryActionsSection() {
         setLayout(new BorderLayout());
         setOpaque(false);
 
-        JPanel leftButtons = new JPanel( new FlowLayout(FlowLayout.LEFT, 10, 0) );
+        // Arrange the action buttons horizontally without FlowLayout's outer gaps.
+        JPanel leftButtons = new JPanel();
+        leftButtons.setLayout(new BoxLayout(leftButtons, BoxLayout.X_AXIS));
         leftButtons.setOpaque(false);
 
         // Create the standard History actions using reusable styling.
@@ -39,18 +34,23 @@ public class HistoryActionsSection extends JPanel {
         exportButton = createActionButton( "Export Results", FontAwesomeSolid.FILE_EXPORT, false );
         printButton = createActionButton( "Print List", FontAwesomeSolid.PRINT, false );
 
+        // Add uniform spacing only between buttons.
         leftButtons.add(importButton);
+        leftButtons.add(Box.createHorizontalStrut(10));
         leftButtons.add(exportButton);
+        leftButtons.add(Box.createHorizontalStrut(10));
         leftButtons.add(printButton);
 
-        JPanel rightButtons = new JPanel( new FlowLayout(FlowLayout.RIGHT, 10, 0) );
+        // Align the delete actions with the right edge of the History cards.
+        JPanel rightButtons = new JPanel();
+        rightButtons.setLayout(new BoxLayout(rightButtons, BoxLayout.X_AXIS));
         rightButtons.setOpaque(false);
 
-        // Use a red hover treatment for actions that remove saved scans.
-        deleteAllButton = createActionButton( "Delete All", FontAwesomeSolid.TRASH_ALT, true );
-        deleteButton = createActionButton( "Delete Selected", FontAwesomeSolid.TRASH_ALT, true);
+        // Only selected-scan deletion remains in the bottom toolbar.
+        // Clearing the entire history is handled by the card header.
+        deleteButton = createActionButton( "Delete Selected", FontAwesomeSolid.TRASH_ALT, true );
 
-        rightButtons.add(deleteAllButton);
+        // Keep Delete Selected aligned to the right edge of the History cards.
         rightButtons.add(deleteButton);
 
         add(leftButtons, BorderLayout.WEST);
@@ -99,7 +99,4 @@ public class HistoryActionsSection extends JPanel {
         return deleteButton;
     }
 
-    public JButton getDeleteAllButton() {
-        return deleteAllButton;
-    }
 }

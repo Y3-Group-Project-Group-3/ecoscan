@@ -122,29 +122,6 @@ public class HistoryPanel extends JPanel {
             }
         });
 
-        // Delete every saved scan when the Delete All button is clicked.
-        actionsSection.getDeleteAllButton().addActionListener(e -> {
-
-            // Inform the user when there are no saved scans to delete.
-            if (!historyListSection.hasScans()) {
-                JOptionPane.showMessageDialog( this,
-                        "There are no saved scans to delete.",
-                        "Delete all scans", JOptionPane.INFORMATION_MESSAGE );
-                return;
-            }
-
-            // Confirm before removing every scan from the saved history.
-            int answer = JOptionPane.showConfirmDialog( this,
-                    "Delete all saved scans? This cannot be undone.",
-                    "Delete all scans", JOptionPane.OK_CANCEL_OPTION,
-                    JOptionPane.WARNING_MESSAGE );
-
-            // Remove every saved scan once the user confirms.
-            if (answer == JOptionPane.OK_OPTION) {
-                historyListSection.deleteAll();
-            }
-        });
-
         // Export the saved scans to a CSV file when the Export Results button is clicked.
         actionsSection.getExportButton().addActionListener(e -> exportScans());
 
@@ -155,7 +132,7 @@ public class HistoryPanel extends JPanel {
         actionsSection.getPrintButton().addActionListener(e -> {
 
             // Inform the user when there are no saved scans to print.
-            if (!historyListSection.hasScans()) {
+            if (!historyListSection.hasStoredScans()) {
                 JOptionPane.showMessageDialog( this,
                         "There are no saved scans to print.",
                         "Print scans", JOptionPane.INFORMATION_MESSAGE );
@@ -176,25 +153,29 @@ public class HistoryPanel extends JPanel {
         return main;
     }
 
-
-    // Disables the buttons that have nothing to act on.
-    // Import always stays enabled so sessions can be added at any time.
+    // Enables History actions according to stored records and visible selection.
     private void updateButtonStates(HistoryActionsSection actionsSection) {
 
-        boolean hasScans = historyListSection.hasScans();
+        // Actions affecting the entire history use the CSV's stored state.
+        boolean hasStoredScans = historyListSection.hasStoredScans();
+        // Printing operates on the currently displayed scans.
+        boolean hasVisibleScans = historyListSection.hasVisibleScans();
 
+        // Deleting selected rows requires an actual row selection.
         actionsSection.getDeleteButton().setEnabled( historyListSection.hasSelection() );
-        actionsSection.getDeleteAllButton().setEnabled(hasScans);
-        actionsSection.getExportButton().setEnabled(hasScans);
-        actionsSection.getPrintButton().setEnabled(hasScans);
-    }
 
+        // This action operates on the complete saved history.
+        actionsSection.getExportButton().setEnabled(hasStoredScans);
+
+        // Only permit printing when visible rows are available.
+        actionsSection.getPrintButton().setEnabled(hasVisibleScans);
+    }
 
     // Lets the user choose where to save a copy of the scan history as a CSV file.
     private void exportScans() {
 
         // Inform the user when there are no saved scans to export.
-        if (!historyListSection.hasScans()) {
+        if (!historyListSection.hasStoredScans()) {
             JOptionPane.showMessageDialog( this,
                     "There are no saved scans to export.",
                     "Export scans", JOptionPane.INFORMATION_MESSAGE );

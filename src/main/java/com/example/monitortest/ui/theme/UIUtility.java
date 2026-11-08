@@ -127,4 +127,24 @@ public final class UIUtility {
         return btn;
     }
 
+
+    // Creates a transparent scroll pane suitable for rounded card containers.
+    // Prevents the scroll pane and viewport from painting rectangular backgrounds.
+    public static JScrollPane createCardScrollPane(JComponent content) {
+
+        // Wrap the supplied content in a standard Swing scroll pane.
+        JScrollPane scrollPane = new JScrollPane(content);
+
+        // Let the parent card control the background and outer border.
+        scrollPane.setBorder(null);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+
+        // Prevent horizontal scrolling in card-based lists.
+        scrollPane.setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
+
+        return scrollPane;
+    }
+
+
 }

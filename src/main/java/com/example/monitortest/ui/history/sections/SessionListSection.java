@@ -4,31 +4,23 @@ import com.example.monitortest.ui.theme.UIUtility;
 
 import com.example.monitortest.ui.history.model.SessionRecord;
 import com.example.monitortest.ui.history.storage.SessionHistoryCsvRepository;
-import com.example.monitortest.ui.common.OutlinedActionButton;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import com.example.monitortest.ui.history.components.SessionRow;
 import com.example.monitortest.ui.history.components.HistoryTableHeader;
+import com.example.monitortest.ui.history.components.HistorySectionTitleBar;
+import com.example.monitortest.ui.history.components.HistoryClearButton;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
-import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
-import org.kordamp.ikonli.swing.FontIcon;
-
-// Displays the total emissions recorded for each Live Monitor session.
-// Kept separate from the saved hardware scans table.
-// Displays saved Live Monitor sessions inside a rounded EcoScan card.
+// Displays saved Live Monitor sessions and their recorded CO2 emissions.
+// Handles loading, importing and clearing session history.
 public class SessionListSection extends RoundedPanel {
 
     private JPanel listItemsPanel;
@@ -38,9 +30,6 @@ public class SessionListSection extends RoundedPanel {
 
     // Retrieves saved sessions from the sessions CSV file.
     private final SessionHistoryCsvRepository sessionRepository = new SessionHistoryCsvRepository();
-
-    // Formats session start times for the Sessions table.
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM uuuu, HH:mm");
 
     // Creates the session history card using EcoScan's existing design.
     public SessionListSection() {
@@ -59,8 +48,16 @@ public class SessionListSection extends RoundedPanel {
 
         // Display the title bar above the column headings.
         JPanel top = new JPanel(new BorderLayout());
+
         top.setOpaque(false);
-        top.add(createTitleBar(), BorderLayout.NORTH);
+
+        // Create the shared clearing button.
+        // Session-specific confirmation and deletion stay in clearSessions().
+        clearButton = new HistoryClearButton( "Clear Sessions", this::clearSessions );
+
+        // Reuse the common title bar with its optional right-side action.
+        top.add( new HistorySectionTitleBar( "Live Monitor Sessions", clearButton ), BorderLayout.NORTH );
+
         // Display the session columns using the shared header.
         top.add( new HistoryTableHeader("DATE", "TOTAL EMISSIONS"), BorderLayout.SOUTH );
 
@@ -71,18 +68,11 @@ public class SessionListSection extends RoundedPanel {
         listItemsPanel.setLayout( new BoxLayout(listItemsPanel, BoxLayout.Y_AXIS) );
         listItemsPanel.setBackground(Color.WHITE);
 
-
-        // Populate the Sessions table using records saved to CSV.
+        // The title bar must be created before refreshing sessions because refreshSessions() updates the Clear Sessions button.
         refreshSessions();
 
-
-        JScrollPane scrollPane = new JScrollPane(listItemsPanel);
-        scrollPane.setBorder(null);
-        // Avoid rectangular background painting at the card edges.
-        scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(false);
-
-        scrollPane.setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
+        // Use the shared scroll pane configuration for rounded cards.
+        JScrollPane scrollPane = UIUtility.createCardScrollPane(listItemsPanel);
 
         // Keep the scrollable session rows inside the rounded card.
         contentPanel.add(scrollPane, BorderLayout.CENTER);
@@ -178,64 +168,21 @@ public class SessionListSection extends RoundedPanel {
             // Remove the sessions CSV file.
             sessionRepository.deleteAll();
 
+
         } catch (IOException e) {
 
-            // Inform the user that the sessions could not be cleared.
-            JOptionPane.showMessageDialog( this,
-                    "Unable to clear the saved sessions.",
-                    "Clear sessions", JOptionPane.ERROR_MESSAGE );
+            // Inform the user that saved sessions could not be cleared.
+            JOptionPane.showMessageDialog( this, "Unable to clear the saved sessions.", "Clear sessions", JOptionPane.ERROR_MESSAGE );
 
-            // Print the underlying error for debugging.
+            // Preserve the exception for debugging.
             e.printStackTrace();
+
+            // Leave the existing session list unchanged after failure.
+            return;
         }
 
-        // Rebuild the Sessions table from the updated CSV.
+        // Refresh the Sessions table after successful deletion.
         refreshSessions();
-    }
 
-    // Creates the title bar with the table title on the left and Clear Sessions on the right.
-    private JPanel createTitleBar() {
-
-        JPanel titleBar = new JPanel(new BorderLayout());
-        titleBar.setOpaque(false);
-        // Give the section heading and action button balanced vertical spacing.
-        titleBar.setBorder(new EmptyBorder(8, 0, 8, 18));
-
-        titleBar.add(createTitle(), BorderLayout.WEST);
-
-
-        // Create a rounded action button matching EcoScan's shared styling.
-        OutlinedActionButton button = new OutlinedActionButton("Clear Sessions");
-
-        // Use the same icon library as the Results toolbar.
-        button.setIcon( FontIcon.of(FontAwesomeSolid.TRASH_ALT, 13, TEXT_MUTED) );
-        button.setIconTextGap(8);
-
-        // Use a subtle red hover to identify this as a destructive action.
-        button.setHoverColors( new Color(0xFDEEEE), new Color(0xC0392B) );
-
-        // Keep the button compact within the section header.
-        button.setPreferredSize(new Dimension(145, 36));
-
-        // Preserve the existing Clear Sessions functionality.
-        button.addActionListener(e -> clearSessions());
-
-        // Retain the existing field used by refreshSessions().
-        clearButton = button;
-
-        titleBar.add(clearButton, BorderLayout.EAST);
-
-        return titleBar;
-    }
-
-    // Creates the title displayed above the Sessions table.
-    private JLabel createTitle() {
-
-        JLabel title = new JLabel("Live Monitor Sessions");
-        title.setFont(UIUtility.font( "SansSerif", Font.BOLD, FONT_LABEL_SIZE ));
-        title.setForeground(TEXT_MAIN);
-        title.setBorder(new EmptyBorder(12, 15, 4, 15));
-
-        return title;
     }
 }

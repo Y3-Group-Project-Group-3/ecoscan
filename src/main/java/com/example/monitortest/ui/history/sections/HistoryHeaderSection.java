@@ -1,8 +1,6 @@
 package com.example.monitortest.ui.history.sections;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -27,8 +25,12 @@ public class HistoryHeaderSection extends JPanel {
 
         JLabel title = label( "Previous Scans", Font.BOLD, FONT_TITLE_SIZE, TEXT_MAIN );
 
-        JPanel controls = new JPanel( new FlowLayout(FlowLayout.RIGHT, 10, 0) );
+
+        // Position search and sort controls without extra outside margins.
+        JPanel controls = new JPanel();
+        controls.setLayout(new BoxLayout(controls, BoxLayout.X_AXIS));
         controls.setOpaque(false);
+
 
 
         // Use the reusable rounded input component.
@@ -65,13 +67,12 @@ public class HistoryHeaderSection extends JPanel {
         // Use EcoScan's rounded dropdown instead of the native Swing appearance.
         sortCombo = new RoundedComboBox( new String[]{"↓↑ Newest first", "↓↑ Oldest first"} );
 
-        // Match the search field's height.
-        sortCombo.setPreferredSize(new Dimension(150, 36));
-
         // Match the search field's height and the application's typography.
         sortCombo.setPreferredSize(new Dimension(150, 36));
 
+        // Keep a consistent gap between search and sorting controls.
         controls.add(searchField);
+        controls.add(Box.createHorizontalStrut(10));
         controls.add(sortCombo);
 
         add(title, BorderLayout.WEST);
