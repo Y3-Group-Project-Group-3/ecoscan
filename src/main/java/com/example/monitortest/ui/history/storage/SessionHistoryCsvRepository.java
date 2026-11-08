@@ -81,6 +81,13 @@ public class SessionHistoryCsvRepository {
     }
 
 
+    // Deletes every saved session by removing the sessions CSV file.
+    // A new file is created the next time a session is saved.
+    public void deleteAll() throws IOException {
+        Files.deleteIfExists(csvPath);
+    }
+
+
     // Reads every valid session from the given CSV file.
     // Rows that cannot be read are skipped.
     private List<SessionRecord> readSessions(Path path) throws IOException {

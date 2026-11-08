@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
@@ -20,12 +21,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
+import static com.example.monitortest.ui.theme.UIUtility.createPillButton;
 
 // Displays the total emissions recorded for each Live Monitor session.
 // Kept separate from the saved hardware scans table.
 public class SessionListSection extends JPanel {
 
     private JPanel listItemsPanel;
+
+    // Removes every saved session after the user confirms.
+    private JButton clearButton;
 
     // Retrieves saved sessions from the sessions CSV file.
     private final SessionHistoryCsvRepository sessionRepository = new SessionHistoryCsvRepository();
@@ -39,10 +44,10 @@ public class SessionListSection extends JPanel {
         setBackground(Color.WHITE);
         setBorder(new LineBorder(BORDER_COLOR, 1, true));
 
-        // Display the table title above the column headings.
+        // Display the title bar above the column headings.
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
-        top.add(createTitle(), BorderLayout.NORTH);
+        top.add(createTitleBar(), BorderLayout.NORTH);
         top.add(createListHeaderRow(), BorderLayout.SOUTH);
 
         add(top, BorderLayout.NORTH);
@@ -73,6 +78,9 @@ public class SessionListSection extends JPanel {
         // Remove the previously displayed rows before rebuilding the list.
         listItemsPanel.removeAll();
 
+        // Tracks whether there are any sessions the user could clear.
+        boolean hasSessions = false;
+
         try {
 
             // Load the saved sessions from EcoScan's sessions CSV file.
@@ -80,6 +88,8 @@ public class SessionListSection extends JPanel {
 
             // Display the most recent sessions first.
             sessions.sort( Comparator.comparing(SessionRecord::getStartedAt).reversed() );
+
+            hasSessions = !sessions.isEmpty();
 
             // Show a helpful message when no sessions have been saved yet.
             if (sessions.isEmpty()) {
@@ -109,6 +119,9 @@ public class SessionListSection extends JPanel {
             e.printStackTrace();
         }
 
+        // Only allow clearing when there are sessions to remove.
+        clearButton.setEnabled(hasSessions);
+
         // Update the Swing layout after changing the displayed rows.
         listItemsPanel.revalidate();
         listItemsPanel.repaint();
@@ -126,6 +139,40 @@ public class SessionListSection extends JPanel {
         refreshSessions();
 
         return imported;
+    }
+
+
+    // Asks the user to confirm, then deletes every saved session.
+    private void clearSessions() {
+
+        // Confirm before removing every session from the saved history.
+        int answer = JOptionPane.showConfirmDialog( this,
+                "Delete all saved sessions? This cannot be undone.",
+                "Clear sessions", JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.WARNING_MESSAGE );
+
+        if (answer != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        try {
+
+            // Remove the sessions CSV file.
+            sessionRepository.deleteAll();
+
+        } catch (IOException e) {
+
+            // Inform the user that the sessions could not be cleared.
+            JOptionPane.showMessageDialog( this,
+                    "Unable to clear the saved sessions.",
+                    "Clear sessions", JOptionPane.ERROR_MESSAGE );
+
+            // Print the underlying error for debugging.
+            e.printStackTrace();
+        }
+
+        // Rebuild the Sessions table from the updated CSV.
+        refreshSessions();
     }
 
 
@@ -180,6 +227,28 @@ public class SessionListSection extends JPanel {
     }
 
 
+    // Creates the title bar with the table title on the left and Clear Sessions on the right.
+    private JPanel createTitleBar() {
+
+        JPanel titleBar = new JPanel(new BorderLayout());
+        titleBar.setOpaque(false);
+        titleBar.setBorder(new EmptyBorder(6, 0, 6, 15));
+
+        titleBar.add(createTitle(), BorderLayout.WEST);
+
+        // Create the button used to remove every saved session.
+        clearButton = createPillButton("🗑️ Clear Sessions");
+        clearButton.addActionListener(e -> clearSessions());
+
+        // Match the subtle red hover used by the other delete buttons.
+        addDeleteHover(clearButton);
+
+        titleBar.add(clearButton, BorderLayout.EAST);
+
+        return titleBar;
+    }
+
+
     // Creates the title displayed above the Sessions table.
     private JLabel createTitle() {
 
@@ -211,6 +280,61 @@ public class SessionListSection extends JPanel {
         }
 
         return header;
+    }
+
+
+    // Tints the button light red while the mouse is over it.
+    // Matches the delete button hover on the History action buttons.
+    private void addDeleteHover(JButton button) {
+
+        Color hoverBackground = new Color(0xFDEEEE);
+        Color hoverAccent = new Color(0xC0392B);
+
+        // Allow the button's background colour to be painted on every platform.
+        button.setContentAreaFilled(false);
+        button.setOpaque(true);
+
+        button.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+                // Disabled buttons don't react to hover.
+                if (!button.isEnabled()) {
+                    return;
+                }
+
+                button.setBackground(hoverBackground);
+                button.setForeground(hoverAccent);
+                button.setBorder( createButtonBorder(hoverAccent) );
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(Color.WHITE);
+                button.setForeground(TEXT_MAIN);
+                button.setBorder( createButtonBorder(BORDER_COLOR) );
+            }
+        });
+
+        // Remove the hover styling if the button is disabled while the mouse is over it.
+        button.addPropertyChangeListener("enabled", e -> {
+            if (!button.isEnabled()) {
+                button.setBackground(Color.WHITE);
+                button.setForeground(TEXT_MAIN);
+                button.setBorder( createButtonBorder(BORDER_COLOR) );
+            }
+        });
+    }
+
+
+    // Creates the pill button border in the given colour.
+    // Matches the padding used by UIUtility.createPillButton.
+    private Border createButtonBorder(Color colour) {
+        return BorderFactory.createCompoundBorder(
+                new LineBorder(colour, 1, true),
+                new EmptyBorder(8, 16, 8, 16)
+        );
     }
 
 }
