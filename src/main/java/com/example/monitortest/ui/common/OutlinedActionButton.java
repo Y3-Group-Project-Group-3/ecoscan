@@ -16,6 +16,10 @@ public class OutlinedActionButton extends JButton {
     // Background colour displayed while hovering over an enabled button.
     private static final Color HOVER_BACKGROUND = new Color(240, 249, 244);
 
+    // Custom hover colours for different button actions.
+    private Color hoverBackground = HOVER_BACKGROUND;
+    private Color hoverBorder = GREEN;
+
     // Creates a styled button with the supplied text.
     public OutlinedActionButton(String text) {
         super(text);
@@ -40,7 +44,7 @@ public class OutlinedActionButton extends JButton {
         Graphics2D g2 = GraphicsUtils.createSmoothGraphics(g);
 
         // Apply the hover colour only when this button is enabled.
-        Color background = isEnabled() && getModel().isRollover() ? HOVER_BACKGROUND : Color.WHITE;
+        Color background = isEnabled() && getModel().isRollover() ? hoverBackground : Color.WHITE;
 
         g2.setColor(background);
         g2.fillRoundRect( 0, 0, getWidth() - 1, getHeight() - 1, CORNER_ARC, CORNER_ARC );
@@ -59,7 +63,7 @@ public class OutlinedActionButton extends JButton {
         Graphics2D g2 = GraphicsUtils.createSmoothGraphics(g);
 
         // Highlight the border when the enabled button is hovered.
-        Color borderColor = isEnabled() && getModel().isRollover() ? GREEN : BORDER_COLOR;
+        Color borderColor = isEnabled() && getModel().isRollover() ? hoverBorder : BORDER_COLOR;
 
         g2.setColor(borderColor);
         g2.setStroke(new BasicStroke(1f));
@@ -67,4 +71,18 @@ public class OutlinedActionButton extends JButton {
 
         g2.dispose();
     }
+
+
+    // Configures custom hover colours for this button.
+    // Useful for destructive actions such as deleting saved data.
+    public void setHoverColors(Color background, Color border) {
+
+        // Store the colours used when the enabled button is hovered.
+        this.hoverBackground = background;
+        this.hoverBorder = border;
+
+        // Refresh the component to display the updated appearance.
+        repaint();
+    }
+
 }

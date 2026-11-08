@@ -1,6 +1,10 @@
 package com.example.monitortest.ui.history.components;
 
 import com.example.monitortest.ui.theme.UIUtility;
+import com.example.monitortest.ui.common.OutlinedActionButton;
+import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
+import org.kordamp.ikonli.swing.FontIcon;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -18,15 +22,19 @@ public class ScanRow extends JPanel {
     private boolean hovered = false;
 
     // Creates one history row containing the scan date, CO₂ and View button.
-    public ScanRow(
-            String date,
-            String name
-    ) {
-        setLayout(new GridLayout(1, 4, 10, 0));
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        setPreferredSize(new Dimension(700, 50));
+    public ScanRow( String date, String name ) {
+
+        // Match the three columns used by HistoryListSection:
+        // Date, Name and Action.
+        setLayout(new GridLayout(1, 3, 10, 0));
         setBackground(Color.WHITE);
-        setBorder(new EmptyBorder(8, 15, 8, 15));
+
+        // Give each row enough height for the rounded action button.
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 54));
+        setPreferredSize(new Dimension(700, 54));
+
+        // Match the padding of the table header.
+        setBorder(new EmptyBorder(10, 18, 10, 18));
 
         Font font = UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE);
 
@@ -37,9 +45,18 @@ public class ScanRow extends JPanel {
         JPanel buttonPanel = new JPanel( new FlowLayout(FlowLayout.LEFT, 0, 0) );
         buttonPanel.setOpaque(false);
 
-        viewButton = new JButton("View");
-        viewButton.setPreferredSize(new Dimension(70, 30));
+        // Reuse the rounded secondary action button.
+        viewButton = new OutlinedActionButton("View");
+
+        // Add a consistent icon to indicate the scan can be opened.
+        viewButton.setIcon( FontIcon.of(FontAwesomeSolid.EYE, 13, GREEN) );
+        viewButton.setIconTextGap(6);
+
+        // Keep the action compact enough for the table row.
+        viewButton.setPreferredSize(new Dimension(88, 32));
+
         buttonPanel.add(viewButton);
+
 
         add(buttonPanel);
 
