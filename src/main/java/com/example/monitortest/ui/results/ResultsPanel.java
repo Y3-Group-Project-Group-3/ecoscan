@@ -55,6 +55,10 @@ public class ResultsPanel extends JPanel {
     // Preserves the original timestamp of the displayed hardware scan.
     private LocalDateTime currentScanTime;
 
+    // Tracks whether the latest completed hardware scan was saved successfully.
+    // Prevents the same scan from being saved multiple times.
+    private boolean latestScanSaved = false;
+
     // Tracks whether estimated RAM and storage power are included.
     private boolean includeEstimates = false;
 
@@ -236,6 +240,12 @@ public class ResultsPanel extends JPanel {
             // Persist the scan using the existing CSV repository.
             scanRepository.save(savedScan);
 
+            // Mark the latest scan as saved only after CSV persistence succeeds.
+            latestScanSaved = true;
+
+            // Prevent the same completed scan from being saved again.
+            saveButton.setEnabled(false);
+
             // Confirm that the scan was saved successfully.
             JOptionPane.showMessageDialog( this, "Hardware scan saved successfully as:\n" + name, "Scan Saved", JOptionPane.INFORMATION_MESSAGE );
 
@@ -317,8 +327,8 @@ public class ResultsPanel extends JPanel {
         // Restore the latest scan's original timestamp.
         updateLatestScanInfo();
 
-        // The latest completed scan is eligible to be saved.
-        saveButton.setEnabled(true);
+        // Only allow saving if the latest scan has not already been saved.
+        saveButton.setEnabled(!latestScanSaved);
     }
 
 
@@ -396,6 +406,9 @@ public class ResultsPanel extends JPanel {
         // Preserve the latest completed hardware scan and timestamp.
         currentHardwareInfo = info;
         currentScanTime = LocalDateTime.now();
+
+        // A newly completed hardware scan has not been saved yet.
+        latestScanSaved = false;
 
         // Display the newly collected hardware information.
         displayHardwareInfo(info);
