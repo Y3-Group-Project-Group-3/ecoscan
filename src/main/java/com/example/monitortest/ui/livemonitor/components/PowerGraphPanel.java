@@ -19,6 +19,14 @@ public class PowerGraphPanel extends JPanel {
     private final Deque<PowerReading> readings = new ArrayDeque<>();
     private final Color lineColor;
 
+    /********************* MAC Dummy Mode ***********************/
+    // Enables a fixed power line instead of time-based measurements.
+    private boolean demoMode = false;
+
+    // Stores the static simulated power value.
+    private double demoPower = 0.0;
+
+
     public PowerGraphPanel(Color lineColor) {
 
         // Store the colour used when drawing the power graph.
@@ -51,6 +59,27 @@ public class PowerGraphPanel extends JPanel {
     }
 
 
+    // Enables a permanent horizontal line for simulated macOS power readings.
+    // The value remains visible without requiring repeated measurements.
+    public void setDemoPower(double watts) {
+
+        // Reject invalid demonstration values.
+        if (!Double.isFinite(watts) || watts < 0) {
+            throw new IllegalArgumentException(
+                    "Demo power must be a finite, non-negative value."
+            );
+        }
+
+        // Enable the static demonstration graph.
+        demoMode = true;
+        demoPower = watts;
+
+        // Redraw the graph using the simulated value.
+        repaint();
+    }
+
+
+
 
     // Draws the power consumption graph using the stored readings.
     @Override
@@ -80,18 +109,22 @@ public class PowerGraphPanel extends JPanel {
         double maxPower = 0.0;
         long windowStart = System.currentTimeMillis() - 60_000;
 
-        for (PowerReading reading : readings) {
+        // Determine the highest power value for the selected graph mode.
+        if (demoMode) {
+            // Use the fixed simulated power value.
+            maxPower = demoPower;
+        } else {
+            // Preserve the original rolling 60-second Windows behaviour.
+            for (PowerReading reading : readings) {
 
-            double watts = reading.watts();
-
-            // Ignore unavailable, invalid and expired readings.
-            if (reading.timestamp() >= windowStart
-                    && Double.isFinite(watts)
-                    && watts >= 0) {
-
-                maxPower = Math.max(maxPower, watts);
+                double watts = reading.watts();
+                // Ignore unavailable, invalid or expired readings.
+                if (reading.timestamp() >= windowStart && Double.isFinite(watts) && watts >= 0) {
+                    maxPower = Math.max(maxPower, watts);
+                }
             }
         }
+
 
         // Add 20% headroom so the highest reading does not touch the top.
         maxPower *= 1.2;
@@ -131,6 +164,20 @@ public class PowerGraphPanel extends JPanel {
 
         g2.setColor(lineColor);
         g2.setStroke(new BasicStroke( 2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND ));
+
+
+        /*********************** MAC *************************************/
+        // Display a permanent horizontal line for macOS demonstration mode.
+        if (demoMode) {
+            // Convert the simulated wattage into a vertical graph position.
+            int y = bottom - (int) Math.round( Math.min(demoPower / maxPower, 1.0) * graphHeight );
+            // Draw the fixed line across the complete graph width.
+            g2.drawLine(left, y, right, y);
+            // Do not draw any time-based measurements in demonstration mode.
+            g2.dispose();
+            return;
+        }
+
 
         int previousX = 0;
         int previousY = 0;

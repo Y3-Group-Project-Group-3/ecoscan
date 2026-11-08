@@ -2,99 +2,77 @@ package com.example.monitortest.ui.results.sections;
 
 import com.example.monitortest.ui.results.breakdown.ComponentSectionUpdater;
 import com.example.monitortest.ui.results.breakdown.PowerSummaryPanel;
+import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.hardware.model.HardwareInfo;
 
+
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
-import static com.example.monitortest.ui.theme.AppTheme.BORDER_COLOR;
 import static com.example.monitortest.ui.theme.UIUtility.column;
 import static com.example.monitortest.ui.theme.UIUtility.label;
-import static com.example.monitortest.ui.results.components.ComponentRow.componentRow;
 import static java.awt.Component.LEFT_ALIGNMENT;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class ComponentSection {
 
-    // Reference to the existing Component Breakdown list.
-    private static JPanel componentList;
-    // Track component rows by name instead of their position.
-    private static final Map<String, JPanel> componentRows = new HashMap<>();
+    // Reference to the Component Breakdown list.
+    private JPanel componentList;
 
-    // Manages the power calculation mode and displayed power totals.
-    private static PowerSummaryPanel powerSummaryPanel;
+    // Track component rows by name instead of position.
+    private final Map<String, JPanel> componentRows = new HashMap<>();
 
-    // Holds the updater responsible for refreshing the Component Breakdown.
-    private static ComponentSectionUpdater componentSectionUpdater;
+    // Manages power calculation controls and totals.
+    private PowerSummaryPanel powerSummaryPanel;
 
-
-    // Create the Component Breakdown before scan results are available.
-    public static JPanel createComponentSection() {
-        return createComponentSection(null);
-    }
+    // Updates the displayed hardware components.
+    private ComponentSectionUpdater componentSectionUpdater;
 
 
-    // list of components, click a row to open details
-    // Build the component breakdown using the supplied scan results.
-    public static JPanel createComponentSection(HardwareInfo info) {
+
+    // Creates the Component Breakdown container and power summary.
+    // Hardware rows are populated when completed scan results are received.
+    public JPanel createComponentSection() {
+
         JPanel section = column();
         section.add(label("COMPONENT BREAKDOWN", Font.BOLD, FONT_LABEL_SIZE, GREEN));
         section.add(Box.createVerticalStrut(4));
         section.add(label("Hardware assessment", Font.BOLD, FONT_HEADING_SIZE, TEXT_MAIN));
         section.add(Box.createVerticalStrut(14));
 
-        JPanel list = new JPanel();
-        // Keep a reference so the rows can be refreshed after scanning.
-        componentList = list;
+        // Clip the expandable rows to the rounded container.
+        JPanel list = new RoundedPanel(CARD_BG, BORDER_COLOR, 16) {
+
+            @Override
+            protected void paintChildren(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+
+                // Prevent expanded row backgrounds from covering rounded corners.
+                g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+
+                g2.clip(new java.awt.geom.RoundRectangle2D.Double( 0, 0, getWidth(), getHeight(), 16, 16 ));
+
+                super.paintChildren(g2);
+                g2.dispose();
+            }
+        };
+
+
+        // Configure the container for vertically stacked hardware rows.
         list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
-        list.setBackground(CARD_BG);
-        list.setBorder(new LineBorder(BORDER_COLOR, 1, true));
         list.setAlignmentX(LEFT_ALIGNMENT);
 
+        // Store the component list so it can be updated after each scan.
+        componentList = list;
 
-        /******************** CPU **********************************/
-        // Initial CPU placeholders; actual values are supplied by the updater.
-        String cpuName = "Not retrieved yet";
-        String cpuPowerText = "Not available";
-        String cpuShareText = "Not available";
+        // Clear references to rows from any previous construction.
+        componentRows.clear();
 
-        JPanel cpuRow = componentRow(
-                list, "CPU", cpuName, "MEASURED", cpuName, cpuPowerText, "—", cpuShareText, false);
-        list.add(cpuRow);
-        componentRows.put("CPU", cpuRow);
-
-        /******************** GPU **********************************/
-        // Initial GPU placeholders; actual values are supplied by the updater.
-        String gpuName = "Not retrieved yet";
-        String gpuPowerText = "Not available";
-        String gpuShareText = "Not available";
-
-        JPanel gpuRow = componentRow(
-                list, "GPU", gpuName, "MEASURED", gpuName, gpuPowerText, "—", gpuShareText, false
-        );
-        list.add(gpuRow);
-        componentRows.put("GPU", gpuRow);
-
-        /******************** RAM **********************************/
-        // Create the RAM row with placeholders until a scan completes.
-        JPanel ramRow = componentRow(
-                list, "RAM", "Not retrieved yet", "EFFICIENT", "Not retrieved yet", "Not available", "—", "Not available", false
-        );
-        list.add(ramRow);
-        componentRows.put("RAM", ramRow);
-
-        /******************** Storage **********************************/
-        // Create storage row with placeholders until a scan completes
-        JPanel storageRow = componentRow(
-                list, "Storage", "Not retrieved yet", "ESTIMATED", "Not retrieved yet", "Not measured", "—", "—", false
-        );
-        list.add(storageRow);
-        componentRows.put("Storage", storageRow);
-
-        // Add the expandable component rows.
+        // Add the initially empty list to the Component Breakdown.
+        // Hardware rows are inserted after a successful scan.
         section.add(list);
 
         /******************** Power Summary  **********************************/
@@ -117,12 +95,42 @@ public class ComponentSection {
 
 
     // Passes completed hardware scan results to the Component Breakdown updater.
-    public static void updateComponentSection(HardwareInfo info) {
+    public void updateComponentSection(HardwareInfo info) {
 
-        // Preserve the existing public interface used by ScanEventListener.
+        // Update the component rows when the section and scan data are available.
         if (componentSectionUpdater != null && info != null) {
             componentSectionUpdater.updateComponentSection(info);
         }
+    }
+
+    // Allows the Results page to respond to power calculation mode changes.
+    public void setPowerModeListener(Consumer<Boolean> listener) {
+        if (powerSummaryPanel != null) {
+            powerSummaryPanel.setPowerModeListener(listener);
+        }
+    }
+
+
+    // Allows the Results Page to restore a saved power calculation mode.
+    // Delegates the operation to the component that owns the controls.
+    public void setIncludeEstimates(boolean includeEstimates) {
+
+        // Update the existing power mode controls when available.
+        if (powerSummaryPanel != null) {
+            powerSummaryPanel.setIncludeEstimates(includeEstimates);
+        }
+    }
+
+
+    // Provides access to the existing power mode controls.
+    // Allows ResultsPanel to display them in its fixed toolbar.
+    public JPanel getPowerModeControls() {
+
+        if (powerSummaryPanel == null) {
+            return null;
+        }
+
+        return powerSummaryPanel.getPowerModeControls();
     }
 
 }

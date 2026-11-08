@@ -36,7 +36,8 @@ public class UsageCard extends JToggleButton {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Graphics2D g2 = UIUtility.smooth(g);
+        // Create a smooth graphics context for the card, icon and text.
+        Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
         int w = getWidth(), h = getHeight();
         boolean selected = isSelected();
 

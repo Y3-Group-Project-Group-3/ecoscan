@@ -40,6 +40,26 @@ public class CarbonEmissionsCalculator {
         return energyKWh * carbonIntensity;
     }
 
+
+    // Calculates the time required to reach an emissions milestone
+    // assuming constant hardware power consumption.
+    public double calculateTimeToEmissions(double powerWatts, double targetGrams) {
+
+        // Reject unavailable or invalid power readings and milestones.
+        if (!Double.isFinite(powerWatts) || powerWatts <= 0 || !Double.isFinite(targetGrams) || targetGrams < 0) {
+            return Double.NaN;
+        }
+
+        // A positive milestone cannot be reached with zero carbon intensity.
+        if (carbonIntensity <= 0) {
+            return Double.NaN;
+        }
+
+        // Rearrange the existing emissions formula to calculate time.
+        return (targetGrams * 3_600_000.0) / (powerWatts * carbonIntensity);
+    }
+
+
     /**
      * Updates the carbon intensity used for future calculations.
      * This can later accept a value retrieved from an API.

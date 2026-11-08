@@ -1,5 +1,6 @@
 package com.example.monitortest.hardware.detection;
 
+import com.example.monitortest.hardware.demo.MacDemoConfig;
 import com.example.monitortest.hardware.model.HardwareInfo;
 import com.example.monitortest.hardware.model.MemoryModule;
 import com.example.monitortest.hardware.model.StorageDevice;
@@ -70,9 +71,9 @@ public class DummyHardwareProvider {
         // the same data flow as detected Windows storage devices.
         List<StorageDevice> storageDevices = List.of(
                 new StorageDevice(
-                        "Apple Internal SSD",
-                        256_000_000_000L, // Simulated capacity: 256 GB.
-                        "SSD"
+                        MacDemoConfig.STORAGE_NAME,
+                        MacDemoConfig.STORAGE_CAPACITY_BYTES,
+                        MacDemoConfig.STORAGE_TYPE
                 )
         );
 
@@ -84,11 +85,11 @@ public class DummyHardwareProvider {
                 totalMemory,
                 true,
                 // Simulated GPU specifications and power for macOS UI testing.
-                "Apple M3 Integrated GPU",
-                "Apple",
+                MacDemoConfig.GPU_NAME,
+                MacDemoConfig.GPU_VENDOR,
                 totalMemory, // Apple Silicon uses unified memory.
-                8.0,         // Fabricated GPU power in watts.
-                "Apple",
+                MacDemoConfig.DEFAULT_GPU_POWER_WATTS, // ,         // Fabricated GPU power in watts.
+                MacDemoConfig.GPU_VENDOR,
                 "Apple Motherboard",
                 "1.0",
                 storageDevices, // Simulated SSD.

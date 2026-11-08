@@ -1,12 +1,13 @@
 
 package com.example.monitortest.ui.loading.components;
 
+import com.example.monitortest.ui.common.GraphicsUtils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Arc2D;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
-import static com.example.monitortest.ui.theme.UIUtility.smooth;
 
 // Animated spinner displayed while a hardware component is being detected.
 public class Spinner extends JComponent {
@@ -32,7 +33,8 @@ public class Spinner extends JComponent {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Graphics2D g2 = smooth(g);
+        // Create an independent graphics context with smooth rendering.
+        Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
 
         // Draw a rotating arc to indicate active detection.
         g2.setColor(TEXT_FAINT);

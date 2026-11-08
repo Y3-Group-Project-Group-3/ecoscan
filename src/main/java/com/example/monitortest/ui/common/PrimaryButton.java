@@ -47,7 +47,8 @@ public class PrimaryButton extends JButton {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Graphics2D g2 = UIUtility.smooth(g);
+        // Create a smooth graphics context for the rounded button background.
+        Graphics2D g2 = GraphicsUtils.createSmoothTextGraphics(g);
 
         if (hover || isFocusOwner()) {
             g2.setColor(AppTheme.BUTTON_GREEN_HOVER);

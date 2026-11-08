@@ -1,15 +1,17 @@
 package com.example.monitortest.ui.window;
 
+import com.example.monitortest.hardware.monitoring.LiveMonitorSnapshot;
 import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsTracker;
 import com.example.monitortest.hardware.monitoring.LiveMonitorAvailability;
 import com.example.monitortest.hardware.monitoring.LiveMonitoringService;
+import com.example.monitortest.hardware.monitoring.MacLiveMonitorDemoProvider;
 import com.example.monitortest.hardware.detection.ScanHardware;
 
-import io.github.pandalxb.jlibrehardwaremonitor.manager.powershell.PowerShellOperations;
 import com.example.monitortest.services.startup.ApplicationElevationManager;
 import com.example.monitortest.services.startup.ApplicationProcessManager;
 
 import com.example.monitortest.ui.history.HistoryPanel;
+import com.example.monitortest.ui.history.SessionRecorder;
 import com.example.monitortest.ui.home.HomePanel;
 import com.example.monitortest.ui.nav.NavBar;
 import com.example.monitortest.ui.loading.LoadingPanel;
@@ -112,12 +114,41 @@ public class CreateWindow {
         });
 
 
+        /************** MAC OS Dummy Interface ***********************************/
         // Determine whether the current environment supports live monitoring.
         LiveMonitorAvailability.Status monitoringStatus = LiveMonitorAvailability.check();
-        // Display an explanation when live monitoring is unavailable.
-        if (monitoringStatus != LiveMonitorAvailability.Status.AVAILABLE) {
+
+        // Only display the unavailable message when monitoring cannot be shown.
+        // macOS retains the existing Live Monitor interface for demonstration data.
+        if (monitoringStatus != LiveMonitorAvailability.Status.AVAILABLE && monitoringStatus != LiveMonitorAvailability.Status.MAC_DEMO) {
             liveMonitorPanel.showUnavailableState(monitoringStatus);
         }
+
+        // Populate the macOS Live Monitor with static demonstration readings.
+        // The Windows hardware monitoring service remains unchanged.
+        if (monitoringStatus == LiveMonitorAvailability.Status.MAC_DEMO) {
+
+            // Clearly identify that this page displays simulated data.
+            liveMonitorPanel.showDemoMode();
+
+            // Read the configurable CPU and GPU power values.
+            MacLiveMonitorDemoProvider demoProvider = new MacLiveMonitorDemoProvider();
+            LiveMonitorSnapshot demoSnapshot = demoProvider.createSnapshot();
+
+            // Populate the existing power cards and stop their loading indicators.
+            liveMonitorPanel.updatePowerReadings(demoSnapshot);
+
+            // Keep both demonstration graphs visible using fixed power values.
+            liveMonitorPanel.showDemoGraphs(demoSnapshot);
+
+            // Display a static emissions ruler with the PC before the first milestone.
+            liveMonitorPanel.showDemoComparison();
+
+            // Display hypothetical carbon emissions for the demo power values.
+            liveMonitorPanel.showDemoEmissions(demoSnapshot);
+        }
+
+
 
         // Register screens with the CardLayout.
         mainPanel.add(homePanel, "home");
@@ -128,13 +159,45 @@ public class CreateWindow {
 
         final NavBar[] navRef = new NavBar[1];
 
+        // Handles navigation between EcoScan's main application pages.
         java.util.function.Consumer<String> navigate = page -> {
+
+            // Reload saved records whenever the History Page is opened.
+            if ("history".equals(page)) { historyPanel.refreshHistory(); }
+
+            // Restore the latest scan when Results is opened through navigation.
+            if ("results".equals(page)) { resultsPanel.restoreLatestScan(); }
+
+            // Display the selected page.
             cardLayout.show(mainPanel, page);
+
+            // Update the active sidebar navigation indicator.
             navRef[0].setActivePage(page);
         };
 
+
+
         NavBar navBar = new NavBar(navigate);
         navRef[0] = navBar;
+
+        /******************** CSV ***************************/
+        // Opens a saved hardware scan from the History Page.
+        historyPanel.setViewScanListener(savedScan -> {
+
+            // Display the selected historical hardware information.
+            resultsPanel.displaySavedScan(savedScan);
+
+            // Historical results also make the Results Page available.
+            navBar.setResultsVisible(true);
+
+            // Switch to the Results Page without starting a new hardware scan.
+            cardLayout.show(mainPanel, "results");
+
+            // Highlight Results in the navigation sidebar.
+            navBar.setActivePage("results");
+        });
+
+
         // Main window container
         JPanel rootPanel = new JPanel(new BorderLayout());
 
@@ -153,7 +216,9 @@ public class CreateWindow {
         // Update both power measurements and emissions after each snapshot.
         final LiveMonitoringService[] monitoringRef = new LiveMonitoringService[1];
 
-        LiveMonitoringService monitoringService = new LiveMonitoringService(snapshot -> {
+        // Create the real monitoring service only on supported Windows systems.
+        // macOS uses static demonstration data and does not require hardware sensors.
+        LiveMonitoringService monitoringService = monitoringStatus == LiveMonitorAvailability.Status.AVAILABLE ? new LiveMonitoringService(snapshot -> {
             // Update the CPU/GPU cards and graphs.
             liveMonitorPanel.updatePowerReadings(snapshot);
 
@@ -163,13 +228,18 @@ public class CreateWindow {
             // Update the carbon emissions panel.
             liveMonitorPanel.updateCarbonEmissions( tracker.getTotalEmissionsGrams(), tracker.getAverageEmissionsPerSecond() );
 
-        });
+        }) : null;
 
         monitoringRef[0] = monitoringService;
 
         // Provide the navigation bar so scanning can temporarily lock navigation.
         ScanEventListener scanEventListener = new ScanEventListener(
-                frame, cardLayout, mainPanel, hardwareInfoService, navBar
+                frame,
+                cardLayout,
+                mainPanel,
+                hardwareInfoService,
+                navBar,
+                resultsPanel
         );
 
         // Connect the Home page Scan Computer button
@@ -190,6 +260,10 @@ public class CreateWindow {
         frame.setContentPane(rootPanel);
         navigate.accept("home");
 
+        // Start recording this Live Monitor session.
+        // The session is saved to History when EcoScan closes.
+        SessionRecorder sessionRecorder = new SessionRecorder();
+
         // Prevent multiple shutdown requests from running simultaneously.
         final boolean[] shuttingDown = {false};
 
@@ -206,11 +280,17 @@ public class CreateWindow {
 
                 shuttingDown[0] = true;
 
+                // Save this session's total emissions before monitoring stops.
+                sessionRecorder.saveSession( monitoringService, monitoringStatus == LiveMonitorAvailability.Status.MAC_DEMO );
+
                 // Prevent new manual hardware scans during shutdown.
                 scanEventListener.beginShutdown();
 
-                // Stop scheduling new live monitoring readings.
-                monitoringService.stop();
+                // Stop real monitoring only when the service exists.
+                // macOS Demo Mode does not create a monitoring service.
+                if (monitoringService != null) {
+                    monitoringService.stop();
+                }
 
                 // Wait for monitoring to finish without blocking Swing.
                 SwingWorker<Boolean, Void> shutdownWorker = new SwingWorker<>() {
@@ -218,8 +298,14 @@ public class CreateWindow {
                     @Override
                     protected Boolean doInBackground() {
 
-                        // Wait for live monitoring to finish.
-                        boolean monitoringStopped = monitoringService.awaitTermination( 10, java.util.concurrent.TimeUnit.SECONDS );
+
+                        // Wait for live monitoring only when the Windows service exists.
+                        // No monitoring service means there is nothing to stop.
+                        boolean monitoringStopped = true;
+
+                        if (monitoringService != null) {
+                            monitoringStopped = monitoringService.awaitTermination( 10, java.util.concurrent.TimeUnit.SECONDS );
+                        }
 
                         // Wait for any active manual hardware scan to finish.
                         while (scanEventListener.isScanRunning()) {
@@ -242,10 +328,6 @@ public class CreateWindow {
                         }
 
                         try {
-                            // Both hardware operations have finished.
-                            // Close the shared PowerShell session.
-//                            PowerShellOperations.closeSession();
-
                             return true;
                         }
                         catch (Exception exception) {
@@ -294,4 +376,3 @@ public class CreateWindow {
     }
 
 }
-

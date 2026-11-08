@@ -1,14 +1,15 @@
 package com.example.monitortest.ui.livemonitor;
 
+import com.example.monitortest.hardware.demo.MacDemoConfig;
 import com.example.monitortest.hardware.monitoring.LiveMonitorSnapshot;
 import com.example.monitortest.ui.livemonitor.components.PowerGraphPanel;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.ui.loading.components.Spinner;
 import com.example.monitortest.ui.livemonitor.components.CarbonEmissionsPanel;
-import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsTracker;
 import com.example.monitortest.hardware.monitoring.LiveMonitorAvailability;
 import com.example.monitortest.services.startup.ApplicationProcessManager;
-import com.example.monitortest.ui.livemonitor.components.EmissionComparisonPanel;
+import com.example.monitortest.ui.livemonitor.components.comparison.EmissionComparisonPanel;
+import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsCalculator;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,6 +43,9 @@ public class LiveMonitorPanel extends JPanel {
     // Displays the PC's emissions against household appliance milestones.
     private final EmissionComparisonPanel emissionComparisonPanel = new EmissionComparisonPanel();
 
+    // Displays the page title and identifies macOS demonstration mode.
+    private final JLabel heading = new JLabel("Live Monitor", SwingConstants.CENTER);
+
     // check if app requires restart
     private Runnable administratorRestartAction;
 
@@ -51,8 +55,6 @@ public class LiveMonitorPanel extends JPanel {
         // Match the background used by the other EcoScan pages.
         setBackground(BG_COLOR);
 
-        // Display a temporary heading for the new page.
-        JLabel heading = new JLabel("Live Monitor", SwingConstants.CENTER);
         heading.setFont(font(Font.BOLD, 26));
         heading.setForeground(TEXT_MAIN);
 
@@ -383,6 +385,67 @@ public class LiveMonitorPanel extends JPanel {
         revalidate();
         repaint();
     }
+
+
+    // Identifies that the Live Monitor is showing simulated macOS data.
+    // The existing measurement cards and graphs remain visible.
+    public void showDemoMode() {
+
+        // Use the shared macOS demonstration heading.
+        heading.setText(MacDemoConfig.LIVE_MONITOR_HEADING);
+
+        // Refresh the heading appearance.
+        heading.revalidate();
+        heading.repaint();
+    }
+
+    /************************************* MAC ********************************/
+    // Displays permanent demonstration graph lines for a simulated snapshot.
+    // Both graphs use the same static CPU/GPU values as the measurement cards.
+    public void showDemoGraphs(LiveMonitorSnapshot snapshot) {
+
+        // Configure the CPU graph with simulated power.
+        cpuGraph.setDemoPower(snapshot.cpuPower());
+
+        // Configure the GPU graph with simulated power.
+        gpuGraph.setDemoPower(snapshot.gpuPower());
+    }
+
+
+    // Enables the static emissions comparison ruler for macOS.
+    // Reuses the existing comparison panel and its painters.
+    public void showDemoComparison() {
+        // Display the comparison without continuous emissions updates.
+        emissionComparisonPanel.showDemoMode();
+    }
+
+
+    // Displays static, hypothetical carbon emissions for macOS Demo Mode.
+    // Uses simulated power values without accumulating emissions over time.
+    public void showDemoEmissions(LiveMonitorSnapshot snapshot) {
+
+        // Clearly label the hypothetical emissions total.
+        carbonEmissionsPanel.showDemoMode();
+
+        // Reuse EcoScan's existing emissions calculation logic.
+        CarbonEmissionsCalculator calculator = new CarbonEmissionsCalculator();
+
+        // Retrieve the combined simulated CPU and GPU power.
+        double totalPower = snapshot.totalPower();
+
+        // Calculate the hypothetical emissions produced in one second.
+        double emissionsPerSecond = calculator.calculateEmissions(totalPower, 1.0);
+
+        // Calculate hypothetical emissions over the configured demo period.
+        double totalEmissions = calculator.calculateEmissions( totalPower, MacDemoConfig.EMISSIONS_DEMO_DURATION_SECONDS );
+
+        // Display the static values using the existing emissions component.
+        carbonEmissionsPanel.updateEmissions( totalEmissions, emissionsPerSecond );
+    }
+
+
+
+
 
 
 
