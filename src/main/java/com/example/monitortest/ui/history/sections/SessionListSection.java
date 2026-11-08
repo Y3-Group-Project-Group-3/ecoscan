@@ -4,6 +4,10 @@ import com.example.monitortest.ui.theme.UIUtility;
 
 import com.example.monitortest.ui.history.model.SessionRecord;
 import com.example.monitortest.ui.history.storage.SessionHistoryCsvRepository;
+import com.example.monitortest.ui.common.OutlinedActionButton;
+import com.example.monitortest.ui.loading.components.RoundedPanel;
+import static com.example.monitortest.ui.theme.AppTheme.*;
+
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -13,19 +17,18 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import static com.example.monitortest.ui.theme.AppTheme.*;
-import static com.example.monitortest.ui.theme.UIUtility.createPillButton;
+import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
+import org.kordamp.ikonli.swing.FontIcon;
 
 // Displays the total emissions recorded for each Live Monitor session.
 // Kept separate from the saved hardware scans table.
-public class SessionListSection extends JPanel {
+// Displays saved Live Monitor sessions inside a rounded EcoScan card.
+public class SessionListSection extends RoundedPanel {
 
     private JPanel listItemsPanel;
 
@@ -39,10 +42,20 @@ public class SessionListSection extends JPanel {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM uuuu, HH:mm");
 
 
+    // Creates the session history card using EcoScan's existing design.
     public SessionListSection() {
+
+        // Reuse the same white fill, border and corner radius.
+        super(Color.WHITE, BORDER_COLOR, 16);
+
+        // Preserve the RoundedPanel as the outer card.
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-        setBorder(new LineBorder(BORDER_COLOR, 1, true));
+
+        // Keep the session components away from the rounded corners.
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setOpaque(false);
+        contentPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
+
 
         // Display the title bar above the column headings.
         JPanel top = new JPanel(new BorderLayout());
@@ -50,7 +63,8 @@ public class SessionListSection extends JPanel {
         top.add(createTitleBar(), BorderLayout.NORTH);
         top.add(createListHeaderRow(), BorderLayout.SOUTH);
 
-        add(top, BorderLayout.NORTH);
+        // Keep the title and column headings inside the card padding.
+        contentPanel.add(top, BorderLayout.NORTH);
 
         listItemsPanel = new JPanel();
         listItemsPanel.setLayout( new BoxLayout(listItemsPanel, BoxLayout.Y_AXIS) );
@@ -63,11 +77,17 @@ public class SessionListSection extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(listItemsPanel);
         scrollPane.setBorder(null);
-        scrollPane.setHorizontalScrollBarPolicy(
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-        );
+        // Avoid rectangular background painting at the card edges.
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
 
-        add(scrollPane, BorderLayout.CENTER);
+        scrollPane.setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
+
+        // Keep the scrollable session rows inside the rounded card.
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
+
+        // Attach the complete session layout to the outer card.
+        add(contentPanel, BorderLayout.CENTER);
     }
 
 
@@ -182,7 +202,8 @@ public class SessionListSection extends JPanel {
         JPanel row = new JPanel(new GridLayout(1, 2, 10, 0));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         row.setBackground(Color.WHITE);
-        row.setBorder(new EmptyBorder(8, 15, 8, 15));
+        // Align session values with their corresponding column headings.
+        row.setBorder(new EmptyBorder(8, 18, 8, 18));
 
         Font font = UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE);
 
@@ -218,7 +239,6 @@ public class SessionListSection extends JPanel {
         return String.format( Locale.UK, "%.2f g CO₂e", grams );
     }
 
-
     private JLabel createCell(String text, Font font) {
         JLabel label = new JLabel(text);
         label.setFont(font);
@@ -226,28 +246,40 @@ public class SessionListSection extends JPanel {
         return label;
     }
 
-
     // Creates the title bar with the table title on the left and Clear Sessions on the right.
     private JPanel createTitleBar() {
 
         JPanel titleBar = new JPanel(new BorderLayout());
         titleBar.setOpaque(false);
-        titleBar.setBorder(new EmptyBorder(6, 0, 6, 15));
+        // Give the section heading and action button balanced vertical spacing.
+        titleBar.setBorder(new EmptyBorder(8, 0, 8, 18));
 
         titleBar.add(createTitle(), BorderLayout.WEST);
 
-        // Create the button used to remove every saved session.
-        clearButton = createPillButton("🗑️ Clear Sessions");
-        clearButton.addActionListener(e -> clearSessions());
 
-        // Match the subtle red hover used by the other delete buttons.
-        addDeleteHover(clearButton);
+        // Create a rounded action button matching EcoScan's shared styling.
+        OutlinedActionButton button = new OutlinedActionButton("Clear Sessions");
+
+        // Use the same icon library as the Results toolbar.
+        button.setIcon( FontIcon.of(FontAwesomeSolid.TRASH_ALT, 13, TEXT_MUTED) );
+        button.setIconTextGap(8);
+
+        // Use a subtle red hover to identify this as a destructive action.
+        button.setHoverColors( new Color(0xFDEEEE), new Color(0xC0392B) );
+
+        // Keep the button compact within the section header.
+        button.setPreferredSize(new Dimension(145, 36));
+
+        // Preserve the existing Clear Sessions functionality.
+        button.addActionListener(e -> clearSessions());
+
+        // Retain the existing field used by refreshSessions().
+        clearButton = button;
 
         titleBar.add(clearButton, BorderLayout.EAST);
 
         return titleBar;
     }
-
 
     // Creates the title displayed above the Sessions table.
     private JLabel createTitle() {
@@ -260,13 +292,14 @@ public class SessionListSection extends JPanel {
         return title;
     }
 
-
     public JPanel createListHeaderRow() {
 
         // Create the header with the two session columns.
         JPanel header = new JPanel(new GridLayout(1, 2, 10, 0));
-        header.setBackground(new Color(243, 244, 246));
-        header.setBorder(new EmptyBorder(12, 15, 12, 15));
+        // Use the RoundedPanel background instead of a rectangular fill.
+        header.setOpaque(false);
+        // Match the horizontal spacing used in the saved scans table.
+        header.setBorder(new EmptyBorder(12, 18, 12, 18));
 
         // Define the column headings in display order.
         String[] titles = { "DATE", "TOTAL EMISSIONS" };
@@ -281,60 +314,4 @@ public class SessionListSection extends JPanel {
 
         return header;
     }
-
-
-    // Tints the button light red while the mouse is over it.
-    // Matches the delete button hover on the History action buttons.
-    private void addDeleteHover(JButton button) {
-
-        Color hoverBackground = new Color(0xFDEEEE);
-        Color hoverAccent = new Color(0xC0392B);
-
-        // Allow the button's background colour to be painted on every platform.
-        button.setContentAreaFilled(false);
-        button.setOpaque(true);
-
-        button.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-
-                // Disabled buttons don't react to hover.
-                if (!button.isEnabled()) {
-                    return;
-                }
-
-                button.setBackground(hoverBackground);
-                button.setForeground(hoverAccent);
-                button.setBorder( createButtonBorder(hoverAccent) );
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                button.setBackground(Color.WHITE);
-                button.setForeground(TEXT_MAIN);
-                button.setBorder( createButtonBorder(BORDER_COLOR) );
-            }
-        });
-
-        // Remove the hover styling if the button is disabled while the mouse is over it.
-        button.addPropertyChangeListener("enabled", e -> {
-            if (!button.isEnabled()) {
-                button.setBackground(Color.WHITE);
-                button.setForeground(TEXT_MAIN);
-                button.setBorder( createButtonBorder(BORDER_COLOR) );
-            }
-        });
-    }
-
-
-    // Creates the pill button border in the given colour.
-    // Matches the padding used by UIUtility.createPillButton.
-    private Border createButtonBorder(Color colour) {
-        return BorderFactory.createCompoundBorder(
-                new LineBorder(colour, 1, true),
-                new EmptyBorder(8, 16, 8, 16)
-        );
-    }
-
 }

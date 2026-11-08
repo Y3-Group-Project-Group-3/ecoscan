@@ -10,12 +10,12 @@ import java.awt.event.MouseEvent;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import static com.example.monitortest.ui.theme.UIUtility.createPillButton;
+import com.example.monitortest.ui.common.OutlinedActionButton;
+
+import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
+import org.kordamp.ikonli.swing.FontIcon;
 
 public class HistoryActionsSection extends JPanel {
-
-    // Hover colours for the standard History buttons.
-    private static final Color HOVER_BG = new Color(0xEEF7F1);
-    private static final Color HOVER_ACCENT = new Color(0x2F9A5F);
 
     // Hover colours for the delete buttons, which remove saved data.
     private static final Color DELETE_HOVER_BG = new Color(0xFDEEEE);
@@ -31,26 +31,24 @@ public class HistoryActionsSection extends JPanel {
         setLayout(new BorderLayout());
         setOpaque(false);
 
-        JPanel leftButtons = new JPanel(
-                new FlowLayout(FlowLayout.LEFT, 10, 0)
-        );
+        JPanel leftButtons = new JPanel( new FlowLayout(FlowLayout.LEFT, 10, 0) );
         leftButtons.setOpaque(false);
 
-        importButton = createPillButton("📥 Import Results");
-        exportButton = createPillButton("💾 Export Results");
-        printButton = createPillButton("🖨️ Print List");
+        // Create the standard History actions using reusable styling.
+        importButton = createActionButton( "Import Results", FontAwesomeSolid.FILE_IMPORT, false );
+        exportButton = createActionButton( "Export Results", FontAwesomeSolid.FILE_EXPORT, false );
+        printButton = createActionButton( "Print List", FontAwesomeSolid.PRINT, false );
 
         leftButtons.add(importButton);
         leftButtons.add(exportButton);
         leftButtons.add(printButton);
 
-        JPanel rightButtons = new JPanel(
-                new FlowLayout(FlowLayout.RIGHT, 10, 0)
-        );
+        JPanel rightButtons = new JPanel( new FlowLayout(FlowLayout.RIGHT, 10, 0) );
         rightButtons.setOpaque(false);
 
-        deleteAllButton = createPillButton("🗑️ Delete All");
-        deleteButton = createPillButton("🗑️ Delete Selected");
+        // Use a red hover treatment for actions that remove saved scans.
+        deleteAllButton = createActionButton( "Delete All", FontAwesomeSolid.TRASH_ALT, true );
+        deleteButton = createActionButton( "Delete Selected", FontAwesomeSolid.TRASH_ALT, true);
 
         rightButtons.add(deleteAllButton);
         rightButtons.add(deleteButton);
@@ -58,66 +56,30 @@ public class HistoryActionsSection extends JPanel {
         add(leftButtons, BorderLayout.WEST);
         add(rightButtons, BorderLayout.EAST);
 
-        // Apply a subtle green hover to the standard buttons.
-        addHoverEffect(importButton, HOVER_BG, HOVER_ACCENT);
-        addHoverEffect(exportButton, HOVER_BG, HOVER_ACCENT);
-        addHoverEffect(printButton, HOVER_BG, HOVER_ACCENT);
-
-        // Use a subtle red hover so the delete buttons stand out as destructive.
-        addHoverEffect(deleteAllButton, DELETE_HOVER_BG, DELETE_HOVER_ACCENT);
-        addHoverEffect(deleteButton, DELETE_HOVER_BG, DELETE_HOVER_ACCENT);
     }
 
 
-    // Tints the button's background, border and text while the mouse is over it.
-    // Restores the original pill button styling when the mouse leaves.
-    private void addHoverEffect(JButton button, Color hoverBackground, Color hoverAccent) {
+    // Creates a consistently styled action button for the History Page.
+    // Destructive actions receive a red hover effect instead of green.
+    private JButton createActionButton( String text, FontAwesomeSolid icon, boolean destructive) {
 
-        // Allow the button's background colour to be painted on every platform.
-        button.setContentAreaFilled(false);
-        button.setOpaque(true);
+        // Reuse EcoScan's shared rounded secondary-action button.
+        OutlinedActionButton button = new OutlinedActionButton(text);
 
-        button.addMouseListener(new MouseAdapter() {
+        // Display a consistent FontAwesome icon beside the label.
+        button.setIcon( FontIcon.of(icon, 13, destructive ? TEXT_MUTED : GREEN) );
+        button.setDisabledIcon( FontIcon.of(icon, 13, TEXT_MUTED) );
+        button.setIconTextGap(8);
 
-            @Override
-            public void mouseEntered(MouseEvent e) {
+        // Apply the red hover treatment only to destructive actions.
+        if (destructive) {
+            button.setHoverColors( DELETE_HOVER_BG, DELETE_HOVER_ACCENT );
+        }
 
-                // Disabled buttons don't react to hover.
-                if (!button.isEnabled()) {
-                    return;
-                }
+        // Match the height used by other EcoScan secondary actions.
+        button.setPreferredSize( new Dimension(button.getPreferredSize().width + 20, 38) );
 
-                button.setBackground(hoverBackground);
-                button.setForeground(hoverAccent);
-                button.setBorder( createButtonBorder(hoverAccent) );
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                button.setBackground(Color.WHITE);
-                button.setForeground(TEXT_MAIN);
-                button.setBorder( createButtonBorder(BORDER_COLOR) );
-            }
-        });
-
-        // Remove the hover styling if the button is disabled while the mouse is over it.
-        button.addPropertyChangeListener("enabled", e -> {
-            if (!button.isEnabled()) {
-                button.setBackground(Color.WHITE);
-                button.setForeground(TEXT_MAIN);
-                button.setBorder( createButtonBorder(BORDER_COLOR) );
-            }
-        });
-    }
-
-
-    // Creates the pill button border in the given colour.
-    // Matches the padding used by UIUtility.createPillButton.
-    private Border createButtonBorder(Color colour) {
-        return BorderFactory.createCompoundBorder(
-                new LineBorder(colour, 1, true),
-                new EmptyBorder(8, 16, 8, 16)
-        );
+        return button;
     }
 
 

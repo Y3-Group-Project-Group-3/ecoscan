@@ -1,58 +1,3 @@
-//package com.example.monitortest.views.sections;
-//
-//import javax.swing.*;
-//import javax.swing.border.EmptyBorder;
-//import javax.swing.border.LineBorder;
-//import java.awt.*;
-//
-//import static com.example.monitortest.ui.theme.AppTheme.*;
-//
-//public class HistoryHeaderSection  extends JPanel{
-//
-//    private JTextField searchField;
-//    private JComboBox<String> sortCombo;
-//
-//        // header title
-//    public HistoryHeaderSection(){
-//        JPanel headerPanel = new JPanel(new BorderLayout());
-//        headerPanel.setOpaque(false);
-//        JLabel title = new JLabel("Previous Scans");
-//        title.setFont(new Font("SansSerif", Font.BOLD, 22));
-//        title.setForeground(TEXT_MAIN);
-//        JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-//        controlsPanel.setOpaque(false);
-//        JTextField searchField = new JTextField("🔍  Search scans");
-//        searchField.setPreferredSize(new Dimension(180, 32));
-//        searchField.setFont(new Font("SansSerif", Font.PLAIN, 12));
-//        searchField.setForeground(TEXT_MUTED);
-//        searchField.setBorder(BorderFactory.createCompoundBorder(
-//                new LineBorder(BORDER_COLOR, 1, true),
-//                new EmptyBorder(5, 8, 5, 8)
-//        ));
-//
-//        JComboBox<String> sortCombo = new JComboBox<>(new String[]{"↓↑ Newest first", "↓↑ Oldest first"});
-//        sortCombo.setPreferredSize(new Dimension(130, 32));
-//        sortCombo.setFont(new Font("SansSerif", Font.PLAIN, 12));
-//        sortCombo.setBackground(Color.WHITE);
-//        controlsPanel.add(searchField);
-//        controlsPanel.add(sortCombo);
-//        headerPanel.add(title, BorderLayout.WEST);
-//        headerPanel.add(controlsPanel, BorderLayout.EAST);
-//    }
-//
-//        // search field
-//        public JTextField getSearchField() {
-//            return searchField;
-//        }
-//
-//        // sort dropdown
-//        public JComboBox<String> getSortCombo() {
-//            return sortCombo;
-//        }
-//
-//}
-
-
 package com.example.monitortest.ui.history.sections;
 
 import javax.swing.*;
@@ -64,6 +9,9 @@ import java.awt.event.FocusEvent;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import static com.example.monitortest.ui.theme.UIUtility.*;
+import com.example.monitortest.ui.common.RoundedTextField;
+
+import com.example.monitortest.ui.common.RoundedComboBox;
 
 public class HistoryHeaderSection extends JPanel {
 
@@ -77,25 +25,21 @@ public class HistoryHeaderSection extends JPanel {
         setLayout(new BorderLayout());
         setOpaque(false);
 
-        JLabel title = label(
-                "Previous Scans",
-                Font.BOLD,
-                FONT_TITLE_SIZE,
-                TEXT_MAIN
-        );
+        JLabel title = label( "Previous Scans", Font.BOLD, FONT_TITLE_SIZE, TEXT_MAIN );
 
-        JPanel controls = new JPanel(
-                new FlowLayout(FlowLayout.RIGHT, 10, 0)
-        );
+        JPanel controls = new JPanel( new FlowLayout(FlowLayout.RIGHT, 10, 0) );
         controls.setOpaque(false);
 
-        searchField = new JTextField(SEARCH_PLACEHOLDER);
+
+        // Use the reusable rounded input component.
+        searchField = new RoundedTextField(SEARCH_PLACEHOLDER);
+
+        // Keep the existing muted search placeholder.
         searchField.setForeground(TEXT_MUTED);
-        searchField.setPreferredSize(new Dimension(180, 32));
-        searchField.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(BORDER_COLOR, 1, true),
-                new EmptyBorder(5, 8, 5, 8)
-        ));
+
+        // Match the height of the nearby sorting dropdown.
+        searchField.setPreferredSize(new Dimension(200, 36));
+
 
         // Clear the hint text when the user clicks into the search box.
         // Restore the hint text when the search box is left empty.
@@ -118,10 +62,14 @@ public class HistoryHeaderSection extends JPanel {
             }
         });
 
-        sortCombo = new JComboBox<>(
-                new String[]{"↓↑ Newest first", "↓↑ Oldest first"}
-        );
-        sortCombo.setPreferredSize(new Dimension(130, 32));
+        // Use EcoScan's rounded dropdown instead of the native Swing appearance.
+        sortCombo = new RoundedComboBox( new String[]{"↓↑ Newest first", "↓↑ Oldest first"} );
+
+        // Match the search field's height.
+        sortCombo.setPreferredSize(new Dimension(150, 36));
+
+        // Match the search field's height and the application's typography.
+        sortCombo.setPreferredSize(new Dimension(150, 36));
 
         controls.add(searchField);
         controls.add(sortCombo);
