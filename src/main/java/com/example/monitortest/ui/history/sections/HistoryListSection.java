@@ -6,6 +6,9 @@ import com.example.monitortest.ui.history.components.ScanRow;
 import com.example.monitortest.ui.history.model.SavedScan;
 import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
+import com.example.monitortest.ui.history.services.ScanHistoryPrinter;
+import static com.example.monitortest.ui.theme.AppTheme.*;
+import com.example.monitortest.ui.history.components.HistoryTableHeader;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -27,33 +30,33 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 
-import static com.example.monitortest.ui.theme.AppTheme.*;
+
 
 // Displays saved hardware scans inside EcoScan's reusable rounded card.
 public class HistoryListSection extends RoundedPanel {
 
-        private JPanel listItemsPanel;
+    private JPanel listItemsPanel;
 
-        // Retrieves saved hardware scans from the CSV history file.
-        private final ScanHistoryCsvRepository scanRepository = new ScanHistoryCsvRepository();
+    // Retrieves saved hardware scans from the CSV history file.
+    private final ScanHistoryCsvRepository scanRepository = new ScanHistoryCsvRepository();
 
-        // Formats scan timestamps for the History table.
-        private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM uuuu");
+    // Formats scan timestamps for the History table.
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM uuuu");
 
-        // Notifies the parent History Page when a saved scan is selected.
-        private Consumer<SavedScan> viewScanListener;
+    // Notifies the parent History Page when a saved scan is selected.
+    private Consumer<SavedScan> viewScanListener;
 
-        // Links each displayed row to the saved scan it represents.
-        private final Map<ScanRow, SavedScan> rows = new LinkedHashMap<>();
+    // Links each displayed row to the saved scan it represents.
+    private final Map<ScanRow, SavedScan> rows = new LinkedHashMap<>();
 
-        // Text currently typed into the History search box.
-        private String searchText = "";
+    // Text currently typed into the History search box.
+    private String searchText = "";
 
-        // Displays the newest scans first unless the user chooses oldest first.
-        private boolean newestFirst = true;
+    // Displays the newest scans first unless the user chooses oldest first.
+    private boolean newestFirst = true;
 
-        // Notifies the History Page when the rows or selection change.
-        private Runnable stateChangeListener;
+    // Notifies the History Page when the rows or selection change.
+    private Runnable stateChangeListener;
 
 
     // Creates the saved hardware scans table using the shared card design.
@@ -73,18 +76,15 @@ public class HistoryListSection extends RoundedPanel {
         // Leave enough space for the rounded outline to remain visible.
         contentPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
 
-        // Add the existing table header inside the wrapper.
-        contentPanel.add(createListHeaderRow(), BorderLayout.NORTH);
-
+        // Display the three saved scan columns using the shared header.
+        contentPanel.add( new HistoryTableHeader("DATE", "NAME", "ACTION"), BorderLayout.NORTH );
 
         listItemsPanel = new JPanel();
         listItemsPanel.setLayout( new BoxLayout(listItemsPanel, BoxLayout.Y_AXIS) );
         listItemsPanel.setBackground(Color.WHITE);
 
-
         // Populate the History table using records saved to CSV.
         refreshScans();
-
 
         JScrollPane scrollPane = new JScrollPane(listItemsPanel);
         scrollPane.setBorder(null);
@@ -117,10 +117,9 @@ public class HistoryListSection extends RoundedPanel {
         add(contentPanel, BorderLayout.CENTER);
     }
 
-
-        // Reloads saved hardware scans and updates the History table.
-        // Can also be called when the user returns to the History Page.
-        public void refreshScans() {
+    // Reloads saved hardware scans and updates the History table.
+    // Can also be called when the user returns to the History Page.
+    public void refreshScans() {
 
         // Remove the previously displayed rows before rebuilding the list.
         listItemsPanel.removeAll();
@@ -145,9 +144,7 @@ public class HistoryListSection extends RoundedPanel {
             // or when no saved scans match the search.
             if (scans.isEmpty()) {
 
-                String message = hasSavedScans
-                        ? "No saved scans match your search."
-                        : "No saved hardware scans available.";
+                String message = hasSavedScans ? "No saved scans match your search." : "No saved hardware scans available.";
 
                 JLabel emptyLabel = new JLabel( message );
                 emptyLabel.setBorder(new EmptyBorder(15, 15, 15, 15));
@@ -206,23 +203,20 @@ public class HistoryListSection extends RoundedPanel {
         notifyStateChanged();
     }
 
-
-        // Updates the search text and reloads the History table.
-        public void setSearchText(String text) {
+    // Updates the search text and reloads the History table.
+    public void setSearchText(String text) {
         this.searchText = text.trim().toLowerCase();
         refreshScans();
     }
 
-
-        // Updates the sort order and reloads the History table.
-        public void setNewestFirst(boolean newestFirst) {
+    // Updates the sort order and reloads the History table.
+    public void setNewestFirst(boolean newestFirst) {
         this.newestFirst = newestFirst;
         refreshScans();
     }
 
-
-        // Returns true when the scan's name or date contains the search text.
-        private boolean matchesSearch(SavedScan scan) {
+    // Returns true when the scan's name or date contains the search text.
+    private boolean matchesSearch(SavedScan scan) {
 
         // Every scan matches when the search box is empty.
         if (searchText.isEmpty()) {
@@ -235,10 +229,9 @@ public class HistoryListSection extends RoundedPanel {
         return name.contains(searchText) || date.contains(searchText);
     }
 
-
-        // Makes a History row selectable.
-        // A single click selects one row, Cmd/Ctrl-click selects several rows.
-        private void addSelection(ScanRow row) {
+    // Makes a History row selectable.
+    // A single click selects one row, Cmd/Ctrl-click selects several rows.
+    private void addSelection(ScanRow row) {
 
         row.addMouseListener(new MouseAdapter() {
 
@@ -264,9 +257,8 @@ public class HistoryListSection extends RoundedPanel {
         });
     }
 
-
-        // Returns true when at least one History row is selected.
-        public boolean hasSelection() {
+    // Returns true when at least one History row is selected.
+    public boolean hasSelection() {
 
         for (ScanRow row : rows.keySet()) {
             if (row.isSelected()) {
@@ -277,15 +269,13 @@ public class HistoryListSection extends RoundedPanel {
         return false;
     }
 
-
-        // Returns true when the History list contains at least one saved scan.
-        public boolean hasScans() {
+    // Returns true when the History list contains at least one saved scan.
+    public boolean hasScans() {
         return !rows.isEmpty();
     }
 
-
-        // Deletes the selected hardware scans and refreshes the History table.
-        public void deleteSelected() {
+    // Deletes the selected hardware scans and refreshes the History table.
+    public void deleteSelected() {
 
         // Collect the ids of every selected saved scan.
         Set<UUID> selectedIds = new HashSet<>();
@@ -304,9 +294,8 @@ public class HistoryListSection extends RoundedPanel {
         deleteScans( selectedIds, "Unable to delete the selected scans." );
     }
 
-
-        // Deletes every saved hardware scan and refreshes the History table.
-        public void deleteAll() {
+    // Deletes every saved hardware scan and refreshes the History table.
+    public void deleteAll() {
 
         // Collect the ids of every displayed saved scan.
         Set<UUID> allIds = new HashSet<>();
@@ -318,10 +307,9 @@ public class HistoryListSection extends RoundedPanel {
         deleteScans( allIds, "Unable to delete the saved scans." );
     }
 
-
-        // Removes the given scans from the CSV file, then reloads the History table.
-        // Displays an error message without changing the list if deletion fails.
-        private void deleteScans(Set<UUID> ids, String errorMessage) {
+    // Removes the given scans from the CSV file, then reloads the History table.
+    // Displays an error message without changing the list if deletion fails.
+    private void deleteScans(Set<UUID> ids, String errorMessage) {
 
         try {
 
@@ -341,91 +329,27 @@ public class HistoryListSection extends RoundedPanel {
         refreshScans();
     }
 
-
-        // Prints the scans currently shown in the History table.
-        // Only the date and name are printed, matching what the user sees.
-        public void printScans() {
-
-        // Copy the displayed scans into rows for a simple printable table.
-        String[] columns = { "Date", "Name" };
-        Object[][] data = new Object[rows.size()][columns.length];
-
-        int index = 0;
-
-        for (SavedScan scan : rows.values()) {
-            data[index][0] = scan.getScannedAt().format(DATE_FORMAT);
-            data[index][1] = scan.getName();
-            index++;
-        }
-
-        JTable table = new JTable(data, columns);
-
-        // Give the table and its header a size so they print correctly off-screen.
-        table.setSize( table.getPreferredSize() );
-        table.getTableHeader().setSize( table.getTableHeader().getPreferredSize() );
-
-        try {
-
-            // Open the system print dialog and print the table across the page width.
-            table.print(
-                    JTable.PrintMode.FIT_WIDTH,
-                    new MessageFormat("EcoScan - Previous Scans"),
-                    new MessageFormat("Page {0}")
-            );
-
-        } catch (PrinterException e) {
-
-            // Inform the user that the list could not be printed.
-            JOptionPane.showMessageDialog( this,
-                    "Unable to print the saved scans.",
-                    "Print scans", JOptionPane.ERROR_MESSAGE );
-
-            // Print the underlying error for debugging.
-            e.printStackTrace();
-        }
+    // Prints the scans currently displayed in the History list.
+    // Delegates document formatting and printing to ScanHistoryPrinter.
+    public void printScans() {
+        // Pass the visible scans in their current display order.
+        new ScanHistoryPrinter().printScans( rows.values(), this );
     }
 
-
-        public JPanel createListHeaderRow() {
-
-        // Create the header with the three remaining columns.
-        JPanel header = new JPanel(new GridLayout(1, 3, 10, 0));
-        // Allow RoundedPanel to provide the card background.
-        header.setOpaque(false);
-        // Match the horizontal padding used by ScanRow.
-        header.setBorder(new EmptyBorder(12, 18, 12, 18));
-
-        // Define the column headings in display order.
-        String[] titles = { "DATE", "NAME", "ACTION" };
-
-        // Create and add a label for each column heading.
-        for (String title : titles) {
-            JLabel label = new JLabel(title);
-            label.setFont(UIUtility.font( "SansSerif", Font.BOLD, FONT_BADGE_SIZE ));
-            label.setForeground(new Color(75, 85, 99));
-            header.add(label);
-        }
-
-        return header;
-    }
-
-
-        // Registers the action to run when the rows or selection change.
-        public void setStateChangeListener(Runnable listener) {
+    // Registers the action to run when the rows or selection change.
+    public void setStateChangeListener(Runnable listener) {
         this.stateChangeListener = listener;
     }
 
-
-        // Runs the state change action when one has been registered.
-        private void notifyStateChanged() {
+    // Runs the state change action when one has been registered.
+    private void notifyStateChanged() {
         if (stateChangeListener != null) {
             stateChangeListener.run();
         }
     }
 
-
-        // Registers the action to perform when the user selects a saved scan.
-        public void setViewScanListener(Consumer<SavedScan> listener) {
+    // Registers the action to perform when the user selects a saved scan.
+    public void setViewScanListener(Consumer<SavedScan> listener) {
         this.viewScanListener = listener;
     }
 

@@ -7,7 +7,8 @@ import com.example.monitortest.ui.history.storage.SessionHistoryCsvRepository;
 import com.example.monitortest.ui.common.OutlinedActionButton;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
 import static com.example.monitortest.ui.theme.AppTheme.*;
-
+import com.example.monitortest.ui.history.components.SessionRow;
+import com.example.monitortest.ui.history.components.HistoryTableHeader;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -41,7 +42,6 @@ public class SessionListSection extends RoundedPanel {
     // Formats session start times for the Sessions table.
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("d MMM uuuu, HH:mm");
 
-
     // Creates the session history card using EcoScan's existing design.
     public SessionListSection() {
 
@@ -61,7 +61,8 @@ public class SessionListSection extends RoundedPanel {
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
         top.add(createTitleBar(), BorderLayout.NORTH);
-        top.add(createListHeaderRow(), BorderLayout.SOUTH);
+        // Display the session columns using the shared header.
+        top.add( new HistoryTableHeader("DATE", "TOTAL EMISSIONS"), BorderLayout.SOUTH );
 
         // Keep the title and column headings inside the card padding.
         contentPanel.add(top, BorderLayout.NORTH);
@@ -89,7 +90,6 @@ public class SessionListSection extends RoundedPanel {
         // Attach the complete session layout to the outer card.
         add(contentPanel, BorderLayout.CENTER);
     }
-
 
     // Reloads saved sessions and updates the Sessions table.
     // Can also be called when the user returns to the History Page.
@@ -119,9 +119,9 @@ public class SessionListSection extends RoundedPanel {
 
             } else {
 
-                // Create one table row for every saved session.
+                // Create one reusable SessionRow for every saved session.
                 for (SessionRecord session : sessions) {
-                    listItemsPanel.add( createRow(session) );
+                    listItemsPanel.add(new SessionRow(session));
                 }
             }
 
@@ -147,7 +147,6 @@ public class SessionListSection extends RoundedPanel {
         listItemsPanel.repaint();
     }
 
-
     // Imports sessions from a CSV file chosen by the user.
     // Returns the number of sessions imported.
     public int importSessions(Path importPath) throws IOException {
@@ -160,7 +159,6 @@ public class SessionListSection extends RoundedPanel {
 
         return imported;
     }
-
 
     // Asks the user to confirm, then deletes every saved session.
     private void clearSessions() {
@@ -193,57 +191,6 @@ public class SessionListSection extends RoundedPanel {
 
         // Rebuild the Sessions table from the updated CSV.
         refreshSessions();
-    }
-
-
-    // Creates one table row displaying the session's date and total emissions.
-    private JPanel createRow(SessionRecord session) {
-
-        JPanel row = new JPanel(new GridLayout(1, 2, 10, 0));
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-        row.setBackground(Color.WHITE);
-        // Align session values with their corresponding column headings.
-        row.setBorder(new EmptyBorder(8, 18, 8, 18));
-
-        Font font = UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE);
-
-        // Add the session information in the same order as the header.
-        row.add( createCell( session.getStartedAt().format(DATE_FORMAT), font ) );
-        row.add( createCell( formatEmissions(session.getTotalEmissionsGrams()), font ) );
-
-        // Highlight the row in light grey while the mouse is over it.
-        row.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                row.setBackground(new Color(0xF7F8FA));
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                row.setBackground(Color.WHITE);
-            }
-        });
-
-        return row;
-    }
-
-
-    // Displays smaller totals in grams and larger totals in kilograms.
-    private String formatEmissions(double grams) {
-
-        if (grams >= 1000) {
-            return String.format( Locale.UK, "%.2f kg CO₂e", grams / 1000 );
-        }
-
-        return String.format( Locale.UK, "%.2f g CO₂e", grams );
-    }
-
-    private JLabel createCell(String text, Font font) {
-        JLabel label = new JLabel(text);
-        label.setFont(font);
-        label.setForeground(TEXT_MAIN);
-        return label;
     }
 
     // Creates the title bar with the table title on the left and Clear Sessions on the right.
@@ -290,28 +237,5 @@ public class SessionListSection extends RoundedPanel {
         title.setBorder(new EmptyBorder(12, 15, 4, 15));
 
         return title;
-    }
-
-    public JPanel createListHeaderRow() {
-
-        // Create the header with the two session columns.
-        JPanel header = new JPanel(new GridLayout(1, 2, 10, 0));
-        // Use the RoundedPanel background instead of a rectangular fill.
-        header.setOpaque(false);
-        // Match the horizontal spacing used in the saved scans table.
-        header.setBorder(new EmptyBorder(12, 18, 12, 18));
-
-        // Define the column headings in display order.
-        String[] titles = { "DATE", "TOTAL EMISSIONS" };
-
-        // Create and add a label for each column heading.
-        for (String title : titles) {
-            JLabel label = new JLabel(title);
-            label.setFont(UIUtility.font( "SansSerif", Font.BOLD, FONT_BADGE_SIZE ));
-            label.setForeground(new Color(75, 85, 99));
-            header.add(label);
-        }
-
-        return header;
     }
 }
