@@ -75,50 +75,63 @@ public class HardwareSensorReader {
 
 
 
-    /**
-     * Retrieves NVIDIA GPU package power from a hardware snapshot.
-     *
-     * @param computer LibreHardwareMonitor snapshot.
-     * @return GPU package power in watts, or NaN if unavailable.
-     */
+
+    // Retrieves GPU power from supported GPU hardware sensors.
+    // Supports common NVIDIA, AMD and Intel GPU power sensor names.
     public double getGpuPower(Computer computer) {
 
-        // Check whether the hardware snapshot is available.
+        // Return unavailable when the hardware snapshot cannot be read.
         if (computer == null || computer.getHardware() == null) {
             return Double.NaN;
         }
 
-        // Search the snapshot for NVIDIA GPU hardware.
+        // Search every GPU rather than restricting detection to NVIDIA.
         for (Hardware hardware : computer.getHardware()) {
 
-            // Skip devices without a valid name or sensor collection.
-            if (hardware.getName() == null || hardware.getSensors() == null) {
+            if (hardware.getHardwareType() == null || hardware.getSensors() == null) {
                 continue;
             }
 
-            // Only examine NVIDIA GPU hardware.
-            if (!hardware.getName().toLowerCase().contains("nvidia")) {
+            // Only inspect hardware classified as a GPU.
+            String hardwareType = hardware.getHardwareType().toString();
+
+            if (!hardwareType.toLowerCase(java.util.Locale.ROOT).startsWith("gpu")) {
                 continue;
             }
 
-            // Find the GPU Package power sensor.
+            // Inspect the power sensors belonging to this GPU.
             for (Sensor sensor : hardware.getSensors()) {
 
-                if (sensor.getName() == null || sensor.getSensorType() == null) {
+                if (sensor.getSensorType() == null || sensor.getName() == null) {
                     continue;
                 }
 
-                if (sensor.getName().equalsIgnoreCase("GPU Package") && sensor.getSensorType().toString().equalsIgnoreCase("Power")) {
-                    // Reject invalid or negative power measurements.
-                    double value = sensor.getValue();
-                    return Double.isFinite(value) && value >= 0.0 ? value : Double.NaN;
+                // Exclude loads, temperatures and other non-power readings.
+                if (!sensor.getSensorType().toString().equalsIgnoreCase("Power")) {
+                    continue;
+                }
+
+                // Support the common GPU power sensor naming conventions.
+                String sensorName = sensor.getName();
+
+                boolean supportedName = sensorName.equalsIgnoreCase("GPU Package") || sensorName.equalsIgnoreCase("GPU Power") || sensorName.equalsIgnoreCase("GPU Core");
+                if (!supportedName) {
+                    continue;
+                }
+
+                // Only accept valid, non-negative readings.
+                double value = sensor.getValue();
+
+                if (Double.isFinite(value) && value >= 0.0) {
+                    return value;
                 }
             }
         }
 
-        // No supported GPU power sensor was found.
+        // No supported GPU power sensor could be retrieved.
         return Double.NaN;
     }
+
 
 
 

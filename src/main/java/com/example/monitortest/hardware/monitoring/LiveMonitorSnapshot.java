@@ -9,12 +9,32 @@ public record LiveMonitorSnapshot(
         double cpuPower,
         double gpuPower
 ) {
-    // Return combined power only when both readings are available.
+
+    // Returns the sum of available, valid power readings.
+    // Missing sensors do not prevent emissions estimation.
     public double totalPower() {
-        if (!Double.isFinite(cpuPower) || !Double.isFinite(gpuPower)) {
+
+        // Treat negative or non-finite readings as unavailable.
+        boolean cpuAvailable = Double.isFinite(cpuPower) && cpuPower >= 0;
+        boolean gpuAvailable = Double.isFinite(gpuPower) && gpuPower >= 0;
+
+        // No valid sensors means power consumption cannot be estimated.
+        if (!cpuAvailable && !gpuAvailable) {
             return Double.NaN;
         }
 
-        return cpuPower + gpuPower;
+        // Begin with zero and add only available measurements.
+        double total = 0.0;
+
+        if (cpuAvailable) {
+            total += cpuPower;
+        }
+
+        if (gpuAvailable) {
+            total += gpuPower;
+        }
+
+        return total;
     }
+
 }
