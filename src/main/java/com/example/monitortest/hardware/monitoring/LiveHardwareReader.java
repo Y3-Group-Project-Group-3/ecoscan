@@ -10,6 +10,9 @@ public class LiveHardwareReader {
     private final HardwareSnapshotProvider snapshotProvider;
     private final HardwareSensorReader sensorReader;
 
+    // TEMP DEBUG: Prevent repeated diagnostic output on every sensor poll.
+    private boolean diagnosticsPrinted = false;
+
     public LiveHardwareReader() {
         // Reuse the existing hardware sensor infrastructure.
         snapshotProvider = new HardwareSnapshotProvider();
@@ -25,6 +28,19 @@ public class LiveHardwareReader {
         // Retrieve the latest available hardware sensor snapshot.
 //        Computer computer = snapshotProvider.getSnapshot();
         Computer computer = HardwareSnapshotProvider.getSnapshot();
+
+
+        // TEMP DEBUG: Capture the first hardware snapshot for compatibility testing.
+        if (!diagnosticsPrinted) {
+
+            sensorReader.debugGpuSensors(computer);
+
+            // Mark diagnostics as complete only after receiving a usable snapshot.
+            if (computer != null && computer.getHardware() != null) {
+                diagnosticsPrinted = true;
+            }
+        }
+
 
         // Default to unavailable readings if the snapshot cannot be retrieved.
         if (computer == null) {

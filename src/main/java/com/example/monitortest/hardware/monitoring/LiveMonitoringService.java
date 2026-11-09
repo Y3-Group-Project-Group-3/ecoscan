@@ -82,6 +82,17 @@ public class LiveMonitoringService {
                 // Accumulate estimated emissions using the latest snapshot.
                 emissionsTracker.addSnapshot(snapshot, timestamp);
 
+
+// TEMP DEBUG: Report the values used for the emissions calculation.
+// This helps identify whether a missing GPU sensor blocks accumulation.
+                System.out.printf( java.util.Locale.UK, "[EcoScan Monitor] CPU=%.2f W | GPU=%.2f W | " + "Total=%.2f W | Emissions=%.6f g CO2e%n",
+                        snapshot.cpuPower(),
+                        snapshot.gpuPower(),
+                        snapshot.totalPower(),
+                        emissionsTracker.getTotalEmissionsGrams()
+                );
+
+
                 // Forward the snapshot to the existing Live Monitor interface.
                 onSnapshot.accept(snapshot);
 

@@ -133,6 +133,65 @@ public class HardwareSensorReader {
     }
 
 
+    // Prints the GPU hardware and power sensors exposed by jLibreHardwareMonitor.
+    // Intended for temporary compatibility testing on different devices.
+    public void debugGpuSensors(Computer computer) {
+
+        System.out.println("\n========== EcoScan GPU Diagnostics ==========");
+
+        // Report when the hardware snapshot cannot be retrieved.
+        if (computer == null || computer.getHardware() == null) {
+            System.out.println("Hardware snapshot unavailable.");
+            System.out.println("============================================\n");
+            return;
+        }
+
+        // Inspect every hardware device so we can verify how GPUs are classified.
+        for (Hardware hardware : computer.getHardware()) {
+
+            String hardwareName = String.valueOf(hardware.getName());
+            String hardwareType = String.valueOf(hardware.getHardwareType());
+
+            // Include likely GPU devices, regardless of their reported type.
+            boolean isGpu = hardwareType.toLowerCase(java.util.Locale.ROOT).contains("gpu")
+                            || hardwareName.toLowerCase(java.util.Locale.ROOT).contains("graphics")
+                            || hardwareName.toLowerCase(java.util.Locale.ROOT).contains("iris")
+                            || hardwareName.toLowerCase(java.util.Locale.ROOT).contains("nvidia")
+                            || hardwareName.toLowerCase(java.util.Locale.ROOT).contains("radeon");
+
+            if (!isGpu) {
+                continue;
+            }
+
+            System.out.println("Hardware: " + hardwareName);
+            System.out.println("Hardware type: " + hardwareType);
+
+            // Report whether this hardware device exposes any sensors.
+            if (hardware.getSensors() == null) {
+                System.out.println("Sensors: unavailable");
+                continue;
+            }
+
+            // Print every power sensor with its exact name and current value.
+            for (Sensor sensor : hardware.getSensors()) {
+
+                if (sensor.getSensorType() == null) {
+                    continue;
+                }
+
+                if (sensor.getSensorType().toString().equalsIgnoreCase("Power")) {
+
+                    System.out.println("  Power sensor: " + sensor.getName() + " | Value: " + sensor.getValue() + " W"
+                    );
+                }
+            }
+        }
+
+        System.out.println("============================================\n");
+    }
+
+
+
 
 
 }
