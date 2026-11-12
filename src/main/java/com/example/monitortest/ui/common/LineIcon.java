@@ -124,6 +124,21 @@ public  class LineIcon implements Icon {
                 g.draw(shield);
                 polyline(g, false, 9, 12, 11, 14, 15, 10);
             }
+            // Scan frame with a scanning line across the middle (Home "Start Hardware Scan" button).
+            case "SCAN_LINE" -> {
+                corner(g, 3, 7, 3, 3, 7, 3);
+                corner(g, 17, 3, 21, 3, 21, 7);
+                corner(g, 21, 17, 21, 21, 17, 21);
+                corner(g, 7, 21, 3, 21, 3, 17);
+                line(g, 7, 12, 17, 12);
+            }
+            // Monitor with a small line chart on the screen (Home "Open Live Monitor" button).
+            case "MONITOR_CHART" -> {
+                g.draw(new RoundRectangle2D.Double(2, 3, 20, 14, 4, 4));
+                line(g, 8, 21, 16, 21);
+                line(g, 12, 17, 12, 21);
+                polyline(g, false, 6, 13, 9.5, 9.5, 12.5, 11.5, 18, 7);
+            }
             case "ARROW_RIGHT" -> {
                 line(g, 5, 12, 19, 12);
                 polyline(g, false, 12, 5, 19, 12, 12, 19);

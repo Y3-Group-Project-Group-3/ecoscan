@@ -71,8 +71,15 @@ public class HomePanel extends JPanel {
         JLabel infoLabel = UIUtility.label("HARDWARE ASSESSMENT", Font.BOLD, AppTheme.FONT_LABEL_SIZE, AppTheme.GREEN);
         column.add(UIUtility.alignComponent(infoLabel, FlowLayout.CENTER));
 
-        // --- Scan yo computer label
+        // Short green underline beneath the label
         column.add(Box.createVerticalStrut(8));
+        JPanel underline = new JPanel();
+        underline.setBackground(AppTheme.GREEN);
+        underline.setPreferredSize(new Dimension(80, 3));
+        column.add(UIUtility.alignComponent(underline, FlowLayout.CENTER));
+
+        // --- Scan yo computer label
+        column.add(Box.createVerticalStrut(14));
         JLabel pageTitle = UIUtility.label("Explore your computer", Font.BOLD, AppTheme.FONT_TITLE_SIZE, AppTheme.TEXT_MAIN);
         column.add(UIUtility.alignComponent(pageTitle, FlowLayout.CENTER));
 
@@ -95,16 +102,18 @@ public class HomePanel extends JPanel {
         HomeFeatureCard scanCard = new HomeFeatureCard(
                 "Scan Hardware",
                 "Discover your computer's hardware and system specifications.",
-                "Start Scan",
-                FontAwesomeSolid.MICROCHIP
+                "Start Hardware Scan",
+                FontAwesomeSolid.MICROCHIP,
+                "SCAN_LINE"
         );
 
         // Live monitoring card.
         HomeFeatureCard monitorCard = new HomeFeatureCard(
                 "Live Monitor",
                 "View real-time hardware performance, power usage and emissions.",
-                "View Monitor",
-                FontAwesomeSolid.CHART_LINE
+                "Open Live Monitor",
+                FontAwesomeSolid.CHART_LINE,
+                "MONITOR_CHART"
         );
 
         // Keep references to the buttons for the existing navigation system.
@@ -124,15 +133,15 @@ public class HomePanel extends JPanel {
         featureContainer.setOpaque(false);
 
         // Keep the cards at a consistent height.
-        featureContainer.setPreferredSize(new Dimension(MAX_CONTENT_WIDTH, 410));
-        featureContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 410));
+        featureContainer.setPreferredSize(new Dimension(MAX_CONTENT_WIDTH, 360));
+        featureContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 360));
 
         // Constrain the row to a maximum width, even on large windows.
         JPanel cardWrapper = new JPanel(new BorderLayout());
         cardWrapper.setOpaque(false);
         cardWrapper.add(featureRow, BorderLayout.CENTER);
 
-        cardWrapper.setPreferredSize(new Dimension(MAX_CONTENT_WIDTH, 410));
+        cardWrapper.setPreferredSize(new Dimension(MAX_CONTENT_WIDTH, 360));
 
         // Centre the card wrapper horizontally inside the available space.
         GridBagConstraints cardConstraints = new GridBagConstraints();
@@ -171,7 +180,7 @@ public class HomePanel extends JPanel {
 
                 // Allow the card container to change height
                 // Provide enough height for both cards when stacked.
-                int cardHeight = stacked ? 840 : 410;
+                int cardHeight = stacked ? 740 : 360;
                 cardWrapper.setPreferredSize( new Dimension( stacked ? Math.min(500, availableWidth) : MAX_CONTENT_WIDTH, cardHeight ) );
                 featureContainer.setPreferredSize( new Dimension(MAX_CONTENT_WIDTH, cardHeight));
                 featureContainer.setMaximumSize( new Dimension(Integer.MAX_VALUE, cardHeight) );

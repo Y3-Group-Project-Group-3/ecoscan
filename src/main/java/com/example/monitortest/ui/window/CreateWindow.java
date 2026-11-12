@@ -34,6 +34,8 @@ public class CreateWindow {
         InfoTooltip.configureAppearance();
 
         JFrame frame = new JFrame("EcoScan");
+        // Show the EcoScan leaf logo in the title bar and taskbar instead of the default Java icon.
+        frame.setIconImages(com.example.monitortest.ui.common.GradientBadge.createAppIconImages());
         CardLayout cardLayout = new CardLayout();
         JPanel mainPanel = new JPanel(cardLayout);
 
