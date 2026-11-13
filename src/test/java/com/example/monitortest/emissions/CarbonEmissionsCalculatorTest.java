@@ -13,7 +13,7 @@ class CarbonEmissionsCalculatorTest {
 
     // Test 1: Verify that a valid power reading produces the expected amount of carbon emissions.
     @Test
-    @DisplayName("LIV-UT-001 — Calculates correct CO₂ emissions for 100 W over 60 seconds")
+    @DisplayName("LIV-UT-001 - Calculates correct CO₂ emissions for 100 W over 60 seconds")
     void calculatesEmissionsCorrectly() {
 
         // Create the calculator with the default carbon intensity of 200 gCO2e/kWh.
@@ -31,7 +31,7 @@ class CarbonEmissionsCalculatorTest {
 
     // Test 2: Verify that an unavailable power sensor produces NaN instead of an incorrect emissions estimate.
     @Test
-    @DisplayName("LIV-UT-002 — Returns NaN when the power sensor reading is unavailable")
+    @DisplayName("LIV-UT-002 - Returns NaN when the power sensor reading is unavailable")
     void rejectsUnavailablePowerReadings() {
 
         // Create a calculator using the default configuration.
@@ -47,7 +47,7 @@ class CarbonEmissionsCalculatorTest {
 
     // Test 3: Verify that no power consumption produces no carbon emissions.
     @Test
-    @DisplayName("LIV-UT-003 — Returns zero CO2 emissions when device power consumption is zero")
+    @DisplayName("LIV-UT-003 - Returns zero CO2 emissions when device power consumption is zero")
     void returnsZeroEmissionsForZeroPower() {
 
         // Create the calculator with its default carbon intensity.
@@ -62,7 +62,7 @@ class CarbonEmissionsCalculatorTest {
 
     // Test 4: Verify that negative hardware power readings are rejected.
     @Test
-    @DisplayName("LIV-UT-004 — Returns NaN when the power sensor reports a negative value")
+    @DisplayName("LIV-UT-004 - Returns NaN when the power sensor reports a negative value")
     void rejectsNegativePowerReadings() {
 
         // Create the calculator with the default configuration.
@@ -77,7 +77,7 @@ class CarbonEmissionsCalculatorTest {
 
     // Test 5: Verify that a custom carbon intensity affects the result.
     @Test
-    @DisplayName("LIV-UT-005 — Uses the configured carbon intensity when calculating CO2 emissions")
+    @DisplayName("LIV-UT-005 - Uses the configured carbon intensity when calculating CO2 emissions")
     void usesConfiguredCarbonIntensity() {
 
         // Create a calculator using 100 gCO2e/kWh instead of the default 200.
@@ -97,7 +97,7 @@ class CarbonEmissionsCalculatorTest {
     // LIV-UT-006
     // Verify that an invalid negative monitoring duration is rejected.
     @Test
-    @DisplayName("LIV-UT-006 — Returns NaN when the monitoring duration is negative")
+    @DisplayName("LIV-UT-006 - Returns NaN when the monitoring duration is negative")
     void rejectsNegativeDuration() {
 
         // Create a calculator using the default carbon intensity.
@@ -113,7 +113,7 @@ class CarbonEmissionsCalculatorTest {
     // LIV-UT-007
     // Verify that an invalid carbon intensity cannot be configured.
     @Test
-    @DisplayName("LIV-UT-007 — Rejects negative carbon intensity configuration")
+    @DisplayName("LIV-UT-007 - Rejects negative carbon intensity configuration")
     void rejectsNegativeCarbonIntensity() {
 
         // Create the calculator with a valid initial configuration.
@@ -126,7 +126,7 @@ class CarbonEmissionsCalculatorTest {
     // LIV-UT-008
     // Verify the time required to reach a specified emissions milestone.
     @Test
-    @DisplayName("LIV-UT-008 — Calculates the correct time to reach a CO2 emissions milestone")
+    @DisplayName("LIV-UT-008 - Calculates the correct time to reach a CO2 emissions milestone")
     void calculatesTimeToEmissionsMilestone() {
 
         // Use the default carbon intensity of 200 gCO2e/kWh.
@@ -142,7 +142,7 @@ class CarbonEmissionsCalculatorTest {
     // LIV-UT-009
     // Verify that a milestone cannot be reached with zero power.
     @Test
-    @DisplayName("LIV-UT-009 — Returns NaN when calculating milestone time with zero power")
+    @DisplayName("LIV-UT-009 - Returns NaN when calculating milestone time with zero power")
     void rejectsZeroPowerForMilestone() {
 
         // Create a calculator with the default carbon intensity.
