@@ -8,33 +8,67 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 
 
 // Continuously retrieves CPU and GPU power readings on a dedicated background thread.
 public class LiveMonitoringService {
 
-    private final LiveHardwareReader reader;
+//    private final LiveHardwareReader reader;
+    // Supplies power snapshots from either real hardware or a test fixture.
+    private final Supplier<LiveMonitorSnapshot> snapshotSupplier;
+
     private final ScheduledExecutorService scheduler;
     // Track whether the monitoring service has encountered a failure.
     private boolean monitoringFailed = false;
     // Prevent multiple monitoring tasks from being scheduled.
     private boolean started = false;
 
+//    public LiveMonitoringService(Consumer<LiveMonitorSnapshot> onSnapshot) {
+//
+//        reader = new LiveHardwareReader();
+//
+//        // Use a single background thread to avoid overlapping sensor requests.
+//        // allow us to retrieve hardware information continuously without freezing the application's GUI.
+//        scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+//            Thread thread = new Thread(r, "EcoScan-LiveMonitor");
+//            thread.setDaemon(true);
+//            return thread;
+//        });
+//
+//        this.onSnapshot = onSnapshot;
+//    }
+
+
+    // Production constructor.
+    // Existing application code can continue creating the service as before.
     public LiveMonitoringService(Consumer<LiveMonitorSnapshot> onSnapshot) {
+        // Use the real hardware reader during normal operation.
+        this(onSnapshot, new LiveHardwareReader()::readSnapshot);
+    }
 
-        reader = new LiveHardwareReader();
+    // Package-private constructor used by integration tests.
+    // Allows simulated snapshots without accessing physical hardware.
+    public LiveMonitoringService(Consumer<LiveMonitorSnapshot> onSnapshot, Supplier<LiveMonitorSnapshot> snapshotSupplier) {
 
-        // Use a single background thread to avoid overlapping sensor requests.
-        // allow us to retrieve hardware information continuously without freezing the application's GUI.
+        // Store the callback and the selected snapshot source.
+        this.onSnapshot = onSnapshot;
+        this.snapshotSupplier = snapshotSupplier;
+
+        // Use one background worker to avoid overlapping sensor requests.
         scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+
+            // Give the monitoring thread a recognisable name.
             Thread thread = new Thread(r, "EcoScan-LiveMonitor");
+
+            // Allow the application to close without waiting on this thread.
             thread.setDaemon(true);
+
             return thread;
         });
-
-        this.onSnapshot = onSnapshot;
     }
+
 
     private final Consumer<LiveMonitorSnapshot> onSnapshot;
     // Track estimated emissions throughout the monitoring session.
@@ -52,7 +86,10 @@ public class LiveMonitoringService {
 
             try {
                 // Retrieve the latest CPU and GPU power readings.
-                LiveMonitorSnapshot snapshot = reader.readSnapshot();
+//                LiveMonitorSnapshot snapshot = reader.readSnapshot();
+
+                // Retrieve a snapshot from the configured source.
+                LiveMonitorSnapshot snapshot = snapshotSupplier.get();
 
                 // Check whether either power sensor returned a valid reading.
                 boolean cpuAvailable = Double.isFinite(snapshot.cpuPower());

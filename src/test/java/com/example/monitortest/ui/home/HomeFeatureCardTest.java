@@ -24,9 +24,19 @@ class HomeFeatureCardTest {
         SwingTestSupport.useHeadlessMode();
     }
 
+
+    // Creates a HomeFeatureCard with the five required constructor arguments.
+    // Swing component creation takes place on the Event Dispatch Thread.
     private static HomeFeatureCard createCard() {
-        return onEdt(() -> new HomeFeatureCard(TITLE, DESCRIPTION, BUTTON_TEXT, FontAwesomeSolid.MICROCHIP));
+        return onEdt(() -> new HomeFeatureCard(
+                TITLE,
+                DESCRIPTION,
+                BUTTON_TEXT,
+                FontAwesomeSolid.MICROCHIP,
+                "scan"
+        ));
     }
+
 
     // Counts how many times the card's action button fires.
     private static AtomicInteger countActions(HomeFeatureCard card) {
@@ -45,7 +55,9 @@ class HomeFeatureCardTest {
 
         assertNotNull(findLabel(card, TITLE), "title label");
         assertNotNull(findLabelContaining(card, DESCRIPTION), "description label");
-        assertEquals(BUTTON_TEXT, card.getActionButton().getText());
+        // The Home card appends a navigation arrow to its action label.
+        assertEquals(BUTTON_TEXT + "  \u2192", card.getActionButton().getText()
+        );
     }
 
     @Test
