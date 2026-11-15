@@ -5,8 +5,10 @@ import com.example.monitortest.hardware.monitoring.LiveMonitoringService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import javax.swing.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -309,6 +311,56 @@ class LiveMonitoringServiceTest {
             service.stop();
             // Confirm the monitoring worker terminates successfully.
             assertTrue( service.awaitTermination(3, TimeUnit.SECONDS), "The monitoring scheduler did not terminate." );
+        }
+    }
+
+
+
+    // LIV-IT-011
+    // Verify that hardware monitoring callbacks execute on a background thread rather than blocking Swing's Event Dispatch Thread.
+    @Test
+    @DisplayName("LIV-IT-011 - Executes monitoring callbacks outside the Swing Event Dispatch Thread")
+    void executesMonitoringCallbacksOnBackgroundThread() throws InterruptedException {
+
+        // Record whether the callback was executed on Swing's EDT.
+        AtomicBoolean callbackOnEdt = new AtomicBoolean(true);
+
+        // Signal when the first monitoring callback has executed.
+        CountDownLatch callbackReceived = new CountDownLatch(1);
+
+        // Use simulated hardware readings to avoid physical sensor access.
+        LiveMonitoringService service = new LiveMonitoringService(
+
+                        // Inspect the thread executing the monitoring callback.
+                        snapshot -> {
+                            callbackOnEdt.set( SwingUtilities.isEventDispatchThread() );
+                            // Notify the test that the callback has completed.
+                            callbackReceived.countDown();
+                        },
+
+                        // Simulate a valid CPU and GPU power measurement.
+                        () -> new LiveMonitorSnapshot(50.0, 30.0)
+                );
+
+        try {
+
+            // Start the background monitoring scheduler.
+            service.start();
+
+            // Wait for the first callback to execute.
+            boolean received = callbackReceived.await( 3, TimeUnit.SECONDS );
+
+            // Verify that the callback actually executed.
+            assertTrue( received, "The monitoring callback was not executed." );
+
+            // The monitoring callback should not run on Swing's EDT.
+            assertFalse( callbackOnEdt.get(), "The monitoring callback executed on the Swing EDT." );
+
+        } finally {
+            // Always stop the monitoring service after the test.
+            service.stop();
+            // Allow the background scheduler to terminate.
+            service.awaitTermination(3, TimeUnit.SECONDS);
         }
     }
 
