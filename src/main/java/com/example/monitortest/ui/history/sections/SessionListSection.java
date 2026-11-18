@@ -11,6 +11,8 @@ import com.example.monitortest.ui.history.components.HistoryTableHeader;
 import com.example.monitortest.ui.history.components.HistorySectionTitleBar;
 import com.example.monitortest.ui.history.components.HistoryClearButton;
 
+import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -27,6 +29,9 @@ public class SessionListSection extends RoundedPanel {
 
     // Removes every saved session after the user confirms.
     private JButton clearButton;
+
+    // Imports sessions from a CSV file chosen by the user.
+    private JButton importButton;
 
     // Retrieves saved sessions from the sessions CSV file.
     private final SessionHistoryCsvRepository sessionRepository = new SessionHistoryCsvRepository();
@@ -76,6 +81,20 @@ public class SessionListSection extends RoundedPanel {
 
         // Keep the scrollable session rows inside the rounded card.
         contentPanel.add(scrollPane, BorderLayout.CENTER);
+
+        // Import sits under the sessions because it only adds sessions.
+        importButton = HistoryActionsSection.createActionButton( "Import Sessions", FontAwesomeSolid.FILE_IMPORT, false );
+
+        // Use the same BoxLayout as the scan actions so the buttons match in size.
+        JPanel footerPanel = new JPanel();
+        footerPanel.setLayout(new BoxLayout(footerPanel, BoxLayout.X_AXIS));
+        footerPanel.setOpaque(false);
+        footerPanel.setBorder(new EmptyBorder(12, 10, 10, 10));
+        footerPanel.add(importButton);
+        footerPanel.add(Box.createHorizontalGlue());
+
+        // Keep the Import Sessions button inside the rounded card.
+        contentPanel.add(footerPanel, BorderLayout.SOUTH);
 
         // Attach the complete session layout to the outer card.
         add(contentPanel, BorderLayout.CENTER);
@@ -184,5 +203,10 @@ public class SessionListSection extends RoundedPanel {
         // Refresh the Sessions table after successful deletion.
         refreshSessions();
 
+    }
+
+    // Returns the Import Sessions button so the History Page can handle the file dialog.
+    public JButton getImportButton() {
+        return importButton;
     }
 }

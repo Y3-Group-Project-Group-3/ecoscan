@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Consumer;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
@@ -37,6 +39,18 @@ public class HistoryPanel extends JPanel {
 
         // Add the main History Page layout.
         add(createMainContentPanel(), BorderLayout.CENTER);
+
+        // Allow the page itself to take focus away from the search box and sort dropdown.
+        setFocusable(true);
+
+        // Clicking an empty part of the page clears the focus from the search and sort controls.
+        addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                requestFocusInWindow();
+            }
+        });
     }
 
 
@@ -84,21 +98,15 @@ public class HistoryPanel extends JPanel {
             historyListSection.setNewestFirst( newestFirst );
         });
 
-        // List and action buttons
-        JPanel center = new JPanel(new BorderLayout(0, 20));
-        center.setOpaque(false);
-
         // Display the saved scans above the Live Monitor sessions.
         JPanel lists = new JPanel(new GridLayout(2, 1, 0, 20));
         lists.setOpaque(false);
         lists.add(historyListSection);
         lists.add(sessionListSection);
 
-        center.add(lists, BorderLayout.CENTER);
-
-        // Display the History action buttons.
+        // Display the saved scan action buttons inside the scans card.
         HistoryActionsSection actionsSection = new HistoryActionsSection();
-        center.add( actionsSection, BorderLayout.SOUTH );
+        historyListSection.setActionsBar(actionsSection);
 
         // Delete the selected scans when the Delete Selected button is clicked.
         actionsSection.getDeleteButton().addActionListener(e -> {
@@ -125,8 +133,8 @@ public class HistoryPanel extends JPanel {
         // Export the saved scans to a CSV file when the Export Results button is clicked.
         actionsSection.getExportButton().addActionListener(e -> exportScans());
 
-        // Import Live Monitor sessions from a CSV file when the Import Results button is clicked.
-        actionsSection.getImportButton().addActionListener(e -> importSessions());
+        // Import Live Monitor sessions from a CSV file when the Import Sessions button is clicked.
+        sessionListSection.getImportButton().addActionListener(e -> importSessions());
 
         // Print the History list when the Print List button is clicked.
         actionsSection.getPrintButton().addActionListener(e -> {
@@ -147,8 +155,8 @@ public class HistoryPanel extends JPanel {
         historyListSection.setStateChangeListener( () -> updateButtonStates(actionsSection) );
         updateButtonStates(actionsSection);
 
-        // ...
-        main.add(center, BorderLayout.CENTER);
+        // Add the scans and sessions cards below the header.
+        main.add(lists, BorderLayout.CENTER);
 
         return main;
     }
