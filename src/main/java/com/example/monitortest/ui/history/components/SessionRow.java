@@ -63,7 +63,8 @@ public class SessionRow extends JPanel {
     }
 
     // Formats smaller emissions in grams and larger totals in kilograms.
-    private String formatEmissions(double grams) {
+    // Shared with the Sessions card so the average uses the same units as the rows.
+    public static String formatEmissions(double grams) {
 
         if (grams >= 1000) {
             return String.format(Locale.UK, "%.2f kg CO₂e", grams / 1000);
