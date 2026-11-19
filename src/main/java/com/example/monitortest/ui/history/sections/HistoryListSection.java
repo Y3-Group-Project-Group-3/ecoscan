@@ -63,6 +63,9 @@ public class HistoryListSection extends RoundedPanel {
     // Clears all saved hardware scans after user confirmation.
     private JButton clearButton;
 
+    // Holds the instruction text and the saved scan action buttons.
+    private JPanel footerPanel;
+
 
 
 
@@ -128,8 +131,12 @@ public class HistoryListSection extends RoundedPanel {
         // Add spacing while retaining the card's white background.
         infoLabel.setBorder(new EmptyBorder(12, 18, 16, 18));
 
-        // Keep the instruction footer inside the rounded card.
-        contentPanel.add(infoLabel, BorderLayout.SOUTH);
+        // Keep the instruction text and scan actions inside the rounded card.
+        footerPanel = new JPanel(new BorderLayout());
+        footerPanel.setOpaque(false);
+        footerPanel.add(infoLabel, BorderLayout.NORTH);
+
+        contentPanel.add(footerPanel, BorderLayout.SOUTH);
 
         // Attach the complete table layout to the rounded outer panel.
         add(contentPanel, BorderLayout.CENTER);
@@ -435,6 +442,16 @@ public class HistoryListSection extends RoundedPanel {
         new ScanHistoryPrinter().printScans( rows.values(), this );
     }
 
+    // Places the saved scan action buttons at the bottom of this card.
+    // The buttons only act on saved scans, so they belong under this section.
+    public void setActionsBar(JComponent actionsBar) {
+
+        // Line the buttons up with the card's inner padding.
+        actionsBar.setBorder(new EmptyBorder(0, 10, 10, 10));
+
+        footerPanel.add(actionsBar, BorderLayout.SOUTH);
+    }
+
     // Registers the action to run when the rows or selection change.
     public void setStateChangeListener(Runnable listener) {
         this.stateChangeListener = listener;
@@ -453,5 +470,3 @@ public class HistoryListSection extends RoundedPanel {
     }
 
 }
-
-

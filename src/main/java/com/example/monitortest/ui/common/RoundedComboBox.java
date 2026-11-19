@@ -39,6 +39,15 @@ public class RoundedComboBox extends JComboBox<String> {
                 // The enclosing RoundedComboBox paints the background.
                 // Prevent Swing from drawing a rectangular one over it.
             }
+
+            @Override
+            public void paintCurrentValue(Graphics g, Rectangle bounds, boolean hasFocus) {
+
+                // Swing paints the chosen value in the white selection colour when focused.
+                // Always paint it as unfocused so the text stays dark on the white background.
+                // The green border still shows focus.
+                super.paintCurrentValue(g, bounds, false);
+            }
         });
 
         // Keep the selected value transparent so the rounded

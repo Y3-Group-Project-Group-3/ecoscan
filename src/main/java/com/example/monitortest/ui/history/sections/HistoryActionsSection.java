@@ -15,7 +15,6 @@ public class HistoryActionsSection extends JPanel {
     private static final Color DELETE_HOVER_BG = new Color(0xFDEEEE);
     private static final Color DELETE_HOVER_ACCENT = new Color(0xC0392B);
 
-    private JButton importButton;
     private JButton exportButton;
     private JButton printButton;
     private JButton deleteButton;
@@ -29,14 +28,12 @@ public class HistoryActionsSection extends JPanel {
         leftButtons.setLayout(new BoxLayout(leftButtons, BoxLayout.X_AXIS));
         leftButtons.setOpaque(false);
 
-        // Create the standard History actions using reusable styling.
-        importButton = createActionButton( "Import Results", FontAwesomeSolid.FILE_IMPORT, false );
+        // Create the saved scan actions using reusable styling.
+        // Importing sessions is handled by the Live Monitor Sessions card.
         exportButton = createActionButton( "Export Results", FontAwesomeSolid.FILE_EXPORT, false );
         printButton = createActionButton( "Print List", FontAwesomeSolid.PRINT, false );
 
         // Add uniform spacing only between buttons.
-        leftButtons.add(importButton);
-        leftButtons.add(Box.createHorizontalStrut(10));
         leftButtons.add(exportButton);
         leftButtons.add(Box.createHorizontalStrut(10));
         leftButtons.add(printButton);
@@ -61,7 +58,8 @@ public class HistoryActionsSection extends JPanel {
 
     // Creates a consistently styled action button for the History Page.
     // Destructive actions receive a red hover effect instead of green.
-    private JButton createActionButton( String text, FontAwesomeSolid icon, boolean destructive) {
+    // Shared with the Sessions card so every History button looks the same.
+    public static JButton createActionButton( String text, FontAwesomeSolid icon, boolean destructive) {
 
         // Reuse EcoScan's shared rounded secondary-action button.
         OutlinedActionButton button = new OutlinedActionButton(text);
@@ -82,10 +80,6 @@ public class HistoryActionsSection extends JPanel {
         return button;
     }
 
-
-    public JButton getImportButton() {
-        return importButton;
-    }
 
     public JButton getExportButton() {
         return exportButton;
