@@ -33,6 +33,9 @@ public class SessionListSection extends RoundedPanel {
     // Imports sessions from a CSV file chosen by the user.
     private JButton importButton;
 
+    // Shows the average emissions across all saved sessions.
+    private JLabel averageLabel;
+
     // Retrieves saved sessions from the sessions CSV file.
     private final SessionHistoryCsvRepository sessionRepository = new SessionHistoryCsvRepository();
 
@@ -73,6 +76,11 @@ public class SessionListSection extends RoundedPanel {
         listItemsPanel.setLayout( new BoxLayout(listItemsPanel, BoxLayout.Y_AXIS) );
         listItemsPanel.setBackground(Color.WHITE);
 
+        // Created before refreshing sessions because refreshSessions() updates the average.
+        averageLabel = new JLabel();
+        averageLabel.setFont(UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE));
+        averageLabel.setForeground(TEXT_MUTED);
+
         // The title bar must be created before refreshing sessions because refreshSessions() updates the Clear Sessions button.
         refreshSessions();
 
@@ -92,8 +100,9 @@ public class SessionListSection extends RoundedPanel {
         footerPanel.setBorder(new EmptyBorder(12, 10, 10, 10));
         footerPanel.add(importButton);
         footerPanel.add(Box.createHorizontalGlue());
+        footerPanel.add(averageLabel);
 
-        // Keep the Import Sessions button inside the rounded card.
+        // Keep the Import Sessions button and average inside the rounded card.
         contentPanel.add(footerPanel, BorderLayout.SOUTH);
 
         // Attach the complete session layout to the outer card.
@@ -110,6 +119,9 @@ public class SessionListSection extends RoundedPanel {
         // Tracks whether there are any sessions the user could clear.
         boolean hasSessions = false;
 
+        // Stays empty when there are no sessions to average.
+        String averageText = "";
+
         try {
 
             // Load the saved sessions from EcoScan's sessions CSV file.
@@ -119,6 +131,19 @@ public class SessionListSection extends RoundedPanel {
             sessions.sort( Comparator.comparing(SessionRecord::getStartedAt).reversed() );
 
             hasSessions = !sessions.isEmpty();
+
+            // Work out the average emissions per session.
+            if (hasSessions) {
+
+                double totalGrams = 0;
+
+                for (SessionRecord session : sessions) {
+                    totalGrams += session.getTotalEmissionsGrams();
+                }
+
+                // Reuse the row formatting so the average uses the same g / kg units.
+                averageText = "Average per session: " + SessionRow.formatEmissions( totalGrams / sessions.size() );
+            }
 
             // Show a helpful message when no sessions have been saved yet.
             if (sessions.isEmpty()) {
@@ -150,6 +175,9 @@ public class SessionListSection extends RoundedPanel {
 
         // Only allow clearing when there are sessions to remove.
         clearButton.setEnabled(hasSessions);
+
+        // Show the average, or nothing when there are no sessions.
+        averageLabel.setText(averageText);
 
         // Update the Swing layout after changing the displayed rows.
         listItemsPanel.revalidate();
