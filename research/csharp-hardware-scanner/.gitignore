@@ -1,0 +1,20 @@
+# Visual Studio build output
+bin/
+obj/
+.vs/
+
+# User-specific settings
+*.user
+*.suo
+*.rsuser
+
+# IDE settings
+.vscode/
+.idea/
+
+# Generated files
+*.log
+*.tmp
+
+# Local hardware scan results
+system_data.csv
