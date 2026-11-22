@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -55,9 +54,6 @@ public class SessionListSection extends RoundedPanel {
 
     // Shares the selected or visible sessions by email.
     private JButton shareButton;
-
-    // Shows the average emissions per second across all saved sessions.
-    private JLabel averageLabel;
 
     // Searches and sorts the sessions in this card only.
     private HistorySearchBar searchBar;
@@ -126,7 +122,8 @@ public class SessionListSection extends RoundedPanel {
         top.add( new HistorySectionTitleBar( "Live Monitor Sessions", searchBar ), BorderLayout.NORTH );
 
         // Display the session columns using the shared header.
-        top.add( new HistoryTableHeader("DATE", "TOTAL EMISSIONS"), BorderLayout.SOUTH );
+        // The third column shows each session's average emissions per second.
+        top.add( new HistoryTableHeader("DATE", "TOTAL EMISSIONS", "AVG. EMISSIONS"), BorderLayout.SOUTH );
 
         // Keep the title and column headings inside the card padding.
         contentPanel.add(top, BorderLayout.NORTH);
@@ -135,12 +132,11 @@ public class SessionListSection extends RoundedPanel {
         listItemsPanel.setLayout( new BoxLayout(listItemsPanel, BoxLayout.Y_AXIS) );
         listItemsPanel.setBackground(Color.WHITE);
 
-        // Created before refreshing sessions because refreshSessions() updates the average.
-        // Sits on the info line, in the same place as the scans card's instruction text.
-        averageLabel = new JLabel();
-        averageLabel.setFont(UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE));
-        averageLabel.setForeground(TEXT_MUTED);
-        averageLabel.setBorder(new EmptyBorder(12, 18, 16, 18));
+        // Instruction text in the same place as the scans card, so both cards match.
+        JLabel infoLabel = new JLabel( "Select one or more rows (Cmd/Ctrl-click) to delete or print them." );
+        infoLabel.setFont(UIUtility.font("SansSerif", Font.PLAIN, FONT_LABEL_SIZE));
+        infoLabel.setForeground(TEXT_MUTED);
+        infoLabel.setBorder(new EmptyBorder(12, 18, 16, 18));
 
         // Use the same buttons as the scans card so both cards match.
         // Created before refreshing sessions because refreshSessions() updates them.
@@ -189,10 +185,10 @@ public class SessionListSection extends RoundedPanel {
         actionsBar.add(leftButtons, BorderLayout.WEST);
         actionsBar.add(rightButtons, BorderLayout.EAST);
 
-        // Keep the average and session actions inside the rounded card.
+        // Keep the instruction text and session actions inside the rounded card.
         JPanel footerPanel = new JPanel(new BorderLayout());
         footerPanel.setOpaque(false);
-        footerPanel.add(averageLabel, BorderLayout.NORTH);
+        footerPanel.add(infoLabel, BorderLayout.NORTH);
         footerPanel.add(actionsBar, BorderLayout.SOUTH);
 
         contentPanel.add(footerPanel, BorderLayout.SOUTH);
@@ -212,9 +208,6 @@ public class SessionListSection extends RoundedPanel {
         // Tracks whether there are any sessions the user could clear or export.
         hasStoredSessions = false;
 
-        // Stays empty when there are no sessions to average.
-        String averageText = "";
-
         try {
 
             // Load the saved sessions from EcoScan's sessions CSV file.
@@ -225,27 +218,6 @@ public class SessionListSection extends RoundedPanel {
             sessions.sort( newestFirst ? byDate.reversed() : byDate );
 
             hasStoredSessions = !sessions.isEmpty();
-
-            // Work out the average emissions per second, matching the Live Monitor.
-            // Uses every saved session with a recorded length, so the search does not change it.
-            if (hasStoredSessions) {
-
-                double totalGrams = 0;
-                double totalSeconds = 0;
-
-                for (SessionRecord session : sessions) {
-
-                    // Sessions saved before the length was recorded cannot be included.
-                    if (session.hasDuration()) {
-                        totalGrams += session.getTotalEmissionsGrams();
-                        totalSeconds += session.getDurationSeconds();
-                    }
-                }
-
-                averageText = totalSeconds > 0
-                        ? String.format( Locale.UK, "Average Emissions / Second: %.6f g CO₂e/s", totalGrams / totalSeconds )
-                        : "Average Emissions / Second: Not available for older sessions";
-            }
 
             // Only keep the sessions that match the current search text.
             sessions.removeIf( session -> !matchesSearch(session) );
@@ -301,9 +273,6 @@ public class SessionListSection extends RoundedPanel {
 
         // Nothing is selected after reloading the rows.
         deleteButton.setEnabled(false);
-
-        // Show the average, or nothing when there are no sessions.
-        averageLabel.setText(averageText);
 
         // Update the Swing layout after changing the displayed rows.
         listItemsPanel.revalidate();
