@@ -12,7 +12,7 @@ import com.example.monitortest.ui.history.services.ScanHistoryPrinter;
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import com.example.monitortest.ui.history.components.HistoryTableHeader;
 import com.example.monitortest.ui.history.components.HistorySectionTitleBar;
-import com.example.monitortest.ui.history.components.HistoryClearButton;
+import com.example.monitortest.ui.history.components.HistorySearchBar;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -27,6 +27,8 @@ import java.util.Comparator;
 import java.util.function.Consumer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 
 
@@ -60,8 +62,8 @@ public class HistoryListSection extends RoundedPanel {
     // Tracks whether the CSV contains saved scans independently of the current search filter.
     private boolean hasStoredScans = false;
 
-    // Clears all saved hardware scans after user confirmation.
-    private JButton clearButton;
+    // Searches and sorts the saved scans in this card only.
+    private HistorySearchBar searchBar;
 
     // Holds the instruction text and the saved scan action buttons.
     private JPanel footerPanel;
@@ -92,11 +94,36 @@ public class HistoryListSection extends RoundedPanel {
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
 
-        // Use the shared clearing button with scan-specific confirmation.
-        clearButton = new HistoryClearButton( "Clear Scans", this::confirmClearScans );
+        // Create the search box and sort dropdown for the saved scans.
+        searchBar = new HistorySearchBar("Search scans");
 
-        // Use the shared title bar with its right-aligned action.
-        top.add( new HistorySectionTitleBar( "Saved Hardware Scans", clearButton ), BorderLayout.NORTH );
+        // Filter the saved scans whenever the search text changes.
+        searchBar.getSearchField().getDocument().addDocumentListener(new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                setSearchText( searchBar.getSearchText() );
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                setSearchText( searchBar.getSearchText() );
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                setSearchText( searchBar.getSearchText() );
+            }
+        });
+
+        // Re-sort the saved scans whenever a different sort option is chosen.
+        // The first option is "Newest first", the second is "Oldest first".
+        searchBar.getSortCombo().addActionListener(e -> {
+            setNewestFirst( searchBar.getSortCombo().getSelectedIndex() == 0 );
+        });
+
+        // Use the shared title bar with the search and sort on the right.
+        top.add( new HistorySectionTitleBar( "Saved Hardware Scans", searchBar ), BorderLayout.NORTH );
 
 
         // Reuse the shared table header for the three saved scan columns.
@@ -228,12 +255,6 @@ public class HistoryListSection extends RoundedPanel {
         // Update the Swing layout after changing the displayed rows.
         listItemsPanel.revalidate();
         listItemsPanel.repaint();
-
-        // Only allow clearing when saved scans exist.
-        // The search filter must not affect this button.
-        if (clearButton != null) {
-            clearButton.setEnabled(hasStoredScans);
-        }
 
         // Let the History Page update its buttons.
         notifyStateChanged();
@@ -422,8 +443,8 @@ public class HistoryListSection extends RoundedPanel {
 
 
     // Confirms that the user wants to remove every saved hardware scan.
-    // Actual deletion remains delegated to the existing deleteAll() method.
-    private void confirmClearScans() {
+    // Called by the Clear Scans button in the bottom toolbar.
+    public void confirmClearScans() {
 
         // Warn the user before permanently removing saved records.
         int answer = JOptionPane.showConfirmDialog( this, "Delete all saved hardware scans? This cannot be undone.", "Clear scans", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
