@@ -30,11 +30,11 @@ public class SessionRow extends JPanel {
     private static final Color HOVER_COLOR = new Color(0xF7F8FA);
     private static final Color SELECTED_COLOR = new Color(0xEAF5EE);
 
-    // Creates a row displaying the session date and total carbon emissions.
+    // Creates a row displaying the session date, total emissions and average emissions per second.
     public SessionRow(SessionRecord session) {
 
-        // Match the two-column layout used by the session table header.
-        setLayout(new GridLayout(1, 2, 10, 0));
+        // Match the three-column layout used by the session table header.
+        setLayout(new GridLayout(1, 3, 10, 0));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(8, 18, 8, 18));
@@ -42,9 +42,10 @@ public class SessionRow extends JPanel {
         // Use the application's standard table typography.
         Font rowFont = UIUtility.font( "SansSerif", Font.PLAIN, FONT_LABEL_SIZE );
 
-        // Display the session's date and formatted emissions.
+        // Display the session's date, total emissions and average emissions per second.
         add(createCell(session.getStartedAt().format(DATE_FORMAT), rowFont));
         add(createCell(formatEmissions(session.getTotalEmissionsGrams()), rowFont));
+        add(createCell(formatAverage(session), rowFont));
 
         // Highlight the row when the mouse enters or leaves it.
         addMouseListener(new MouseAdapter() {
@@ -106,5 +107,16 @@ public class SessionRow extends JPanel {
         }
 
         return String.format(Locale.UK, "%.2f g CO₂e", grams);
+    }
+
+    // Formats the session's average emissions per second, matching the Live Monitor.
+    // Sessions saved before the length was recorded show "Not recorded".
+    public static String formatAverage(SessionRecord session) {
+
+        if (!session.hasDuration()) {
+            return "Not recorded";
+        }
+
+        return String.format(Locale.UK, "%.6f g CO₂e/s", session.getTotalEmissionsGrams() / session.getDurationSeconds());
     }
 }
