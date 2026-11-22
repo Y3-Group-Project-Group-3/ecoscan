@@ -16,8 +16,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class HistoryPanel extends JPanel {
@@ -69,34 +67,9 @@ public class HistoryPanel extends JPanel {
 
 
         // Header
+        // Search and sort are handled inside each card.
         HistoryHeaderSection headerSection = new HistoryHeaderSection();
         main.add( headerSection, BorderLayout.NORTH);
-
-        // Filter the History list whenever the search text changes.
-        headerSection.getSearchField().getDocument().addDocumentListener(new DocumentListener() {
-
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                historyListSection.setSearchText( headerSection.getSearchText() );
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                historyListSection.setSearchText( headerSection.getSearchText() );
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                historyListSection.setSearchText( headerSection.getSearchText() );
-            }
-        });
-
-        // Re-sort the History list whenever a different sort option is chosen.
-        // The first option is "Newest first", the second is "Oldest first".
-        headerSection.getSortCombo().addActionListener(e -> {
-            boolean newestFirst = headerSection.getSortCombo().getSelectedIndex() == 0;
-            historyListSection.setNewestFirst( newestFirst );
-        });
 
         // Display the saved scans above the Live Monitor sessions.
         JPanel lists = new JPanel(new GridLayout(2, 1, 0, 20));
@@ -129,6 +102,9 @@ public class HistoryPanel extends JPanel {
                 historyListSection.deleteSelected();
             }
         });
+
+        // Remove every saved scan when the Clear Scans button is clicked.
+        actionsSection.getClearButton().addActionListener(e -> historyListSection.confirmClearScans());
 
         // Export the saved scans to a CSV file when the Export Results button is clicked.
         actionsSection.getExportButton().addActionListener(e -> exportScans());
@@ -171,6 +147,9 @@ public class HistoryPanel extends JPanel {
 
         // Deleting selected rows requires an actual row selection.
         actionsSection.getDeleteButton().setEnabled( historyListSection.hasSelection() );
+
+        // Clearing removes every saved scan, so the search filter must not affect it.
+        actionsSection.getClearButton().setEnabled(hasStoredScans);
 
         // This action operates on the complete saved history.
         actionsSection.getExportButton().setEnabled(hasStoredScans);

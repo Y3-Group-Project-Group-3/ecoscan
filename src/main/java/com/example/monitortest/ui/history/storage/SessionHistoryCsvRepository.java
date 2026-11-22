@@ -81,6 +81,35 @@ public class SessionHistoryCsvRepository {
     }
 
 
+    // Deletes the given sessions and keeps every other session.
+    // Sessions are matched by their start time and total emissions.
+    public void deleteSessions(List<SessionRecord> sessionsToDelete) throws IOException {
+
+        // Load the full session history.
+        List<SessionRecord> remaining = loadAll();
+
+        // Remove every session that matches one of the selected sessions.
+        remaining.removeIf( session -> sessionsToDelete.stream().anyMatch( selected ->
+                selected.getStartedAt().equals(session.getStartedAt())
+                        && selected.getTotalEmissionsGrams() == session.getTotalEmissionsGrams() ) );
+
+        // Remove the file when no sessions are left.
+        if (remaining.isEmpty()) {
+            deleteAll();
+            return;
+        }
+
+        // Rewrite the file with the sessions that are left.
+        StringBuilder csv = new StringBuilder(HEADER).append(System.lineSeparator());
+
+        for (SessionRecord session : remaining) {
+            csv.append(toCsvRow(session)).append(System.lineSeparator());
+        }
+
+        Files.writeString( csvPath, csv.toString(), StandardCharsets.UTF_8 );
+    }
+
+
     // Deletes every saved session by removing the sessions CSV file.
     // A new file is created the next time a session is saved.
     public void deleteAll() throws IOException {

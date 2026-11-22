@@ -14,12 +14,21 @@ import java.util.Locale;
 import static com.example.monitortest.ui.theme.AppTheme.*;
 
 // Displays one recorded Live Monitor session.
-// Responsible only for presenting session information and hover styling.
+// Responsible only for presenting session information, hover and selection styling.
 public class SessionRow extends JPanel {
 
     // Formats the session's original start date and time.
-    private static final DateTimeFormatter DATE_FORMAT =
+    // Shared with the Sessions card so search matches the date shown on screen.
+    public static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("d MMM uuuu, HH:mm");
+
+    // Tracks the row's selection and mouse hover state.
+    private boolean selected = false;
+    private boolean hovered = false;
+
+    // Colours used to distinguish hovered and selected rows.
+    private static final Color HOVER_COLOR = new Color(0xF7F8FA);
+    private static final Color SELECTED_COLOR = new Color(0xEAF5EE);
 
     // Creates a row displaying the session date and total carbon emissions.
     public SessionRow(SessionRecord session) {
@@ -42,12 +51,14 @@ public class SessionRow extends JPanel {
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                setBackground(new Color(0xF7F8FA));
+                hovered = true;
+                updateBackground();
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                setBackground(Color.WHITE);
+                hovered = false;
+                updateBackground();
             }
         });
     }
@@ -60,6 +71,30 @@ public class SessionRow extends JPanel {
         label.setForeground(TEXT_MAIN);
 
         return label;
+    }
+
+    // Updates the row background based on selection and hover state.
+    // Selected rows take priority over hover highlighting.
+    private void updateBackground() {
+
+        if (selected) {
+            setBackground(SELECTED_COLOR);
+        } else if (hovered) {
+            setBackground(HOVER_COLOR);
+        } else {
+            setBackground(Color.WHITE);
+        }
+    }
+
+    // Returns whether this row is currently selected.
+    public boolean isSelected() {
+        return selected;
+    }
+
+    // Updates selection and immediately refreshes the row appearance.
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+        updateBackground();
     }
 
     // Formats smaller emissions in grams and larger totals in kilograms.

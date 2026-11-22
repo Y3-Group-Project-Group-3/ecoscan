@@ -15,9 +15,13 @@ public class HistoryActionsSection extends JPanel {
     private static final Color DELETE_HOVER_BG = new Color(0xFDEEEE);
     private static final Color DELETE_HOVER_ACCENT = new Color(0xC0392B);
 
+    // Every History button uses the same size so both cards line up.
+    private static final Dimension BUTTON_SIZE = new Dimension(130, 30);
+
     private JButton exportButton;
     private JButton printButton;
     private JButton deleteButton;
+    private JButton clearButton;
 
     public HistoryActionsSection() {
         setLayout(new BorderLayout());
@@ -43,12 +47,14 @@ public class HistoryActionsSection extends JPanel {
         rightButtons.setLayout(new BoxLayout(rightButtons, BoxLayout.X_AXIS));
         rightButtons.setOpaque(false);
 
-        // Only selected-scan deletion remains in the bottom toolbar.
-        // Clearing the entire history is handled by the card header.
+        // Delete Selected removes the chosen rows, Clear Scans removes every saved scan.
         deleteButton = createActionButton( "Delete Selected", FontAwesomeSolid.TRASH_ALT, true );
+        clearButton = createActionButton( "Clear Scans", FontAwesomeSolid.TRASH_ALT, true );
 
-        // Keep Delete Selected aligned to the right edge of the History cards.
+        // Keep both delete actions together on the right edge of the History cards.
         rightButtons.add(deleteButton);
+        rightButtons.add(Box.createHorizontalStrut(10));
+        rightButtons.add(clearButton);
 
         add(leftButtons, BorderLayout.WEST);
         add(rightButtons, BorderLayout.EAST);
@@ -74,8 +80,9 @@ public class HistoryActionsSection extends JPanel {
             button.setHoverColors( DELETE_HOVER_BG, DELETE_HOVER_ACCENT );
         }
 
-        // Match the height used by other EcoScan secondary actions.
-        button.setPreferredSize( new Dimension(button.getPreferredSize().width + 20, 38) );
+        // Use the same width and height for every History button.
+        button.setPreferredSize(BUTTON_SIZE);
+        button.setMaximumSize(BUTTON_SIZE);
 
         return button;
     }
@@ -91,6 +98,10 @@ public class HistoryActionsSection extends JPanel {
 
     public JButton getDeleteButton() {
         return deleteButton;
+    }
+
+    public JButton getClearButton() {
+        return clearButton;
     }
 
 }
