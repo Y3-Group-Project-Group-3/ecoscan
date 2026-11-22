@@ -6,13 +6,15 @@ import com.example.monitortest.ui.livemonitor.components.PowerGraphPanel;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.ui.loading.components.Spinner;
 import com.example.monitortest.ui.livemonitor.components.CarbonEmissionsPanel;
+import com.example.monitortest.ui.livemonitor.components.comparison.EmissionComparisonPanel;
+import com.example.monitortest.ui.common.OutlinedActionButton;
 import com.example.monitortest.hardware.monitoring.LiveMonitorAvailability;
 import com.example.monitortest.services.startup.ApplicationProcessManager;
-import com.example.monitortest.ui.livemonitor.components.comparison.EmissionComparisonPanel;
 import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsCalculator;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import static com.example.monitortest.ui.theme.UIUtility.font;
@@ -42,6 +44,11 @@ public class LiveMonitorPanel extends JPanel {
     private final CarbonEmissionsPanel carbonEmissionsPanel = new CarbonEmissionsPanel();
     // Displays the PC's emissions against household appliance milestones.
     private final EmissionComparisonPanel emissionComparisonPanel = new EmissionComparisonPanel();
+
+    // Container holding both CPU and GPU graphs.
+    private JPanel graphsPanel;
+    // Tracks whether the graphs are currently displayed side by side.
+    private boolean sideBySideView = true;
 
     // Displays the page title and identifies macOS demonstration mode.
     private final JLabel heading = new JLabel("Live Monitor", SwingConstants.CENTER);
@@ -75,12 +82,21 @@ public class LiveMonitorPanel extends JPanel {
 
         /********************* GRAPHS ********************/
         // Create a container for both power graphs.
-        JPanel graphsPanel = new JPanel(new GridLayout(2, 1, 0, 20));
+//        JPanel graphsPanel = new JPanel(new GridLayout(2, 1, 0, 20));
+
+        // Display CPU and GPU graphs side by side.
+        // One row, two columns, with a 20-pixel horizontal gap.
+        // Initialise the shared graph container in side-by-side mode.
+        graphsPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         graphsPanel.setOpaque(false);
 
-        // Reserve enough vertical space for both graphs.
-        graphsPanel.setPreferredSize(new Dimension(0, 520));
-        graphsPanel.setMinimumSize(new Dimension(0, 520));
+//        // Reserve enough vertical space for both graphs.
+//        graphsPanel.setPreferredSize(new Dimension(0, 520));
+//        graphsPanel.setMinimumSize(new Dimension(0, 520));
+
+        // Reserve enough height for the side-by-side graphs.
+        graphsPanel.setPreferredSize(new Dimension(0, 300));
+        graphsPanel.setMinimumSize(new Dimension(0, 300));
 
         graphsPanel.setBorder(BorderFactory.createEmptyBorder(10, 40, 30, 40));
 
@@ -165,10 +181,68 @@ public class LiveMonitorPanel extends JPanel {
 
         // Keep the graphs at their preferred height.
         summaryPanel.setMaximumSize( new Dimension(Integer.MAX_VALUE, summaryPanel.getPreferredSize().height) );
-        graphsPanel.setMaximumSize( new Dimension(Integer.MAX_VALUE, 520) );
+
+        // Allow the graph container to fill the available width.
+        graphsPanel.setMaximumSize( new Dimension(Integer.MAX_VALUE, 300) );
 
         // Add the summary section above the graphs.
         contentPanel.add(summaryPanel);
+
+
+        // Use EcoScan's existing secondary button styling.
+        OutlinedActionButton graphLayoutButton = new OutlinedActionButton("");
+
+        // Display the icon for stacking the graphs vertically.
+        graphLayoutButton.setIcon(createGraphLayoutIcon(false));
+
+        // Explain the action when the user hovers over the button.
+        graphLayoutButton.setToolTipText("Stack Graphs");
+
+        // Provide an accessible description for the icon-only button.
+        graphLayoutButton.getAccessibleContext()
+                .setAccessibleName("Stack Graphs");
+
+        // Give the compact toggle a consistent size.
+        graphLayoutButton.setPreferredSize(new Dimension(46, 38));
+
+        // Keep the icon centred inside the button.
+        graphLayoutButton.setHorizontalAlignment(SwingConstants.CENTER);
+
+
+        // Explain the button's action on hover.
+        graphLayoutButton.setToolTipText("Stack Graphs");
+
+        // Provide an accessible name for the icon-only control.
+        graphLayoutButton.getAccessibleContext().setAccessibleName("Stack Graphs");
+
+        // Give the button consistent dimensions.
+        graphLayoutButton.setPreferredSize(new Dimension(42, 36));
+
+        // Keep the visual appearance compact.
+        graphLayoutButton.setFocusPainted(false);
+
+        // Display a hand cursor when hovering.
+        graphLayoutButton.setCursor( Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) );
+
+
+        // Switch layouts whenever the button is clicked.
+        graphLayoutButton.addActionListener( event -> toggleGraphLayout(graphLayoutButton) );
+
+        // Position the toggle above the graphs, aligned to the right.
+        JPanel graphToolbar = new JPanel( new FlowLayout(FlowLayout.RIGHT, 40, 0) );
+
+        // Match the background of the Live Monitor page.
+        graphToolbar.setOpaque(false);
+
+        // Allow the toolbar to fill the content width without excessive height.
+        graphToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        graphToolbar.setMaximumSize( new Dimension(Integer.MAX_VALUE, 45) );
+
+        // Add the toggle button to the toolbar.
+        graphToolbar.add(graphLayoutButton);
+
+        // Place the graph layout toggle immediately above the graphs.
+        contentPanel.add(graphToolbar);
         contentPanel.add(graphsPanel);
 
         // Allow vertical scrolling when the content exceeds the window height.
@@ -366,7 +440,7 @@ public class LiveMonitorPanel extends JPanel {
             } else {
 
                 // IntelliJ launches cannot safely restart using java.exe alone.
-                JLabel instructionLabel = new JLabel( "Restart IntelliJ as administrator to enable live monitoring." );
+                JLabel instructionLabel = new JLabel( "Restart IDE as administrator to enable live monitoring." );
 
                 instructionLabel.setFont(font(Font.PLAIN, 13));
                 instructionLabel.setForeground(TEXT_MUTED);
@@ -386,6 +460,92 @@ public class LiveMonitorPanel extends JPanel {
         repaint();
     }
 
+
+    // Switches between side-by-side and vertically stacked graph layouts.
+    // Keeps the existing graph components and their recorded measurements.
+    private void toggleGraphLayout(JButton toggleButton) {
+
+        // Switch to the opposite layout.
+        sideBySideView = !sideBySideView;
+
+        if (sideBySideView) {
+
+            // Display both graphs horizontally.
+            graphsPanel.setLayout(new GridLayout(1, 2, 20, 0));
+
+            // Use a shorter container for the horizontal layout.
+            updateGraphHeight(300);
+
+            // Display the option to stack the graphs vertically.
+            toggleButton.setIcon(createGraphLayoutIcon(false));
+            toggleButton.setToolTipText("Stack Graphs");
+            toggleButton.getAccessibleContext().setAccessibleName("Stack Graphs");
+
+        } else {
+
+            // Display the graphs vertically.
+            graphsPanel.setLayout(new GridLayout(2, 1, 0, 20));
+
+            // Restore the original height for the stacked layout.
+            updateGraphHeight(520);
+
+            // Display the option to arrange graphs horizontally.
+            toggleButton.setIcon(createGraphLayoutIcon(true));
+            toggleButton.setToolTipText("Side-by-Side Graphs");
+            toggleButton.getAccessibleContext().setAccessibleName("Side-by-Side Graphs");
+        }
+
+        // Refresh the container without recreating its child components.
+        graphsPanel.revalidate();
+        graphsPanel.repaint();
+    }
+
+
+    // Creates an icon representing one of the two graph layouts.
+    // true = side-by-side layout; false = stacked layout.
+    private Icon createGraphLayoutIcon(boolean sideBySide) {
+
+        // Create a transparent 24x24 image.
+        BufferedImage image = new BufferedImage( 24, 24, BufferedImage.TYPE_INT_ARGB );
+
+        Graphics2D graphics = image.createGraphics();
+
+        try {
+            // Smooth the icon's edges.
+            graphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+
+            // Match EcoScan's existing text colour.
+            graphics.setColor(TEXT_MAIN);
+
+            if (sideBySide) {
+                // Draw two vertical rectangles.
+                graphics.fillRoundRect(2, 4, 9, 16, 3, 3);
+                graphics.fillRoundRect(13, 4, 9, 16, 3, 3);
+
+            } else {
+                // Draw two horizontal rectangles.
+                graphics.fillRoundRect(3, 3, 18, 8, 3, 3);
+                graphics.fillRoundRect(3, 13, 18, 8, 3, 3);
+            }
+
+        } finally {
+            // Release the graphics resources.
+            graphics.dispose();
+        }
+
+        // Return the image as a Swing-compatible icon.
+        return new ImageIcon(image);
+    }
+
+
+
+    // Updates the graph container's dimensions for the selected layout.
+    private void updateGraphHeight(int height) {
+        // Ensure BoxLayout allocates the required vertical space.
+        graphsPanel.setPreferredSize(new Dimension(0, height));
+        graphsPanel.setMinimumSize(new Dimension(0, height));
+        graphsPanel.setMaximumSize( new Dimension(Integer.MAX_VALUE, height) );
+    }
 
     // Identifies that the Live Monitor is showing simulated macOS data.
     // The existing measurement cards and graphs remain visible.

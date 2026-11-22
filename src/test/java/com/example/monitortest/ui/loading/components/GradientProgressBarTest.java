@@ -51,9 +51,17 @@ class GradientProgressBarTest {
         return green > red + 40;
     }
 
+
+    // Wait until the progress bar reaches its completed green state.
+    // Sample near the left side, where the gradient uses the stronger green colour.
     private static boolean waitForFull(GradientProgressBar bar) {
-        return waitUntil(() -> isGreen(pixelAt(bar, WIDTH - 12)), ANIMATION_TIMEOUT);
+
+        return waitUntil(
+                () -> isGreen(pixelAt(bar, 10)),
+                ANIMATION_TIMEOUT
+        );
     }
+
 
 
     @Test

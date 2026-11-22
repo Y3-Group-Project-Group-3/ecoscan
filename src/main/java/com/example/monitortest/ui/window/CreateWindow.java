@@ -364,12 +364,22 @@ public class CreateWindow {
             }
         });
 
+
         // Allow EcoScan to finish background operations before exiting.
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+        // Set the normal window dimensions for when the user restores it.
         frame.setSize(1280, 760);
+
+        // Centre the window in its restored state.
         frame.setLocationRelativeTo(null);
-        // Begin collecting power readings automatically.
+
+        // Start EcoScan maximised to fill the available screen.
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+        // Display the application window.
         frame.setVisible(true);
+
 
         // Start live sensor retrieval only when the environment is supported.
         if (monitoringStatus == LiveMonitorAvailability.Status.AVAILABLE) {
