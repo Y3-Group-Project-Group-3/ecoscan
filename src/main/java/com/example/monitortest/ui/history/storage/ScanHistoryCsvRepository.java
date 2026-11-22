@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -235,6 +236,58 @@ public class ScanHistoryCsvRepository {
 
         // Copy the history file, replacing any existing file at the chosen location.
         Files.copy( csvPath, exportPath, StandardCopyOption.REPLACE_EXISTING );
+    }
+
+
+
+    // Imports scans from a scans CSV file, such as one created by Export Results.
+    // Scans that are already saved, and rows that cannot be read, are skipped.
+    // Returns the number of new scans that were imported.
+    public int importFrom(Path importPath) throws IOException {
+
+        // Read the complete file using UTF-8 encoding.
+        String content = Files.readString( importPath, StandardCharsets.UTF_8 );
+
+        // Separate the file into complete CSV records.
+        List<String> records;
+
+        try {
+            records = readRecords(content);
+        } catch (IllegalArgumentException e) {
+            // The file is not a valid scans CSV.
+            throw new IOException("The selected file is not a valid scans CSV.", e);
+        }
+
+        // Collect the IDs of the scans that are already saved.
+        Set<UUID> savedIds = new HashSet<>();
+
+        for (SavedScan scan : loadAll()) {
+            savedIds.add(scan.getId());
+        }
+
+        int added = 0;
+
+        for (String record : records) {
+
+            try {
+
+                // Convert the record back into a SavedScan object.
+                SavedScan scan = SavedScanCsvMapper.fromCsvRow(record);
+
+                // Only save scans that are not already in the history.
+                if (savedIds.add(scan.getId())) {
+                    save(scan);
+                    added++;
+                }
+
+            } catch (RuntimeException e) {
+
+                // Skip rows that are not in the expected format.
+                System.err.println("Skipping invalid scan row.");
+            }
+        }
+
+        return added;
     }
 
 

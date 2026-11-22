@@ -6,9 +6,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -18,6 +19,9 @@ public class SessionHistoryCsvRepository {
 
     // Header written at the top of the sessions CSV file.
     private static final String HEADER = "startedAt,totalEmissionsGrams";
+
+    // Only the most recent sessions are kept, matching the saved scans limit.
+    public static final int MAX_SAVED_SESSIONS = 10;
 
     // Location of EcoScan's saved session history.
     private final Path csvPath;
@@ -49,35 +53,63 @@ public class SessionHistoryCsvRepository {
     }
 
 
-    // Adds a finished session to the end of the CSV file.
+    // Adds a finished session to the CSV file.
+    // Keeps only the most recent sessions once the limit is reached.
     public void save(SessionRecord session) throws IOException {
 
-        // Ensure the EcoScan data directory exists.
-        Files.createDirectories(csvPath.getParent());
+        // Load the existing sessions and add the new one.
+        List<SessionRecord> sessions = loadAll();
+        sessions.add(session);
 
-        // Write the header the first time a session is saved.
-        if (Files.notExists(csvPath)) {
-            Files.writeString( csvPath, HEADER + System.lineSeparator(), StandardCharsets.UTF_8 );
-        }
-
-        // Append the session as a new CSV row.
-        Files.writeString( csvPath, toCsvRow(session) + System.lineSeparator(), StandardCharsets.UTF_8, StandardOpenOption.APPEND );
+        // Rewrite the file, keeping only the newest sessions.
+        writeSessions(sessions);
     }
 
 
-    // Imports every session from another sessions CSV file.
-    // Returns the number of sessions that were imported.
+    // Imports sessions from another sessions CSV file.
+    // Sessions that are already saved are skipped.
+    // Returns the number of new sessions that were imported.
     public int importFrom(Path importPath) throws IOException {
 
         // Read the sessions from the selected file.
         List<SessionRecord> importedSessions = readSessions(importPath);
 
-        // Add each imported session to EcoScan's session history.
+        // Load the sessions that are already saved.
+        List<SessionRecord> sessions = loadAll();
+
+        int added = 0;
+
         for (SessionRecord session : importedSessions) {
-            save(session);
+
+            // Skip a session when one with the same start time and emissions is already saved.
+            boolean alreadySaved = sessions.stream().anyMatch( saved ->
+                    saved.getStartedAt().equals(session.getStartedAt())
+                            && saved.getTotalEmissionsGrams() == session.getTotalEmissionsGrams() );
+
+            if (!alreadySaved) {
+                sessions.add(session);
+                added++;
+            }
         }
 
-        return importedSessions.size();
+        // Rewrite the file, keeping only the newest sessions.
+        writeSessions(sessions);
+
+        return added;
+    }
+
+
+    // Copies the saved session history to a CSV file chosen by the user.
+    // The exported file uses the same format, so it can be imported again later.
+    public void exportTo(Path exportPath) throws IOException {
+
+        // Create a history file with just the header if no sessions have been saved yet.
+        if (Files.notExists(csvPath)) {
+            writeSessions(new ArrayList<>());
+        }
+
+        // Copy the history file, replacing any existing file at the chosen location.
+        Files.copy( csvPath, exportPath, StandardCopyOption.REPLACE_EXISTING );
     }
 
 
@@ -100,13 +132,7 @@ public class SessionHistoryCsvRepository {
         }
 
         // Rewrite the file with the sessions that are left.
-        StringBuilder csv = new StringBuilder(HEADER).append(System.lineSeparator());
-
-        for (SessionRecord session : remaining) {
-            csv.append(toCsvRow(session)).append(System.lineSeparator());
-        }
-
-        Files.writeString( csvPath, csv.toString(), StandardCharsets.UTF_8 );
+        writeSessions(remaining);
     }
 
 
@@ -114,6 +140,29 @@ public class SessionHistoryCsvRepository {
     // A new file is created the next time a session is saved.
     public void deleteAll() throws IOException {
         Files.deleteIfExists(csvPath);
+    }
+
+
+    // Writes the given sessions to the CSV file, oldest first.
+    // Only the newest sessions are kept once the limit is reached.
+    private void writeSessions(List<SessionRecord> sessions) throws IOException {
+
+        // Ensure the EcoScan data directory exists.
+        Files.createDirectories(csvPath.getParent());
+
+        // Keep the file in date order, oldest first, as sessions are added.
+        sessions.sort( Comparator.comparing(SessionRecord::getStartedAt) );
+
+        // Skip the oldest sessions when there are more than the limit.
+        int start = Math.max(0, sessions.size() - MAX_SAVED_SESSIONS);
+
+        StringBuilder csv = new StringBuilder(HEADER).append(System.lineSeparator());
+
+        for (int i = start; i < sessions.size(); i++) {
+            csv.append(toCsvRow(sessions.get(i))).append(System.lineSeparator());
+        }
+
+        Files.writeString( csvPath, csv.toString(), StandardCharsets.UTF_8 );
     }
 
 
