@@ -6,6 +6,7 @@ import com.example.monitortest.ui.history.sections.HistoryListSection;
 import com.example.monitortest.ui.history.sections.SessionListSection;
 import com.example.monitortest.ui.history.model.SavedScan;
 import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
+import com.example.monitortest.ui.history.storage.SessionHistoryCsvRepository;
 import static com.example.monitortest.ui.theme.AppTheme.*;
 
 import java.io.File;
@@ -231,8 +232,13 @@ public class HistoryPanel extends JPanel {
 
             // Tell the user how many sessions were added.
             String message = imported == 0
-                    ? "No sessions were found in " + importFile.getName() + "."
+                    ? "No new sessions were found in " + importFile.getName() + "."
                     : imported + " session(s) imported from " + importFile.getName() + ".";
+
+            // Let the user know older sessions are removed once the limit is reached.
+            if (imported > 0) {
+                message += "\nOnly the " + SessionHistoryCsvRepository.MAX_SAVED_SESSIONS + " most recent sessions are kept.";
+            }
 
             JOptionPane.showMessageDialog( this, message, "Import sessions", JOptionPane.INFORMATION_MESSAGE );
 
