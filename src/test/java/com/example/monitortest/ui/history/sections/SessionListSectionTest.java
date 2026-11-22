@@ -39,21 +39,21 @@ class SessionListSectionTest {
     }
 
     // HIS-UT-026
-    // Verify that the average emissions per session is calculated and shown.
+    // Verify that the average emissions per second is calculated and shown.
     @Test
-    @DisplayName("HIS-UT-026 - Shows the average emissions per session")
+    @DisplayName("HIS-UT-026 - Shows the average emissions per second")
     void showsAverageEmissions() throws IOException {
 
-        // Save two sessions of 0.12 g and 0.02 g.
+        // Save two sessions: 0.12 g over 60 seconds and 0.02 g over 40 seconds.
         SessionHistoryCsvRepository repository = new SessionHistoryCsvRepository( tempDir.resolve("EcoScan").resolve("sessions.csv") );
 
-        repository.save( new SessionRecord(LocalDateTime.of(2026, 11, 18, 16, 48), 0.12) );
-        repository.save( new SessionRecord(LocalDateTime.of(2026, 11, 18, 17, 22), 0.02) );
+        repository.save( new SessionRecord(LocalDateTime.of(2026, 11, 18, 16, 48), 0.12, 60) );
+        repository.save( new SessionRecord(LocalDateTime.of(2026, 11, 18, 17, 22), 0.02, 40) );
 
         SessionListSection section = new SessionListSection();
 
-        // Expected: (0.12 + 0.02) / 2 = 0.07 g.
-        assertNotNull( findLabel(section, "Average per session: 0.07 g CO₂e") );
+        // Expected: (0.12 + 0.02) / (60 + 40) = 0.0014 g per second.
+        assertNotNull( findLabel(section, "Average Emissions / Second: 0.001400 g CO₂e/s") );
     }
 
     // HIS-UT-027
@@ -65,6 +65,6 @@ class SessionListSectionTest {
         SessionListSection section = new SessionListSection();
 
         // There is nothing to average, so the label should be empty.
-        assertNull( findLabelContaining(section, "Average per session") );
+        assertNull( findLabelContaining(section, "Average Emissions / Second") );
     }
 }

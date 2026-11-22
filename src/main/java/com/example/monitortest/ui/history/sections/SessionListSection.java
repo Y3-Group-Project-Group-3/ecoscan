@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -52,7 +53,7 @@ public class SessionListSection extends RoundedPanel {
     // Saves the selected or visible sessions as a PDF.
     private JButton printButton;
 
-    // Shows the average emissions across all saved sessions.
+    // Shows the average emissions per second across all saved sessions.
     private JLabel averageLabel;
 
     // Searches and sorts the sessions in this card only.
@@ -219,18 +220,25 @@ public class SessionListSection extends RoundedPanel {
 
             hasStoredSessions = !sessions.isEmpty();
 
-            // Work out the average emissions per session.
-            // Uses every saved session, so the search does not change it.
+            // Work out the average emissions per second, matching the Live Monitor.
+            // Uses every saved session with a recorded length, so the search does not change it.
             if (hasStoredSessions) {
 
                 double totalGrams = 0;
+                double totalSeconds = 0;
 
                 for (SessionRecord session : sessions) {
-                    totalGrams += session.getTotalEmissionsGrams();
+
+                    // Sessions saved before the length was recorded cannot be included.
+                    if (session.hasDuration()) {
+                        totalGrams += session.getTotalEmissionsGrams();
+                        totalSeconds += session.getDurationSeconds();
+                    }
                 }
 
-                // Reuse the row formatting so the average uses the same g / kg units.
-                averageText = "Average per session: " + SessionRow.formatEmissions( totalGrams / sessions.size() );
+                averageText = totalSeconds > 0
+                        ? String.format( Locale.UK, "Average Emissions / Second: %.6f g CO₂e/s", totalGrams / totalSeconds )
+                        : "Average Emissions / Second: Not available for older sessions";
             }
 
             // Only keep the sessions that match the current search text.
