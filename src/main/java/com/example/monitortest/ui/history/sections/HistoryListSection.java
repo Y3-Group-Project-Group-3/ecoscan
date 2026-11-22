@@ -3,12 +3,12 @@ package com.example.monitortest.ui.history.sections;
 import com.example.monitortest.ui.theme.UIUtility;
 import com.example.monitortest.ui.history.components.ScanRow;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.example.monitortest.ui.history.model.SavedScan;
 import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
-import com.example.monitortest.ui.history.services.ScanHistoryPrinter;
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import com.example.monitortest.ui.history.components.HistoryTableHeader;
 import com.example.monitortest.ui.history.components.HistorySectionTitleBar;
@@ -456,11 +456,23 @@ public class HistoryListSection extends RoundedPanel {
     }
 
     /************************** Bottom Toolbar ****************************/
-    // Prints the scans currently displayed in the History list.
-    // Delegates document formatting and printing to ScanHistoryPrinter.
-    public void printScans() {
-        // Pass the visible scans in their current display order.
-        new ScanHistoryPrinter().printScans( rows.values(), this );
+    // Returns the scans to include in the PDF.
+    // Uses the selected rows, or every visible row when nothing is selected.
+    public List<SavedScan> getPrintScans() {
+
+        boolean printSelectedOnly = hasSelection();
+
+        List<SavedScan> printScans = new ArrayList<>();
+
+        // Keep the scans in the same order as the table on screen.
+        for (Map.Entry<ScanRow, SavedScan> entry : rows.entrySet()) {
+
+            if (!printSelectedOnly || entry.getKey().isSelected()) {
+                printScans.add(entry.getValue());
+            }
+        }
+
+        return printScans;
     }
 
     // Places the saved scan action buttons at the bottom of this card.

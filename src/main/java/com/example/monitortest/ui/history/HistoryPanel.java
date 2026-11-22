@@ -5,12 +5,15 @@ import com.example.monitortest.ui.history.sections.HistoryHeaderSection;
 import com.example.monitortest.ui.history.sections.HistoryListSection;
 import com.example.monitortest.ui.history.sections.SessionListSection;
 import com.example.monitortest.ui.history.model.SavedScan;
+import com.example.monitortest.ui.history.services.HistoryPdfWriter;
+import com.example.monitortest.ui.history.services.ScanPdfReport;
 import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
 import com.example.monitortest.ui.history.storage.SessionHistoryCsvRepository;
 import static com.example.monitortest.ui.theme.AppTheme.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.function.Consumer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -119,19 +122,26 @@ public class HistoryPanel extends JPanel {
         // Export Live Monitor sessions to a CSV file when the Export Sessions button is clicked.
         sessionListSection.getExportButton().addActionListener(e -> exportSessions());
 
-        // Print the History list when the Print List button is clicked.
+        // Save the selected or visible scans as a PDF when the scans Print List button is clicked.
+        // The PDF starts with a summary table, then has a full breakdown page for each scan.
         actionsSection.getPrintButton().addActionListener(e -> {
 
-            // Inform the user when there are no saved scans to print.
-            if (!historyListSection.hasStoredScans()) {
-                JOptionPane.showMessageDialog( this,
-                        "There are no saved scans to print.",
-                        "Print scans", JOptionPane.INFORMATION_MESSAGE );
-                return;
-            }
+            List<SavedScan> scans = historyListSection.getPrintScans();
 
-            historyListSection.printScans();
+            savePdf( "EcoScan - Saved Hardware Scans",
+                    ScanPdfReport.SUMMARY_HEADINGS,
+                    ScanPdfReport.summaryRows(scans),
+                    ScanPdfReport.detailPages(scans),
+                    "ecoscan-scans.pdf", "scan(s)" );
         });
+
+        // Save the selected or visible sessions as a PDF when the sessions Print List button is clicked.
+        sessionListSection.getPrintButton().addActionListener(e ->
+                savePdf( "EcoScan - Live Monitor Sessions",
+                        new String[]{"Date", "Total Emissions"},
+                        sessionListSection.getPrintRows(),
+                        List.of(),
+                        "ecoscan-sessions.pdf", "session(s)" ) );
 
         // Enable each button only when it can be used.
         // Updated whenever the scans or the selected rows change.
@@ -164,6 +174,64 @@ public class HistoryPanel extends JPanel {
         // Only permit printing when visible rows are available.
         actionsSection.getPrintButton().setEnabled(hasVisibleScans);
     }
+
+
+    // Lets the user choose where to save a PDF of the given rows, then opens it.
+    // Used by the Print List buttons on both cards.
+    private void savePdf(String title, String[] headings, List<String[]> rows, List<HistoryPdfWriter.DetailPage> detailPages, String defaultFileName, String itemName) {
+
+        // Inform the user when there is nothing to print.
+        if (rows.isEmpty()) {
+            JOptionPane.showMessageDialog( this,
+                    "There is nothing to print.",
+                    "Print", JOptionPane.INFORMATION_MESSAGE );
+            return;
+        }
+
+        // Open a save dialog limited to PDF files.
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save as PDF");
+        fileChooser.setFileFilter( new FileNameExtensionFilter("PDF files (*.pdf)", "pdf") );
+        fileChooser.setSelectedFile( new File(defaultFileName) );
+
+        // Stop when the user cancels the dialog.
+        if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        // Add the .pdf extension when the user leaves it out.
+        File pdfFile = fileChooser.getSelectedFile();
+
+        if (!pdfFile.getName().toLowerCase().endsWith(".pdf")) {
+            pdfFile = new File( pdfFile.getParentFile(), pdfFile.getName() + ".pdf" );
+        }
+
+        try {
+
+            // Create the PDF with the summary table and any detail pages.
+            new HistoryPdfWriter().write( pdfFile.toPath(), title, headings, rows, detailPages );
+
+            JOptionPane.showMessageDialog( this,
+                    rows.size() + " " + itemName + " saved to " + pdfFile.getName(),
+                    "Print", JOptionPane.INFORMATION_MESSAGE );
+
+            // Open the PDF so the user can view or print it.
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+                Desktop.getDesktop().open(pdfFile);
+            }
+
+        } catch (IOException ex) {
+
+            // Inform the user that the PDF could not be created.
+            JOptionPane.showMessageDialog( this,
+                    "Unable to save the PDF.",
+                    "Print", JOptionPane.ERROR_MESSAGE );
+
+            // Print the underlying error for debugging.
+            ex.printStackTrace();
+        }
+    }
+
 
     // Lets the user choose where to save a copy of the scan history as a CSV file.
     private void exportScans() {

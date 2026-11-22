@@ -29,7 +29,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 
 // Displays saved Live Monitor sessions and their recorded CO2 emissions.
-// Handles loading, searching, importing, exporting and deleting session history.
+// Handles loading, searching, importing, exporting, printing and deleting session history.
 public class SessionListSection extends RoundedPanel {
 
     private JPanel listItemsPanel;
@@ -48,6 +48,9 @@ public class SessionListSection extends RoundedPanel {
 
     // Exports the saved sessions to a CSV file chosen by the user.
     private JButton exportButton;
+
+    // Saves the selected or visible sessions as a PDF.
+    private JButton printButton;
 
     // Shows the average emissions across all saved sessions.
     private JLabel averageLabel;
@@ -139,6 +142,7 @@ public class SessionListSection extends RoundedPanel {
         // Created before refreshing sessions because refreshSessions() updates them.
         importButton = HistoryActionsSection.createActionButton( "Import Sessions", FontAwesomeSolid.FILE_IMPORT, false );
         exportButton = HistoryActionsSection.createActionButton( "Export Sessions", FontAwesomeSolid.FILE_EXPORT, false );
+        printButton = HistoryActionsSection.createActionButton( "Print List", FontAwesomeSolid.PRINT, false );
         deleteButton = HistoryActionsSection.createActionButton( "Delete Selected", FontAwesomeSolid.TRASH_ALT, true );
         clearButton = HistoryActionsSection.createActionButton( "Clear Sessions", FontAwesomeSolid.TRASH_ALT, true );
 
@@ -153,13 +157,15 @@ public class SessionListSection extends RoundedPanel {
         // Keep the scrollable session rows inside the rounded card.
         contentPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Import and Export sit on the left, matching the scans card.
+        // Import, Export and Print sit on the left, matching the scans card.
         JPanel leftButtons = new JPanel();
         leftButtons.setLayout(new BoxLayout(leftButtons, BoxLayout.X_AXIS));
         leftButtons.setOpaque(false);
         leftButtons.add(importButton);
         leftButtons.add(Box.createHorizontalStrut(10));
         leftButtons.add(exportButton);
+        leftButtons.add(Box.createHorizontalStrut(10));
+        leftButtons.add(printButton);
 
         // Keep both delete actions together on the right edge of the card.
         JPanel rightButtons = new JPanel();
@@ -275,6 +281,9 @@ public class SessionListSection extends RoundedPanel {
         clearButton.setEnabled(hasStoredSessions);
         exportButton.setEnabled(hasStoredSessions);
 
+        // Only allow printing when there are sessions on screen.
+        printButton.setEnabled( !rows.isEmpty() );
+
         // Nothing is selected after reloading the rows.
         deleteButton.setEnabled(false);
 
@@ -365,6 +374,30 @@ public class SessionListSection extends RoundedPanel {
     // Returns true when there are saved sessions, even if the search hides them.
     public boolean hasStoredSessions() {
         return hasStoredSessions;
+    }
+
+    // Returns the sessions to include in the PDF, as Date and Total Emissions rows.
+    // Uses the selected rows, or every visible row when nothing is selected.
+    public List<String[]> getPrintRows() {
+
+        boolean printSelectedOnly = hasSelection();
+
+        List<String[]> printRows = new ArrayList<>();
+
+        // Keep the rows in the same order as the table on screen.
+        for (Map.Entry<SessionRow, SessionRecord> entry : rows.entrySet()) {
+
+            if (!printSelectedOnly || entry.getKey().isSelected()) {
+
+                SessionRecord session = entry.getValue();
+                printRows.add( new String[]{
+                        session.getStartedAt().format(SessionRow.DATE_FORMAT),
+                        SessionRow.formatEmissions( session.getTotalEmissionsGrams() )
+                } );
+            }
+        }
+
+        return printRows;
     }
 
     // Imports sessions from a CSV file chosen by the user.
@@ -470,5 +503,10 @@ public class SessionListSection extends RoundedPanel {
     // Returns the Export Sessions button so the History Page can handle the file dialog.
     public JButton getExportButton() {
         return exportButton;
+    }
+
+    // Returns the Print List button so the History Page can handle the save dialog.
+    public JButton getPrintButton() {
+        return printButton;
     }
 }
