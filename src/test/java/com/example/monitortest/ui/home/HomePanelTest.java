@@ -98,8 +98,9 @@ class HomePanelTest {
         assertNotNull(panel.getLiveMonitorButton());
         assertNotSame(panel.getScanButton(), panel.getLiveMonitorButton());
 
-        assertEquals("Start Scan", panel.getScanButton().getText());
-        assertEquals("View Monitor", panel.getLiveMonitorButton().getText());
+        // Verify the scan button has the correct label including its visual navigation indicator.
+        assertEquals("Start Hardware Scan  →", panel.getScanButton().getText());
+        assertEquals("Open Live Monitor  →", panel.getLiveMonitorButton().getText());
 
         // Each exposed button belongs to the matching card.
         assertSame(cards.get(0).getActionButton(), panel.getScanButton());
@@ -156,7 +157,7 @@ class HomePanelTest {
         assertEquals(0, grid.getHgap());
         assertEquals(20, grid.getVgap());
         // Both cards need to fit one above the other.
-        assertEquals(840, featureContainer(panel).getPreferredSize().height);
+        assertEquals(740, featureContainer(panel).getPreferredSize().height);
     }
 
     @Test
@@ -174,7 +175,7 @@ class HomePanelTest {
         assertEquals(2, grid.getColumns());
         assertEquals(24, grid.getHgap());
         assertEquals(0, grid.getVgap());
-        assertEquals(410, featureContainer(panel).getPreferredSize().height);
+        assertEquals(360, featureContainer(panel).getPreferredSize().height);
     }
 
 }
