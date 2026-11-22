@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -98,6 +99,20 @@ public class SessionHistoryCsvRepository {
     }
 
 
+    // Copies the saved session history to a CSV file chosen by the user.
+    // The exported file uses the same format, so it can be imported again later.
+    public void exportTo(Path exportPath) throws IOException {
+
+        // Create a history file with just the header if no sessions have been saved yet.
+        if (Files.notExists(csvPath)) {
+            writeSessions(new ArrayList<>());
+        }
+
+        // Copy the history file, replacing any existing file at the chosen location.
+        Files.copy( csvPath, exportPath, StandardCopyOption.REPLACE_EXISTING );
+    }
+
+
     // Deletes the given sessions and keeps every other session.
     // Sessions are matched by their start time and total emissions.
     public void deleteSessions(List<SessionRecord> sessionsToDelete) throws IOException {
@@ -128,20 +143,22 @@ public class SessionHistoryCsvRepository {
     }
 
 
-    // Writes the given sessions to the CSV file, newest first.
-    // Anything past the session limit is left out.
+    // Writes the given sessions to the CSV file, oldest first.
+    // Only the newest sessions are kept once the limit is reached.
     private void writeSessions(List<SessionRecord> sessions) throws IOException {
 
         // Ensure the EcoScan data directory exists.
         Files.createDirectories(csvPath.getParent());
 
-        // Put the newest sessions first so the oldest are the ones removed.
-        sessions.sort( Comparator.comparing(SessionRecord::getStartedAt).reversed() );
+        // Keep the file in date order, oldest first, as sessions are added.
+        sessions.sort( Comparator.comparing(SessionRecord::getStartedAt) );
+
+        // Skip the oldest sessions when there are more than the limit.
+        int start = Math.max(0, sessions.size() - MAX_SAVED_SESSIONS);
 
         StringBuilder csv = new StringBuilder(HEADER).append(System.lineSeparator());
 
-        // Only write up to the session limit.
-        for (int i = 0; i < Math.min(sessions.size(), MAX_SAVED_SESSIONS); i++) {
+        for (int i = start; i < sessions.size(); i++) {
             csv.append(toCsvRow(sessions.get(i))).append(System.lineSeparator());
         }
 

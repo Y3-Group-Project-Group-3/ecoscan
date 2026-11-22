@@ -29,7 +29,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 
 // Displays saved Live Monitor sessions and their recorded CO2 emissions.
-// Handles loading, searching, importing and deleting session history.
+// Handles loading, searching, importing, exporting and deleting session history.
 public class SessionListSection extends RoundedPanel {
 
     private JPanel listItemsPanel;
@@ -46,6 +46,9 @@ public class SessionListSection extends RoundedPanel {
     // Imports sessions from a CSV file chosen by the user.
     private JButton importButton;
 
+    // Exports the saved sessions to a CSV file chosen by the user.
+    private JButton exportButton;
+
     // Shows the average emissions across all saved sessions.
     private JLabel averageLabel;
 
@@ -57,6 +60,9 @@ public class SessionListSection extends RoundedPanel {
 
     // Displays the newest sessions first unless the user chooses oldest first.
     private boolean newestFirst = true;
+
+    // Tracks whether there are any saved sessions, ignoring the search filter.
+    private boolean hasStoredSessions = false;
 
     // Retrieves saved sessions from the sessions CSV file.
     private final SessionHistoryCsvRepository sessionRepository = new SessionHistoryCsvRepository();
@@ -132,6 +138,7 @@ public class SessionListSection extends RoundedPanel {
         // Use the same buttons as the scans card so both cards match.
         // Created before refreshing sessions because refreshSessions() updates them.
         importButton = HistoryActionsSection.createActionButton( "Import Sessions", FontAwesomeSolid.FILE_IMPORT, false );
+        exportButton = HistoryActionsSection.createActionButton( "Export Sessions", FontAwesomeSolid.FILE_EXPORT, false );
         deleteButton = HistoryActionsSection.createActionButton( "Delete Selected", FontAwesomeSolid.TRASH_ALT, true );
         clearButton = HistoryActionsSection.createActionButton( "Clear Sessions", FontAwesomeSolid.TRASH_ALT, true );
 
@@ -146,11 +153,13 @@ public class SessionListSection extends RoundedPanel {
         // Keep the scrollable session rows inside the rounded card.
         contentPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Import sits on the left, matching the scans card.
+        // Import and Export sit on the left, matching the scans card.
         JPanel leftButtons = new JPanel();
         leftButtons.setLayout(new BoxLayout(leftButtons, BoxLayout.X_AXIS));
         leftButtons.setOpaque(false);
         leftButtons.add(importButton);
+        leftButtons.add(Box.createHorizontalStrut(10));
+        leftButtons.add(exportButton);
 
         // Keep both delete actions together on the right edge of the card.
         JPanel rightButtons = new JPanel();
@@ -187,8 +196,8 @@ public class SessionListSection extends RoundedPanel {
         listItemsPanel.removeAll();
         rows.clear();
 
-        // Tracks whether there are any sessions the user could clear.
-        boolean hasSessions = false;
+        // Tracks whether there are any sessions the user could clear or export.
+        hasStoredSessions = false;
 
         // Stays empty when there are no sessions to average.
         String averageText = "";
@@ -202,11 +211,11 @@ public class SessionListSection extends RoundedPanel {
             Comparator<SessionRecord> byDate = Comparator.comparing(SessionRecord::getStartedAt);
             sessions.sort( newestFirst ? byDate.reversed() : byDate );
 
-            hasSessions = !sessions.isEmpty();
+            hasStoredSessions = !sessions.isEmpty();
 
             // Work out the average emissions per session.
             // Uses every saved session, so the search does not change it.
-            if (hasSessions) {
+            if (hasStoredSessions) {
 
                 double totalGrams = 0;
 
@@ -225,7 +234,7 @@ public class SessionListSection extends RoundedPanel {
             // or when no saved sessions match the search.
             if (sessions.isEmpty()) {
 
-                String message = hasSessions ? "No saved sessions match your search." : "No monitoring sessions recorded yet. A session is saved when EcoScan closes.";
+                String message = hasStoredSessions ? "No saved sessions match your search." : "No monitoring sessions recorded yet. A session is saved when EcoScan closes.";
 
                 JLabel emptyLabel = new JLabel( message );
                 emptyLabel.setBorder(new EmptyBorder(15, 15, 15, 15));
@@ -262,8 +271,9 @@ public class SessionListSection extends RoundedPanel {
             e.printStackTrace();
         }
 
-        // Only allow clearing when there are sessions to remove.
-        clearButton.setEnabled(hasSessions);
+        // Only allow clearing and exporting when there are sessions.
+        clearButton.setEnabled(hasStoredSessions);
+        exportButton.setEnabled(hasStoredSessions);
 
         // Nothing is selected after reloading the rows.
         deleteButton.setEnabled(false);
@@ -352,6 +362,11 @@ public class SessionListSection extends RoundedPanel {
         return !getSelectedSessions().isEmpty();
     }
 
+    // Returns true when there are saved sessions, even if the search hides them.
+    public boolean hasStoredSessions() {
+        return hasStoredSessions;
+    }
+
     // Imports sessions from a CSV file chosen by the user.
     // Returns the number of sessions imported.
     public int importSessions(Path importPath) throws IOException {
@@ -363,6 +378,11 @@ public class SessionListSection extends RoundedPanel {
         refreshSessions();
 
         return imported;
+    }
+
+    // Copies the saved sessions to a CSV file chosen by the user.
+    public void exportSessions(Path exportPath) throws IOException {
+        sessionRepository.exportTo(exportPath);
     }
 
     /******************** DELETE SESSIONS **************************************/
@@ -445,5 +465,10 @@ public class SessionListSection extends RoundedPanel {
     // Returns the Import Sessions button so the History Page can handle the file dialog.
     public JButton getImportButton() {
         return importButton;
+    }
+
+    // Returns the Export Sessions button so the History Page can handle the file dialog.
+    public JButton getExportButton() {
+        return exportButton;
     }
 }

@@ -18,6 +18,7 @@ public class HistoryActionsSection extends JPanel {
     // Every History button uses the same size so both cards line up.
     private static final Dimension BUTTON_SIZE = new Dimension(130, 30);
 
+    private JButton importButton;
     private JButton exportButton;
     private JButton printButton;
     private JButton deleteButton;
@@ -33,11 +34,14 @@ public class HistoryActionsSection extends JPanel {
         leftButtons.setOpaque(false);
 
         // Create the saved scan actions using reusable styling.
-        // Importing sessions is handled by the Live Monitor Sessions card.
+        // Import sits first, matching the Live Monitor Sessions card.
+        importButton = createActionButton( "Import Scans", FontAwesomeSolid.FILE_IMPORT, false );
         exportButton = createActionButton( "Export Results", FontAwesomeSolid.FILE_EXPORT, false );
         printButton = createActionButton( "Print List", FontAwesomeSolid.PRINT, false );
 
         // Add uniform spacing only between buttons.
+        leftButtons.add(importButton);
+        leftButtons.add(Box.createHorizontalStrut(10));
         leftButtons.add(exportButton);
         leftButtons.add(Box.createHorizontalStrut(10));
         leftButtons.add(printButton);
@@ -87,6 +91,10 @@ public class HistoryActionsSection extends JPanel {
         return button;
     }
 
+
+    public JButton getImportButton() {
+        return importButton;
+    }
 
     public JButton getExportButton() {
         return exportButton;
