@@ -39,32 +39,36 @@ class SessionListSectionTest {
     }
 
     // HIS-UT-026
-    // Verify that the average emissions per second is calculated and shown.
+    // Verify that each session shows its own average emissions per second.
     @Test
-    @DisplayName("HIS-UT-026 - Shows the average emissions per second")
+    @DisplayName("HIS-UT-026 - Shows the average emissions per second for a session")
     void showsAverageEmissions() throws IOException {
 
-        // Save two sessions: 0.12 g over 60 seconds and 0.02 g over 40 seconds.
+        // Save a session of 0.12 g over 60 seconds.
         SessionHistoryCsvRepository repository = new SessionHistoryCsvRepository( tempDir.resolve("EcoScan").resolve("sessions.csv") );
 
         repository.save( new SessionRecord(LocalDateTime.of(2026, 11, 18, 16, 48), 0.12, 60) );
-        repository.save( new SessionRecord(LocalDateTime.of(2026, 11, 18, 17, 22), 0.02, 40) );
 
         SessionListSection section = new SessionListSection();
 
-        // Expected: (0.12 + 0.02) / (60 + 40) = 0.0014 g per second.
-        assertNotNull( findLabel(section, "Average Emissions / Second: 0.001400 g CO₂e/s") );
+        // Expected: 0.12 / 60 = 0.002 g per second.
+        assertNotNull( findLabel(section, "0.002000 g CO₂e/s") );
     }
 
     // HIS-UT-027
-    // Verify that no average is shown when there are no saved sessions.
+    // Verify that older sessions without a recorded length show "Not recorded".
     @Test
-    @DisplayName("HIS-UT-027 - Shows no average when there are no saved sessions")
-    void showsNoAverageWithoutSessions() {
+    @DisplayName("HIS-UT-027 - Shows Not recorded for sessions without a length")
+    void showsNotRecordedForOlderSessions() throws IOException {
+
+        // Save a session without a length, like those saved before the length was recorded.
+        SessionHistoryCsvRepository repository = new SessionHistoryCsvRepository( tempDir.resolve("EcoScan").resolve("sessions.csv") );
+
+        repository.save( new SessionRecord(LocalDateTime.of(2026, 11, 18, 16, 48), 0.12) );
 
         SessionListSection section = new SessionListSection();
 
-        // There is nothing to average, so the label should be empty.
-        assertNull( findLabelContaining(section, "Average Emissions / Second") );
+        // There is no length to divide by, so no average can be shown.
+        assertNotNull( findLabel(section, "Not recorded") );
     }
 }
