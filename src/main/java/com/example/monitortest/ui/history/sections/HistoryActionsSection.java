@@ -15,8 +15,8 @@ public class HistoryActionsSection extends JPanel {
     private static final Color DELETE_HOVER_BG = new Color(0xFDEEEE);
     private static final Color DELETE_HOVER_ACCENT = new Color(0xC0392B);
 
-    // Every History button uses the same size so both cards line up.
-    private static final Dimension BUTTON_SIZE = new Dimension(130, 38);
+//    // Every History button uses the same size so both cards line up.
+//    private static final Dimension BUTTON_SIZE = new Dimension(130, 38);
 
     private JButton importButton;
     private JButton exportButton;
@@ -88,9 +88,17 @@ public class HistoryActionsSection extends JPanel {
             button.setHoverColors( DELETE_HOVER_BG, DELETE_HOVER_ACCENT );
         }
 
-        // Use the same width and height for every History button.
-        button.setPreferredSize(BUTTON_SIZE);
-        button.setMaximumSize(BUTTON_SIZE);
+        // Calculate the width needed for the full label and icon.
+        // Preserve a consistent height across all History action buttons.
+        Dimension preferredSize = button.getPreferredSize();
+
+        // Allow enough horizontal space for the complete button content.
+        Dimension buttonSize = new Dimension( preferredSize.width + 16, 38 );
+
+        // Keep the button at its content-based width within BoxLayout.
+        button.setPreferredSize(buttonSize);
+        button.setMaximumSize(buttonSize);
+
 
         return button;
     }

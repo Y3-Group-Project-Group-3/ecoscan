@@ -150,7 +150,8 @@ public class HistoryPanel extends JPanel {
         // Save the selected or visible sessions as a PDF when the sessions Print List button is clicked.
         sessionListSection.getPrintButton().addActionListener(e ->
                 savePdf( "EcoScan - Live Monitor Sessions",
-                        new String[]{"Date", "Total Emissions"},
+                        // Use the same four columns displayed in the History session table.
+                        new String[]{ "Date", "Total Emissions", "Avg. Emissions", "Carbon Intensity" },
                         sessionListSection.getPrintRows(),
                         List.of(),
                         "ecoscan-sessions.pdf", "session(s)" ) );

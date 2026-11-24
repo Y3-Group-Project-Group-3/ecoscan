@@ -121,9 +121,15 @@ public class SessionListSection extends RoundedPanel {
         // Reuse the common title bar with the search and sort on the right.
         top.add( new HistorySectionTitleBar( "Live Monitor Sessions", searchBar ), BorderLayout.NORTH );
 
-        // Display the session columns using the shared header.
-        // The third column shows each session's average emissions per second.
-        top.add( new HistoryTableHeader("DATE", "TOTAL EMISSIONS", "AVG. EMISSIONS"), BorderLayout.SOUTH );
+
+        // Display the four Live Monitor session columns.
+        // Carbon intensity represents the latest recorded value
+        // when the monitoring session ended.
+        top.add(
+                new HistoryTableHeader( "DATE", "TOTAL EMISSIONS", "AVG. EMISSIONS", "CARBON INTENSITY" ),
+                BorderLayout.SOUTH
+        );
+
 
         // Keep the title and column headings inside the card padding.
         contentPanel.add(top, BorderLayout.NORTH);
@@ -374,10 +380,23 @@ public class SessionListSection extends RoundedPanel {
             if (!printSelectedOnly || entry.getKey().isSelected()) {
 
                 SessionRecord session = entry.getValue();
-                printRows.add( new String[]{
+
+                // Include all four session measurements in printed and shared reports.
+                printRows.add(new String[]{
+
+                        // Session start date and time.
                         session.getStartedAt().format(SessionRow.DATE_FORMAT),
-                        SessionRow.formatEmissions( session.getTotalEmissionsGrams() )
-                } );
+
+                        // Total carbon emissions accumulated during the session.
+                        SessionRow.formatEmissions(session.getTotalEmissionsGrams()),
+
+                        // Average carbon emissions per second.
+                        SessionRow.formatAverage(session),
+
+                        // Most recent carbon intensity recorded for the session.
+                        SessionRow.formatCarbonIntensity(session)
+                });
+
             }
         }
 
