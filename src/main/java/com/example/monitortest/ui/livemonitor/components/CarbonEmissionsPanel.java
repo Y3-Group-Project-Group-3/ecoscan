@@ -17,6 +17,12 @@ public class CarbonEmissionsPanel extends RoundedPanel {
     private final JLabel totalEmissionsLabel = new JLabel("0.0000 g");
     private final JLabel averageEmissionsLabel = new JLabel("0.000000 g/s");
 
+
+    // Displays the current electricity carbon intensity and its source.
+    // Initially shows the fallback until live NESO data is available.
+    private final JLabel intensityLabel = new JLabel("Carbon intensity: 200.0 g/kWh (Offline fallback)");
+
+
     // Describes the total emissions value shown in the panel.
     private JLabel totalEmissionsTitle;
 
@@ -38,7 +44,7 @@ public class CarbonEmissionsPanel extends RoundedPanel {
         measurementsPanel.add( createMeasurement("Total Emissions", totalEmissionsLabel) );
         measurementsPanel.add( createMeasurement("Average Emissions / Second", averageEmissionsLabel) );
 
-        JLabel intensityLabel = new JLabel( "Based on an assumed carbon intensity of 200 g CO₂e/kWh" );
+
 
         intensityLabel.setFont(font(Font.PLAIN, 12));
         intensityLabel.setForeground(TEXT_MUTED);
@@ -50,10 +56,12 @@ public class CarbonEmissionsPanel extends RoundedPanel {
         intensityRow.add(intensityLabel);
         intensityRow.add(new InfoIcon(
                 "Carbon Intensity",
-                "Carbon intensity represents the estimated greenhouse gas " +
-                        "emissions associated with generating one kilowatt-hour of electricity. " +
-                        "EcoScan currently uses a fixed assumed value of 200 g CO₂e/kWh, " +
-                        "rather than retrieving live electricity grid data."
+                "Carbon intensity represents the amount of carbon dioxide " +
+                        "associated with generating one kilowatt-hour of electricity. " +
+                        "EcoScan retrieves current Great Britain electricity carbon " +
+                        "intensity data from NESO when available." +
+                        "If the API is unavailable, EcoScan uses an assumed fallback" +
+                        "of 200 g/kWh. Actual emissions may differ."
         ));
 
         add(heading, BorderLayout.NORTH);
@@ -112,6 +120,16 @@ public class CarbonEmissionsPanel extends RoundedPanel {
         totalEmissionsLabel.setText( String.format("%.4f g CO₂e", totalGrams) );
         averageEmissionsLabel.setText( String.format("%.6f g CO₂e/s", averageGramsPerSecond) );
     }
+
+    // Updates the displayed carbon intensity and its source.
+    // Must be called on Swing's Event Dispatch Thread.
+    public void updateCarbonIntensity(double intensity, String source) {
+
+        // Format the intensity to one decimal place.
+        // Include its source so users can distinguish API data from fallback.
+        intensityLabel.setText( String.format( "Carbon intensity: %.1f g/kWh (%s)", intensity, source ) );
+    }
+
 
 
     // Identifies the total emissions as a hypothetical demonstration value.

@@ -26,7 +26,7 @@ public class CarbonEmissionsTracker {
      * @param snapshot Latest CPU and GPU power measurements.
      * @param timestamp Timestamp in milliseconds.
      */
-    public void addSnapshot(LiveMonitorSnapshot snapshot, long timestamp) {
+    public synchronized void addSnapshot(LiveMonitorSnapshot snapshot, long timestamp) {
 
         double currentPower = snapshot.totalPower();
 
@@ -55,10 +55,7 @@ public class CarbonEmissionsTracker {
         double averagePower = (previousPower + currentPower) / 2.0;
 
         // Convert average power and elapsed time into estimated emissions.
-        double emissions = calculator.calculateEmissions(
-                averagePower,
-                durationSeconds
-        );
+        double emissions = calculator.calculateEmissions( averagePower, durationSeconds );
 
         totalEmissionsGrams += emissions;
         monitoredSeconds += durationSeconds;
@@ -70,13 +67,13 @@ public class CarbonEmissionsTracker {
 
 
     // Returns the accumulated estimated emissions in grams of CO2e.
-    public double getTotalEmissionsGrams() {
+    public synchronized double getTotalEmissionsGrams() {
         return totalEmissionsGrams;
     }
 
 
     // Returns the average emissions per monitored second.
-    public double getAverageEmissionsPerSecond() {
+    public synchronized double getAverageEmissionsPerSecond() {
 
         if (monitoredSeconds == 0) {
             return 0.0;
@@ -84,4 +81,14 @@ public class CarbonEmissionsTracker {
 
         return totalEmissionsGrams / monitoredSeconds;
     }
+
+
+    // Updates the carbon intensity used for future emissions calculations.
+    // Previously accumulated emissions remain unchanged.
+    // Synchronization prevents updates during snapshot calculations.
+    public synchronized void updateCarbonIntensity(double intensity) {
+        // Delegate validation and updating to the existing calculator.
+        calculator.setCarbonIntensity(intensity);
+    }
+
 }

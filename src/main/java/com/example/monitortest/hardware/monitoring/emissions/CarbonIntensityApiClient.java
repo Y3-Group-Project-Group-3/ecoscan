@@ -85,6 +85,20 @@ public class CarbonIntensityApiClient {
         throw new IOException("No valid carbon intensity was returned.");
     }
 
+
+    // Retrieves the current carbon intensity from the NESO API.
+    // Combines the existing HTTP request and JSON parsing operations.
+    // This method performs network I/O and must run on a background thread.
+    public double fetchCurrentCarbonIntensity() throws IOException, InterruptedException {
+
+        // Retrieve the current API response as JSON text.
+        String json = fetchCurrentIntensityResponse();
+
+        // Extract the actual intensity, or forecast when actual is unavailable.
+        return parseCarbonIntensity(json);
+    }
+
+
     // Checks that an API intensity is a finite, non-negative number.
     private boolean isValidIntensity(JsonNode value) {
 

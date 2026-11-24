@@ -199,8 +199,7 @@ public class LiveMonitorPanel extends JPanel {
         graphLayoutButton.setToolTipText("Stack Graphs");
 
         // Provide an accessible description for the icon-only button.
-        graphLayoutButton.getAccessibleContext()
-                .setAccessibleName("Stack Graphs");
+        graphLayoutButton.getAccessibleContext().setAccessibleName("Stack Graphs");
 
         // Give the compact toggle a consistent size.
         graphLayoutButton.setPreferredSize(new Dimension(46, 38));
@@ -305,6 +304,19 @@ public class LiveMonitorPanel extends JPanel {
             emissionComparisonPanel.updateEmissions( totalGrams, averageGramsPerSecond );
         });
     }
+
+
+    // Updates the displayed carbon intensity and its source.
+    // Ensures updates from background threads are handled on Swing's EDT.
+    public void updateCarbonIntensity(double intensity, String source) {
+
+        // Schedule the label update on Swing's Event Dispatch Thread.
+        SwingUtilities.invokeLater(() -> {
+            // Forward the new intensity and source to the emissions panel.
+            carbonEmissionsPanel.updateCarbonIntensity( intensity, source );
+        });
+    }
+
 
     /**
      * Configures the action used to restart EcoScan with administrator privileges.
