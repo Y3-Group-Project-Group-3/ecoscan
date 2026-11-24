@@ -4,12 +4,11 @@ import com.example.monitortest.hardware.demo.MacDemoConfig;
 import com.example.monitortest.hardware.monitoring.LiveMonitorSnapshot;
 import com.example.monitortest.ui.livemonitor.components.PowerReadingsPanel;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
-import com.example.monitortest.ui.loading.components.Spinner;
 import com.example.monitortest.ui.livemonitor.components.CarbonEmissionsPanel;
 import com.example.monitortest.ui.livemonitor.components.comparison.EmissionComparisonPanel;
+import com.example.monitortest.ui.livemonitor.components.LiveMonitorUnavailablePanel;
 import com.example.monitortest.ui.livemonitor.components.PowerGraphsContainer;
 import com.example.monitortest.hardware.monitoring.LiveMonitorAvailability;
-import com.example.monitortest.services.startup.ApplicationProcessManager;
 import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsCalculator;
 
 import javax.swing.*;
@@ -18,10 +17,17 @@ import java.awt.*;
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import static com.example.monitortest.ui.theme.UIUtility.font;
 
+
 /**
- * Displays live hardware monitoring information.
- * Sensor readings will be added once the monitoring service is implemented.
+ * Coordinates the EcoScan Live Monitor interface.
+ *
+ * Delegates power measurement cards, graph presentation and
+ * unavailable-state messages to dedicated UI components.
+ *
+ * Displays live carbon emissions and intensity information,
+ * and supports static macOS demonstration mode.
  */
+
 public class LiveMonitorPanel extends JPanel {
 
     // Owns both power graphs, their layout toggle and update behaviour.
@@ -38,19 +44,21 @@ public class LiveMonitorPanel extends JPanel {
     // Displays the page title and identifies macOS demonstration mode.
     private final JLabel heading = new JLabel("Live Monitor", SwingConstants.CENTER);
 
-    // check if app requires restart
-    private Runnable administratorRestartAction;
+    // Displays the appropriate message when hardware monitoring is unavailable.
+    // Also manages administrator restart controls.
+    private final LiveMonitorUnavailablePanel unavailablePanel = new LiveMonitorUnavailablePanel();
 
     public LiveMonitorPanel() {
         super(new BorderLayout());
 
+        /********************* PANEL INITIALISATION *********************/
         // Match the background used by the other EcoScan pages.
         setBackground(BG_COLOR);
 
         heading.setFont(font(Font.BOLD, 26));
         heading.setForeground(TEXT_MAIN);
 
-        /********************* Emissions Panel *****************************/
+        /********************* POWER & EMISSIONS SUMMARY *********************/
         // Stack the power cards and carbon emissions panel above the graphs.
         JPanel summaryPanel = new JPanel();
         summaryPanel.setLayout(new BoxLayout(summaryPanel, BoxLayout.Y_AXIS));
@@ -85,6 +93,7 @@ public class LiveMonitorPanel extends JPanel {
         // Place the comparison bar below the carbon emissions summary.
         summaryPanel.add(comparisonContainer);
 
+        /********************* CONTENT LAYOUT *********************/
         // Create a vertically stacked container for the page content.
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
@@ -106,6 +115,7 @@ public class LiveMonitorPanel extends JPanel {
         // Display the extracted graph component beneath the summary.
         contentPanel.add(powerGraphsContainer);
 
+        /********************* SCROLL PANE CONFIGURATION *********************/
         // Allow vertical scrolling when the content exceeds the window height.
         JScrollPane scrollPane = new JScrollPane(contentPanel);
 
@@ -119,12 +129,14 @@ public class LiveMonitorPanel extends JPanel {
         // Prevent horizontal scrolling.
         scrollPane.setHorizontalScrollBarPolicy( JScrollPane.HORIZONTAL_SCROLLBAR_NEVER );
 
+        /********************* FINAL PANEL ASSEMBLY *********************/
         // Keep the page heading visible while the content scrolls.
         add(heading, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
 
     }
 
+    /********************* LIVE MONITOR UPDATES *********************/
     // Forwards live hardware measurements to the extracted components.
     // Each component handles its own Swing thread safety.
     public void updatePowerReadings(LiveMonitorSnapshot snapshot) {
@@ -135,6 +147,7 @@ public class LiveMonitorPanel extends JPanel {
         // Update both power graphs using the same snapshot.
         powerGraphsContainer.updateGraphs(snapshot);
     }
+
 
     public void updateCarbonEmissions(double totalGrams, double averageGramsPerSecond) {
 
@@ -157,156 +170,41 @@ public class LiveMonitorPanel extends JPanel {
         });
     }
 
-    /**
-     * Configures the action used to restart EcoScan with administrator privileges.
-     * @param action the administrator restart operation
-     */
+
+    /********************* ADMINISTRATOR & AVAILABILITY *********************/
+    // Passes the administrator restart action to the unavailable-state panel.
+    // Preserves the existing public interface used by CreateWindow.
     public void setAdministratorRestartAction(Runnable action) {
-        this.administratorRestartAction = action;
+        // Let the dedicated component manage the restart callback.
+        unavailablePanel.setAdministratorRestartAction(action);
     }
 
-    /**
-     * Creates a styled card displaying a hardware power measurement.
-     *
-     * @param title Description of the measurement.
-     * @param valueLabel Label updated with live power readings.
-     * @return A rounded measurement card.
-     */
-    private JPanel createPowerCard(String title, JLabel valueLabel, Spinner spinner){
-
-        // Reuse EcoScan's existing rounded panel component.
-        RoundedPanel card = new RoundedPanel( Color.WHITE, new Color(226, 232, 240), 16 );
-
-        card.setLayout(new BorderLayout(0, 12));
-        card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        // Display the measurement name above its value.
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(font(Font.PLAIN, 13));
-        titleLabel.setForeground(TEXT_MUTED);
-
-        // Style the live measurement value.
-        valueLabel.setFont(font(Font.BOLD, 22));
-        valueLabel.setForeground(TEXT_MAIN);
-
-        // Arrange the spinner immediately beside the measurement value.
-        JPanel valuePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        valuePanel.setOpaque(false);
-
-        valuePanel.add(spinner);
-        valuePanel.add(valueLabel);
-
-        // Add the measurement title and value row to the card.
-        card.add(titleLabel, BorderLayout.NORTH);
-        card.add(valuePanel, BorderLayout.CENTER);
-
-        return card;
-    }
-
-    // Replaces the live monitoring interface with an explanatory message when the current environment is unsupported.
+    // Replaces the Live Monitor content with an explanation when hardware monitoring is unavailable in the current environment.
     public void showUnavailableState(LiveMonitorAvailability.Status status) {
 
-        // The existing monitoring interface should remain unchanged
-        // when the environment meets the requirements.
+        // Keep the existing monitoring UI when the environment is supported.
         if (status == LiveMonitorAvailability.Status.AVAILABLE) {
             return;
         }
 
-        String title;
-        String description;
-
-        // Select the appropriate message for the current environment.
-        switch (status) {
-
-            case WINDOWS_ONLY -> {
-                title = "Windows Only";
-                description = "Live hardware monitoring is currently supported on Windows only.";
-            }
-
-            case ADMIN_REQUIRED -> {
-                title = "Administrator Privileges Required";
-                description = "Live hardware monitoring requires administrator privileges to access hardware sensors.";
-            }
-
-            default -> {
-                return;
-            }
+        // Ignore statuses that do not have an unavailable-state message.
+        if (status != LiveMonitorAvailability.Status.WINDOWS_ONLY
+                && status != LiveMonitorAvailability.Status.ADMIN_REQUIRED) {
+            return;
         }
 
-        // Create a centred message panel.
-        JPanel messagePanel = new JPanel(new GridBagLayout());
-        messagePanel.setBackground(BG_COLOR);
+        // Ask the dedicated component to build the appropriate message.
+        unavailablePanel.showStatus(status);
 
-        JPanel messageContent = new JPanel();
-        messageContent.setLayout( new BoxLayout(messageContent, BoxLayout.Y_AXIS) );
-        messageContent.setOpaque(false);
-
-        // Display the availability message heading.
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(font(Font.BOLD, 22));
-        titleLabel.setForeground(TEXT_MAIN);
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        // Display the explanation beneath the heading.
-        JLabel descriptionLabel = new JLabel(description);
-        descriptionLabel.setFont(font(Font.PLAIN, 14));
-        descriptionLabel.setForeground(TEXT_MUTED);
-        descriptionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        messageContent.add(titleLabel);
-        messageContent.add(Box.createVerticalStrut(12));
-        messageContent.add(descriptionLabel);
-
-        // Offer administrator elevation only when it is required.
-        if (status == LiveMonitorAvailability.Status.ADMIN_REQUIRED) {
-
-            ApplicationProcessManager processManager = new ApplicationProcessManager();
-
-            messageContent.add(Box.createVerticalStrut(20));
-
-            if (processManager.isPackagedApplication()) {
-
-                // The packaged EcoScan executable supports Windows UAC elevation.
-                JButton restartButton = new JButton("Restart as Administrator");
-
-                restartButton.setFont(font(Font.BOLD, 13));
-                restartButton.setBackground(new Color(22, 137, 76));
-                restartButton.setForeground(Color.WHITE);
-                restartButton.setFocusPainted(false);
-                restartButton.setCursor( Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) );
-                restartButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-                // Delegate the restart operation to CreateWindow.
-                restartButton.addActionListener(e -> {
-                    if (administratorRestartAction != null) {
-                        administratorRestartAction.run();
-                    }
-                });
-
-                messageContent.add(restartButton);
-
-            } else {
-
-                // IntelliJ launches cannot safely restart using java.exe alone.
-                JLabel instructionLabel = new JLabel( "Restart IDE as administrator to enable live monitoring." );
-
-                instructionLabel.setFont(font(Font.PLAIN, 13));
-                instructionLabel.setForeground(TEXT_MUTED);
-                instructionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-                messageContent.add(instructionLabel);
-            }
-        }
-
-        messagePanel.add(messageContent);
-
-        // Replace the page contents with the unavailable message.
+        // Replace the existing Live Monitor content.
         removeAll();
-        add(messagePanel, BorderLayout.CENTER);
+        add(unavailablePanel, BorderLayout.CENTER);
 
+        // Recalculate and redraw the updated interface.
         revalidate();
         repaint();
     }
+
 
     // Identifies that the Live Monitor is showing simulated macOS data.
     // The existing measurement cards and graphs remain visible.
@@ -357,8 +255,5 @@ public class LiveMonitorPanel extends JPanel {
         carbonEmissionsPanel.updateEmissions( totalEmissions, emissionsPerSecond );
     }
 
-    // Formats a power measurement to one decimal place.
-    private String formatPower(double power) {
-        return Double.isFinite(power) ? String.format("%.1f W", power) : "N/A";
-    }
+
 }
