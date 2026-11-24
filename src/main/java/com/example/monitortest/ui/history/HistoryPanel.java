@@ -5,6 +5,7 @@ import com.example.monitortest.ui.history.sections.HistoryHeaderSection;
 import com.example.monitortest.ui.history.sections.HistoryListSection;
 import com.example.monitortest.ui.history.sections.SessionListSection;
 import com.example.monitortest.ui.history.model.SavedScan;
+import com.example.monitortest.ui.history.services.EmailSharer;
 import com.example.monitortest.ui.history.services.HistoryPdfWriter;
 import com.example.monitortest.ui.history.services.ScanPdfReport;
 import com.example.monitortest.ui.history.storage.ScanHistoryCsvRepository;
@@ -13,6 +14,14 @@ import static com.example.monitortest.ui.theme.AppTheme.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
 import java.awt.*;
@@ -28,6 +37,9 @@ public class HistoryPanel extends JPanel {
 
     // Displays the total emissions recorded for each Live Monitor session.
     private final SessionListSection sessionListSection = new SessionListSection();
+
+    // Adds the date and time to shared PDF names so earlier ones are not replaced.
+    private static final DateTimeFormatter SHARE_FILE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm");
 
 
     // Creates the History Page using EcoScan's shared application theme.
@@ -143,6 +155,26 @@ public class HistoryPanel extends JPanel {
                         List.of(),
                         "ecoscan-sessions.pdf", "session(s)" ) );
 
+        // Share the selected or visible scans by email when the scans Share button is clicked.
+        actionsSection.getShareButton().addActionListener(e -> {
+
+            List<SavedScan> scans = historyListSection.getPrintScans();
+
+            shareByEmail( "EcoScan - Saved Hardware Scans",
+                    ScanPdfReport.SUMMARY_HEADINGS,
+                    ScanPdfReport.summaryRows(scans),
+                    ScanPdfReport.detailPages(scans),
+                    "ecoscan-scans" );
+        });
+
+        // Share the selected or visible sessions by email when the sessions Share button is clicked.
+        sessionListSection.getShareButton().addActionListener(e ->
+                shareByEmail( "EcoScan - Live Monitor Sessions",
+                        new String[]{"Date", "Total Emissions"},
+                        sessionListSection.getPrintRows(),
+                        List.of(),
+                        "ecoscan-sessions" ) );
+
         // Enable each button only when it can be used.
         // Updated whenever the scans or the selected rows change.
         historyListSection.setStateChangeListener( () -> updateButtonStates(actionsSection) );
@@ -159,7 +191,7 @@ public class HistoryPanel extends JPanel {
 
         // Actions affecting the entire history use the CSV's stored state.
         boolean hasStoredScans = historyListSection.hasStoredScans();
-        // Printing operates on the currently displayed scans.
+        // Printing and sharing operate on the currently displayed scans.
         boolean hasVisibleScans = historyListSection.hasVisibleScans();
 
         // Deleting selected rows requires an actual row selection.
@@ -171,8 +203,9 @@ public class HistoryPanel extends JPanel {
         // This action operates on the complete saved history.
         actionsSection.getExportButton().setEnabled(hasStoredScans);
 
-        // Only permit printing when visible rows are available.
+        // Only permit printing and sharing when visible rows are available.
         actionsSection.getPrintButton().setEnabled(hasVisibleScans);
+        actionsSection.getShareButton().setEnabled(hasVisibleScans);
     }
 
 
@@ -230,6 +263,85 @@ public class HistoryPanel extends JPanel {
             // Print the underlying error for debugging.
             ex.printStackTrace();
         }
+    }
+
+
+    // Saves a PDF of the given rows, then opens a new email with the PDF attached.
+    // Uses Apple Mail on macOS and Outlook on Windows.
+    // Falls back to a plain email and opens the PDF's folder when neither is available.
+    // Used by the Share buttons on both cards.
+    private void shareByEmail(String title, String[] headings, List<String[]> rows, List<HistoryPdfWriter.DetailPage> detailPages, String fileName) {
+
+        // Inform the user when there is nothing to share.
+        if (rows.isEmpty()) {
+            JOptionPane.showMessageDialog( this,
+                    "There is nothing to share.",
+                    "Share", JOptionPane.INFORMATION_MESSAGE );
+            return;
+        }
+
+        try {
+
+            // Save the PDF to EcoScan's Shared folder, with the date and time in its name.
+            Path shareFolder = Path.of( System.getProperty("user.home"), "EcoScan", "Shared" );
+            Files.createDirectories(shareFolder);
+
+            File pdfFile = shareFolder.resolve( fileName + "-" + LocalDateTime.now().format(SHARE_FILE_FORMAT) + ".pdf" ).toFile();
+
+            new HistoryPdfWriter().write( pdfFile.toPath(), title, headings, rows, detailPages );
+
+            // Write a short summary of the rows for the body of the email.
+            StringBuilder body = new StringBuilder(title).append("\n\n");
+
+            for (String[] row : rows) {
+                body.append( String.join(" | ", row) ).append("\n");
+            }
+
+            body.append("\nThe full report is attached.");
+
+            // Try to open a new email with the PDF already attached.
+            if (EmailSharer.openWithAttachment( title, body.toString(), pdfFile.toPath() )) {
+                return;
+            }
+
+            // Fall back to a plain email when Mail or Outlook could not be used.
+            if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.MAIL)) {
+                JOptionPane.showMessageDialog( this,
+                        "No email app is available on this computer.\nThe PDF was saved to " + pdfFile + ".",
+                        "Share", JOptionPane.INFORMATION_MESSAGE );
+                return;
+            }
+
+            // Open a new email with the subject and summary filled in.
+            String mailto = "mailto:?subject=" + encode(title) + "&body=" + encode(body.toString());
+            Desktop.getDesktop().mail( new URI(mailto) );
+
+            // Open the Shared folder so the PDF can be dragged into the email.
+            if (Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+                Desktop.getDesktop().open( shareFolder.toFile() );
+            }
+
+            JOptionPane.showMessageDialog( this,
+                    "Your email app could not attach the PDF automatically.\nAttach " + pdfFile.getName() + " from the folder that has opened.",
+                    "Share", JOptionPane.INFORMATION_MESSAGE );
+
+        } catch (IOException | URISyntaxException ex) {
+
+            // Inform the user that the email could not be prepared.
+            JOptionPane.showMessageDialog( this,
+                    "Unable to open an email for sharing.",
+                    "Share", JOptionPane.ERROR_MESSAGE );
+
+            // Print the underlying error for debugging.
+            ex.printStackTrace();
+        }
+    }
+
+
+    // Encodes text so it can be used in a mailto link.
+    // Spaces become %20 because some email apps show + signs instead.
+    private String encode(String text) {
+        return URLEncoder.encode(text, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
 

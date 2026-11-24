@@ -16,11 +16,12 @@ public class HistoryActionsSection extends JPanel {
     private static final Color DELETE_HOVER_ACCENT = new Color(0xC0392B);
 
     // Every History button uses the same size so both cards line up.
-    private static final Dimension BUTTON_SIZE = new Dimension(130, 30);
+    private static final Dimension BUTTON_SIZE = new Dimension(130, 38);
 
     private JButton importButton;
     private JButton exportButton;
     private JButton printButton;
+    private JButton shareButton;
     private JButton deleteButton;
     private JButton clearButton;
 
@@ -38,6 +39,7 @@ public class HistoryActionsSection extends JPanel {
         importButton = createActionButton( "Import Scans", FontAwesomeSolid.FILE_IMPORT, false );
         exportButton = createActionButton( "Export Results", FontAwesomeSolid.FILE_EXPORT, false );
         printButton = createActionButton( "Print List", FontAwesomeSolid.PRINT, false );
+        shareButton = createActionButton( "Share", FontAwesomeSolid.ENVELOPE, false );
 
         // Add uniform spacing only between buttons.
         leftButtons.add(importButton);
@@ -45,6 +47,8 @@ public class HistoryActionsSection extends JPanel {
         leftButtons.add(exportButton);
         leftButtons.add(Box.createHorizontalStrut(10));
         leftButtons.add(printButton);
+        leftButtons.add(Box.createHorizontalStrut(10));
+        leftButtons.add(shareButton);
 
         // Align the delete actions with the right edge of the History cards.
         JPanel rightButtons = new JPanel();
@@ -102,6 +106,10 @@ public class HistoryActionsSection extends JPanel {
 
     public JButton getPrintButton() {
         return printButton;
+    }
+
+    public JButton getShareButton() {
+        return shareButton;
     }
 
     public JButton getDeleteButton() {

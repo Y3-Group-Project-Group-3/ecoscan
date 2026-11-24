@@ -29,7 +29,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 
 // Displays saved Live Monitor sessions and their recorded CO2 emissions.
-// Handles loading, searching, importing, exporting, printing and deleting session history.
+// Handles loading, searching, importing, exporting, printing, sharing and deleting session history.
 public class SessionListSection extends RoundedPanel {
 
     private JPanel listItemsPanel;
@@ -51,6 +51,9 @@ public class SessionListSection extends RoundedPanel {
 
     // Saves the selected or visible sessions as a PDF.
     private JButton printButton;
+
+    // Shares the selected or visible sessions by email.
+    private JButton shareButton;
 
     // Searches and sorts the sessions in this card only.
     private HistorySearchBar searchBar;
@@ -140,6 +143,7 @@ public class SessionListSection extends RoundedPanel {
         importButton = HistoryActionsSection.createActionButton( "Import Sessions", FontAwesomeSolid.FILE_IMPORT, false );
         exportButton = HistoryActionsSection.createActionButton( "Export Sessions", FontAwesomeSolid.FILE_EXPORT, false );
         printButton = HistoryActionsSection.createActionButton( "Print List", FontAwesomeSolid.PRINT, false );
+        shareButton = HistoryActionsSection.createActionButton( "Share", FontAwesomeSolid.ENVELOPE, false );
         deleteButton = HistoryActionsSection.createActionButton( "Delete Selected", FontAwesomeSolid.TRASH_ALT, true );
         clearButton = HistoryActionsSection.createActionButton( "Clear Sessions", FontAwesomeSolid.TRASH_ALT, true );
 
@@ -154,7 +158,7 @@ public class SessionListSection extends RoundedPanel {
         // Keep the scrollable session rows inside the rounded card.
         contentPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Import, Export and Print sit on the left, matching the scans card.
+        // Import, Export, Print and Share sit on the left, matching the scans card.
         JPanel leftButtons = new JPanel();
         leftButtons.setLayout(new BoxLayout(leftButtons, BoxLayout.X_AXIS));
         leftButtons.setOpaque(false);
@@ -163,6 +167,8 @@ public class SessionListSection extends RoundedPanel {
         leftButtons.add(exportButton);
         leftButtons.add(Box.createHorizontalStrut(10));
         leftButtons.add(printButton);
+        leftButtons.add(Box.createHorizontalStrut(10));
+        leftButtons.add(shareButton);
 
         // Keep both delete actions together on the right edge of the card.
         JPanel rightButtons = new JPanel();
@@ -261,8 +267,9 @@ public class SessionListSection extends RoundedPanel {
         clearButton.setEnabled(hasStoredSessions);
         exportButton.setEnabled(hasStoredSessions);
 
-        // Only allow printing when there are sessions on screen.
+        // Only allow printing and sharing when there are sessions on screen.
         printButton.setEnabled( !rows.isEmpty() );
+        shareButton.setEnabled( !rows.isEmpty() );
 
         // Nothing is selected after reloading the rows.
         deleteButton.setEnabled(false);
@@ -485,5 +492,10 @@ public class SessionListSection extends RoundedPanel {
     // Returns the Print List button so the History Page can handle the save dialog.
     public JButton getPrintButton() {
         return printButton;
+    }
+
+    // Returns the Share button so the History Page can open the email app.
+    public JButton getShareButton() {
+        return shareButton;
     }
 }
