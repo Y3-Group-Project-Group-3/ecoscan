@@ -21,10 +21,14 @@ public class SessionRecorder {
     private final SessionHistoryCsvRepository sessionRepository = new SessionHistoryCsvRepository();
 
 
-    // Saves the total emissions for the current session.
+    // Saves the total emissions and length of the current session.
     // Windows uses the emissions accumulated by live monitoring.
     // macOS Demo Mode uses the demo power values over the time EcoScan was open.
     public void saveSession(LiveMonitoringService monitoringService, boolean macDemoMode) {
+
+        // Calculate how long EcoScan has been open.
+        // Saved with the session so the History Page can show the average emissions per second.
+        double sessionSeconds = Duration.between( startedAt, LocalDateTime.now() ).toMillis() / 1000.0;
 
         double totalEmissionsGrams;
 
@@ -38,9 +42,6 @@ public class SessionRecorder {
             // Retrieve the demonstration CPU and GPU power values.
             LiveMonitorSnapshot demoSnapshot = new MacLiveMonitorDemoProvider().createSnapshot();
 
-            // Calculate how long EcoScan has been open.
-            double sessionSeconds = Duration.between( startedAt, LocalDateTime.now() ).toMillis() / 1000.0;
-
             // Reuse EcoScan's existing emissions calculation logic.
             totalEmissionsGrams = new CarbonEmissionsCalculator().calculateEmissions( demoSnapshot.totalPower(), sessionSeconds );
 
@@ -53,7 +54,7 @@ public class SessionRecorder {
         try {
 
             // Save the finished session to the sessions CSV file.
-            sessionRepository.save( new SessionRecord(startedAt, totalEmissionsGrams) );
+            sessionRepository.save( new SessionRecord(startedAt, totalEmissionsGrams, sessionSeconds) );
 
         } catch (Exception e) {
 

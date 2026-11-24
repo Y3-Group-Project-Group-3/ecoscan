@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.Locale;
 
 // Manages Live Monitor session records stored in a single CSV file.
-// Each row stores the session start time and its total emissions.
+// Each row stores the session start time, its total emissions and how long it lasted.
 public class SessionHistoryCsvRepository {
 
     // Header written at the top of the sessions CSV file.
-    private static final String HEADER = "startedAt,totalEmissionsGrams";
+    private static final String HEADER = "startedAt,totalEmissionsGrams,durationSeconds";
 
     // Only the most recent sessions are kept, matching the saved scans limit.
     public static final int MAX_SAVED_SESSIONS = 10;
@@ -92,8 +92,10 @@ public class SessionHistoryCsvRepository {
             }
         }
 
-        // Rewrite the file, keeping only the newest sessions.
-        writeSessions(sessions);
+        // Only rewrite the file when there are new sessions to add.
+        if (added > 0) {
+            writeSessions(sessions);
+        }
 
         return added;
     }
@@ -188,7 +190,8 @@ public class SessionHistoryCsvRepository {
             String[] values = line.split(",");
 
             // Each row must contain a start time and a total.
-            if (values.length != 2) {
+            // Older files have no session length, so two or three values are accepted.
+            if (values.length != 2 && values.length != 3) {
                 continue;
             }
 
@@ -198,7 +201,10 @@ public class SessionHistoryCsvRepository {
                 LocalDateTime startedAt = LocalDateTime.parse( values[0].trim() );
                 double totalEmissionsGrams = Double.parseDouble( values[1].trim() );
 
-                sessions.add( new SessionRecord(startedAt, totalEmissionsGrams) );
+                // Sessions saved before the length was recorded have a length of zero.
+                double durationSeconds = values.length == 3 ? Double.parseDouble( values[2].trim() ) : 0;
+
+                sessions.add( new SessionRecord(startedAt, totalEmissionsGrams, durationSeconds) );
 
             } catch (RuntimeException e) {
 
@@ -213,7 +219,9 @@ public class SessionHistoryCsvRepository {
 
     // Converts a session into a single CSV row.
     private String toCsvRow(SessionRecord session) {
-        return session.getStartedAt() + "," + String.format( Locale.UK, "%.4f", session.getTotalEmissionsGrams() );
+        return session.getStartedAt() + ","
+                + String.format( Locale.UK, "%.4f", session.getTotalEmissionsGrams() ) + ","
+                + String.format( Locale.UK, "%.1f", session.getDurationSeconds() );
     }
 
 
