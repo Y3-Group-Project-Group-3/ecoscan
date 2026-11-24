@@ -51,8 +51,26 @@ public class HistoryPanel extends JPanel {
         // Match the background used throughout EcoScan.
         setBackground(BG_COLOR);
 
-        // Add the main History Page layout.
-        add(createMainContentPanel(), BorderLayout.CENTER);
+
+        // Wrap the complete History content in a scroll pane.
+        // This allows the page to scroll when the window is too small.
+        JScrollPane historyScrollPane = new JScrollPane(createMainContentPanel());
+
+        // Match the application's existing background and remove the border.
+        historyScrollPane.setBorder(null);
+        historyScrollPane.getViewport().setBackground(BG_COLOR);
+
+        // Improve the responsiveness of mouse-wheel scrolling.
+        historyScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        historyScrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+
+        // Only show scrollbars when the content exceeds the viewport.
+        historyScrollPane.setVerticalScrollBarPolicy( JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED );
+        historyScrollPane.setHorizontalScrollBarPolicy( JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED );
+
+        // Display the scrollable History page.
+        add(historyScrollPane, BorderLayout.CENTER);
+
 
         // Allow the page itself to take focus away from the search box and sort dropdown.
         setFocusable(true);
@@ -72,8 +90,22 @@ public class HistoryPanel extends JPanel {
     private JPanel createMainContentPanel() {
 
 
-        // Build the main content area with consistent spacing.
-        JPanel main = new JPanel(new BorderLayout(0, 24));
+        // Keep the History content large enough for its tables and buttons.
+        // The scroll pane can scroll instead of forcing the cards to overlap.
+        JPanel main = new JPanel(new BorderLayout(0, 24)) {
+
+            @Override
+            public Dimension getPreferredSize() {
+
+                // Calculate the natural size required by the page.
+                Dimension preferred = super.getPreferredSize();
+
+                // Prevent the content from becoming narrower or shorter
+                // than the dimensions needed for a readable layout.
+                return new Dimension( Math.max(preferred.width, 800), Math.max(preferred.height, 800) );
+            }
+        };
+
 
         // Match the application's main page background.
         main.setBackground(BG_COLOR);
@@ -150,7 +182,8 @@ public class HistoryPanel extends JPanel {
         // Save the selected or visible sessions as a PDF when the sessions Print List button is clicked.
         sessionListSection.getPrintButton().addActionListener(e ->
                 savePdf( "EcoScan - Live Monitor Sessions",
-                        new String[]{"Date", "Total Emissions"},
+                        // Use the same four columns displayed in the History session table.
+                        new String[]{ "Date", "Total Emissions", "Avg. Emissions", "Carbon Intensity" },
                         sessionListSection.getPrintRows(),
                         List.of(),
                         "ecoscan-sessions.pdf", "session(s)" ) );

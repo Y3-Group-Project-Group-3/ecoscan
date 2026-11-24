@@ -32,10 +32,19 @@ public class SessionRecorder {
 
         double totalEmissionsGrams;
 
+        // Stores the most recent carbon intensity used during monitoring.
+        // NaN represents a session without an available recorded intensity.
+        double carbonIntensityGramsPerKwh = Double.NaN;
+
         if (monitoringService != null) {
 
             // Retrieve the emissions accumulated during live monitoring.
             totalEmissionsGrams = monitoringService.getEmissionsTracker().getTotalEmissionsGrams();
+
+            // Capture the latest carbon intensity applied to the emissions tracker.
+            // This is the value used for the most recent emissions calculations.
+            carbonIntensityGramsPerKwh = monitoringService.getEmissionsTracker().getCarbonIntensity();
+
 
         } else if (macDemoMode) {
 
@@ -53,8 +62,12 @@ public class SessionRecorder {
 
         try {
 
-            // Save the finished session to the sessions CSV file.
-            sessionRepository.save( new SessionRecord(startedAt, totalEmissionsGrams, sessionSeconds) );
+            // Save the session with its final carbon intensity reading.
+            // macOS demonstration sessions retain an unrecorded intensity.
+            sessionRepository.save(
+                    new SessionRecord( startedAt, totalEmissionsGrams, sessionSeconds, carbonIntensityGramsPerKwh )
+            );
+
 
         } catch (Exception e) {
 

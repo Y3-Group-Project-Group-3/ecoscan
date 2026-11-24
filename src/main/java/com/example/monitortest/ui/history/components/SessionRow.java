@@ -33,8 +33,9 @@ public class SessionRow extends JPanel {
     // Creates a row displaying the session date, total emissions and average emissions per second.
     public SessionRow(SessionRecord session) {
 
-        // Match the three-column layout used by the session table header.
-        setLayout(new GridLayout(1, 3, 10, 0));
+
+        // Display the session date, total emissions, average emissions and most recent carbon intensity across four columns.
+        setLayout(new GridLayout(1, 4, 10, 0));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(8, 18, 8, 18));
@@ -42,10 +43,13 @@ public class SessionRow extends JPanel {
         // Use the application's standard table typography.
         Font rowFont = UIUtility.font( "SansSerif", Font.PLAIN, FONT_LABEL_SIZE );
 
-        // Display the session's date, total emissions and average emissions per second.
+
+        // Display all four recorded session measurements.
         add(createCell(session.getStartedAt().format(DATE_FORMAT), rowFont));
         add(createCell(formatEmissions(session.getTotalEmissionsGrams()), rowFont));
         add(createCell(formatAverage(session), rowFont));
+        add(createCell(formatCarbonIntensity(session), rowFont));
+
 
         // Highlight the row when the mouse enters or leaves it.
         addMouseListener(new MouseAdapter() {
@@ -119,4 +123,19 @@ public class SessionRow extends JPanel {
 
         return String.format(Locale.UK, "%.6f g CO₂e/s", session.getTotalEmissionsGrams() / session.getDurationSeconds());
     }
+
+
+    // Formats the most recent carbon intensity recorded for the session.
+    // Older sessions without this information display "Not recorded".
+    public static String formatCarbonIntensity(SessionRecord session) {
+
+        // Do not invent intensity values for older saved sessions.
+        if (!session.hasCarbonIntensity()) {
+            return "Not recorded";
+        }
+
+        // Display the recorded intensity in grams of CO2 per kilowatt-hour.
+        return String.format( Locale.UK, "%.1f g/kWh", session.getCarbonIntensityGramsPerKwh() );
+    }
+
 }

@@ -17,8 +17,10 @@ import java.util.Locale;
 // Each row stores the session start time, its total emissions and how long it lasted.
 public class SessionHistoryCsvRepository {
 
-    // Header written at the top of the sessions CSV file.
-    private static final String HEADER = "startedAt,totalEmissionsGrams,durationSeconds";
+
+    // Session CSV columns, including the most recent carbon intensity.
+    private static final String HEADER = "startedAt,totalEmissionsGrams,durationSeconds,carbonIntensityGramsPerKwh";
+
 
     // Only the most recent sessions are kept, matching the saved scans limit.
     public static final int MAX_SAVED_SESSIONS = 10;
@@ -187,13 +189,18 @@ public class SessionHistoryCsvRepository {
                 continue;
             }
 
-            String[] values = line.split(",");
+            // Preserve empty trailing values when reading CSV rows.
+            // This allows a missing carbon intensity to be recognised.
+            String[] values = line.split(",", -1);
 
-            // Each row must contain a start time and a total.
-            // Older files have no session length, so two or three values are accepted.
-            if (values.length != 2 && values.length != 3) {
+            // Support all three session formats:
+            // 2 columns: original sessions without duration.
+            // 3 columns: sessions with duration but no intensity.
+            // 4 columns: sessions containing carbon intensity.
+            if (values.length < 2 || values.length > 4) {
                 continue;
             }
+
 
             try {
 
@@ -201,10 +208,22 @@ public class SessionHistoryCsvRepository {
                 LocalDateTime startedAt = LocalDateTime.parse( values[0].trim() );
                 double totalEmissionsGrams = Double.parseDouble( values[1].trim() );
 
-                // Sessions saved before the length was recorded have a length of zero.
-                double durationSeconds = values.length == 3 ? Double.parseDouble( values[2].trim() ) : 0;
+                // Older sessions without a recorded duration use zero.
+                double durationSeconds = values.length >= 3
+                        ? Double.parseDouble(values[2].trim())
+                        : 0.0;
 
-                sessions.add( new SessionRecord(startedAt, totalEmissionsGrams, durationSeconds) );
+                // Older sessions without carbon intensity use NaN.
+                // Empty fourth-column values also represent missing readings.
+                double carbonIntensityGramsPerKwh = Double.NaN;
+
+                if (values.length == 4 && !values[3].trim().isEmpty()) {
+                    carbonIntensityGramsPerKwh = Double.parseDouble(values[3].trim());
+                }
+
+                // Construct a session with its available historical data.
+                sessions.add(new SessionRecord( startedAt, totalEmissionsGrams, durationSeconds, carbonIntensityGramsPerKwh ));
+
 
             } catch (RuntimeException e) {
 
@@ -217,12 +236,25 @@ public class SessionHistoryCsvRepository {
     }
 
 
-    // Converts a session into a single CSV row.
+
+    // Converts a saved Live Monitor session into a CSV row.
+    // Missing carbon intensity readings are stored as an empty field.
     private String toCsvRow(SessionRecord session) {
+
+        // Format the carbon intensity only when it was recorded.
+        // Older sessions retain an empty fourth column.
+        String intensity = session.hasCarbonIntensity()
+                ? String.format( Locale.UK, "%.1f", session.getCarbonIntensityGramsPerKwh() )
+                : "";
+
+        // Preserve the existing date, emissions and duration fields.
+        // Append the carbon intensity as the fourth CSV column.
         return session.getStartedAt() + ","
                 + String.format( Locale.UK, "%.4f", session.getTotalEmissionsGrams() ) + ","
-                + String.format( Locale.UK, "%.1f", session.getDurationSeconds() );
+                + String.format( Locale.UK, "%.1f", session.getDurationSeconds() ) + ","
+                + intensity;
     }
+
 
 
 
