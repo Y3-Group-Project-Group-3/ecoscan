@@ -2,20 +2,18 @@ package com.example.monitortest.ui.livemonitor;
 
 import com.example.monitortest.hardware.demo.MacDemoConfig;
 import com.example.monitortest.hardware.monitoring.LiveMonitorSnapshot;
-import com.example.monitortest.ui.livemonitor.components.PowerGraphPanel;
 import com.example.monitortest.ui.livemonitor.components.PowerReadingsPanel;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.ui.loading.components.Spinner;
 import com.example.monitortest.ui.livemonitor.components.CarbonEmissionsPanel;
 import com.example.monitortest.ui.livemonitor.components.comparison.EmissionComparisonPanel;
-import com.example.monitortest.ui.common.OutlinedActionButton;
+import com.example.monitortest.ui.livemonitor.components.PowerGraphsContainer;
 import com.example.monitortest.hardware.monitoring.LiveMonitorAvailability;
 import com.example.monitortest.services.startup.ApplicationProcessManager;
 import com.example.monitortest.hardware.monitoring.emissions.CarbonEmissionsCalculator;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 
 import static com.example.monitortest.ui.theme.AppTheme.*;
 import static com.example.monitortest.ui.theme.UIUtility.font;
@@ -26,19 +24,13 @@ import static com.example.monitortest.ui.theme.UIUtility.font;
  */
 public class LiveMonitorPanel extends JPanel {
 
-    // Graphs displaying recent CPU and GPU power consumption.
-    private final PowerGraphPanel cpuGraph = new PowerGraphPanel(GREEN);
-    private final PowerGraphPanel gpuGraph = new PowerGraphPanel(TEXT_MUTED);
+    // Owns both power graphs, their layout toggle and update behaviour.
+    private final PowerGraphsContainer powerGraphsContainer = new PowerGraphsContainer();
 
     // Displays the estimated emissions accumulated during monitoring.
     private final CarbonEmissionsPanel carbonEmissionsPanel = new CarbonEmissionsPanel();
     // Displays the PC's emissions against household appliance milestones.
     private final EmissionComparisonPanel emissionComparisonPanel = new EmissionComparisonPanel();
-
-    // Container holding both CPU and GPU graphs.
-    private JPanel graphsPanel;
-    // Tracks whether the graphs are currently displayed side by side.
-    private boolean sideBySideView = true;
 
     // Owns the CPU, GPU and combined power measurement cards.
     private final PowerReadingsPanel powerReadingsPanel = new PowerReadingsPanel();
@@ -57,58 +49,6 @@ public class LiveMonitorPanel extends JPanel {
 
         heading.setFont(font(Font.BOLD, 26));
         heading.setForeground(TEXT_MAIN);
-
-        /********************* GRAPHS ********************/
-        // Create a container for both power graphs.
-//        JPanel graphsPanel = new JPanel(new GridLayout(2, 1, 0, 20));
-
-        // Display CPU and GPU graphs side by side.
-        // One row, two columns, with a 20-pixel horizontal gap.
-        // Initialise the shared graph container in side-by-side mode.
-        graphsPanel = new JPanel(new GridLayout(1, 2, 20, 0));
-        graphsPanel.setOpaque(false);
-
-//        // Reserve enough vertical space for both graphs.
-//        graphsPanel.setPreferredSize(new Dimension(0, 520));
-//        graphsPanel.setMinimumSize(new Dimension(0, 520));
-
-        // Reserve enough height for the side-by-side graphs.
-        graphsPanel.setPreferredSize(new Dimension(0, 300));
-        graphsPanel.setMinimumSize(new Dimension(0, 300));
-
-        graphsPanel.setBorder(BorderFactory.createEmptyBorder(10, 40, 30, 40));
-
-        // Create rounded containers for the CPU and GPU graphs.
-        RoundedPanel cpuSection = new RoundedPanel( Color.WHITE, new Color(226, 232, 240), 16 );
-        RoundedPanel gpuSection = new RoundedPanel( Color.WHITE, new Color(226, 232, 240), 16 );
-
-        // Arrange each graph beneath its heading.
-        cpuSection.setLayout(new BorderLayout(0, 10));
-        gpuSection.setLayout(new BorderLayout(0, 10));
-
-        // Add internal spacing so graph elements do not touch the card borders.
-        cpuSection.setBorder(BorderFactory.createEmptyBorder(20, 20, 15, 20));
-        gpuSection.setBorder(BorderFactory.createEmptyBorder(20, 20, 15, 20));
-
-        // Create headings for the graph cards.
-        JLabel cpuGraphTitle = new JLabel("CPU Power Consumption");
-        JLabel gpuGraphTitle = new JLabel("GPU Power Consumption");
-
-        cpuGraphTitle.setFont(font(Font.BOLD, 15));
-        gpuGraphTitle.setFont(font(Font.BOLD, 15));
-
-        cpuGraphTitle.setForeground(TEXT_MAIN);
-        gpuGraphTitle.setForeground(TEXT_MAIN);
-
-        // Add the existing graphs without recreating them.
-        cpuSection.add(cpuGraphTitle, BorderLayout.NORTH);
-        cpuSection.add(cpuGraph, BorderLayout.CENTER);
-
-        gpuSection.add(gpuGraphTitle, BorderLayout.NORTH);
-        gpuSection.add(gpuGraph, BorderLayout.CENTER);
-
-        graphsPanel.add(cpuSection);
-        graphsPanel.add(gpuSection);
 
         /********************* Emissions Panel *****************************/
         // Stack the power cards and carbon emissions panel above the graphs.
@@ -134,17 +74,13 @@ public class LiveMonitorPanel extends JPanel {
 
 
         // Give the emissions comparison ruler the same rounded card styling.
-        RoundedPanel comparisonCard = new RoundedPanel( Color.WHITE, new Color(226, 232, 240), 16
-        );
-
+        RoundedPanel comparisonCard = new RoundedPanel( Color.WHITE, new Color(226, 232, 240), 16);
         comparisonCard.setLayout(new BorderLayout());
         comparisonCard.setBorder( BorderFactory.createEmptyBorder(15, 20, 15, 20) );
 
         // Keep the custom-drawn ruler inside the styled card.
         comparisonCard.add(emissionComparisonPanel, BorderLayout.CENTER);
-
         comparisonContainer.add(comparisonCard, BorderLayout.CENTER);
-
 
         // Place the comparison bar below the carbon emissions summary.
         summaryPanel.add(comparisonContainer);
@@ -154,74 +90,21 @@ public class LiveMonitorPanel extends JPanel {
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setOpaque(false);
 
-        // Ensure the summary and graphs fill the available width.
+        // Keep the summary and graph components aligned across the page.
         summaryPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        graphsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        powerGraphsContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Keep the graphs at their preferred height.
-        summaryPanel.setMaximumSize( new Dimension(Integer.MAX_VALUE, summaryPanel.getPreferredSize().height) );
+        // Keep the summary section at its preferred height.
+        summaryPanel.setMaximumSize( new Dimension( Integer.MAX_VALUE, summaryPanel.getPreferredSize().height ) );
 
-        // Allow the graph container to fill the available width.
-        graphsPanel.setMaximumSize( new Dimension(Integer.MAX_VALUE, 300) );
+        // Allow the graph component to expand horizontally.
+        powerGraphsContainer.setMaximumSize( new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE) );
 
         // Add the summary section above the graphs.
         contentPanel.add(summaryPanel);
 
-
-        // Use EcoScan's existing secondary button styling.
-        OutlinedActionButton graphLayoutButton = new OutlinedActionButton("");
-
-        // Display the icon for stacking the graphs vertically.
-        graphLayoutButton.setIcon(createGraphLayoutIcon(false));
-
-        // Explain the action when the user hovers over the button.
-        graphLayoutButton.setToolTipText("Stack Graphs");
-
-        // Provide an accessible description for the icon-only button.
-        graphLayoutButton.getAccessibleContext().setAccessibleName("Stack Graphs");
-
-        // Give the compact toggle a consistent size.
-        graphLayoutButton.setPreferredSize(new Dimension(46, 38));
-
-        // Keep the icon centred inside the button.
-        graphLayoutButton.setHorizontalAlignment(SwingConstants.CENTER);
-
-
-        // Explain the button's action on hover.
-        graphLayoutButton.setToolTipText("Stack Graphs");
-
-        // Provide an accessible name for the icon-only control.
-        graphLayoutButton.getAccessibleContext().setAccessibleName("Stack Graphs");
-
-        // Give the button consistent dimensions.
-        graphLayoutButton.setPreferredSize(new Dimension(42, 36));
-
-        // Keep the visual appearance compact.
-        graphLayoutButton.setFocusPainted(false);
-
-        // Display a hand cursor when hovering.
-        graphLayoutButton.setCursor( Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) );
-
-
-        // Switch layouts whenever the button is clicked.
-        graphLayoutButton.addActionListener( event -> toggleGraphLayout(graphLayoutButton) );
-
-        // Position the toggle above the graphs, aligned to the right.
-        JPanel graphToolbar = new JPanel( new FlowLayout(FlowLayout.RIGHT, 40, 0) );
-
-        // Match the background of the Live Monitor page.
-        graphToolbar.setOpaque(false);
-
-        // Allow the toolbar to fill the content width without excessive height.
-        graphToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
-        graphToolbar.setMaximumSize( new Dimension(Integer.MAX_VALUE, 45) );
-
-        // Add the toggle button to the toolbar.
-        graphToolbar.add(graphLayoutButton);
-
-        // Place the graph layout toggle immediately above the graphs.
-        contentPanel.add(graphToolbar);
-        contentPanel.add(graphsPanel);
+        // Display the extracted graph component beneath the summary.
+        contentPanel.add(powerGraphsContainer);
 
         // Allow vertical scrolling when the content exceeds the window height.
         JScrollPane scrollPane = new JScrollPane(contentPanel);
@@ -242,22 +125,16 @@ public class LiveMonitorPanel extends JPanel {
 
     }
 
-    // Updates the measurement cards and power graphs.
-    // The child component handles its own Swing thread safety.
+    // Forwards live hardware measurements to the extracted components.
+    // Each component handles its own Swing thread safety.
     public void updatePowerReadings(LiveMonitorSnapshot snapshot) {
 
-        // Update the extracted CPU, GPU and combined power cards.
+        // Update the CPU, GPU and combined power measurement cards.
         powerReadingsPanel.updateReadings(snapshot);
 
-        // Keep graph updates on Swing's Event Dispatch Thread.
-        SwingUtilities.invokeLater(() -> {
-            // Add the latest readings to the existing graphs.
-            cpuGraph.addReading(snapshot.cpuPower());
-            gpuGraph.addReading(snapshot.gpuPower());
-        });
+        // Update both power graphs using the same snapshot.
+        powerGraphsContainer.updateGraphs(snapshot);
     }
-
-
 
     public void updateCarbonEmissions(double totalGrams, double averageGramsPerSecond) {
 
@@ -269,7 +146,6 @@ public class LiveMonitorPanel extends JPanel {
         });
     }
 
-
     // Updates the displayed carbon intensity and its source.
     // Ensures updates from background threads are handled on Swing's EDT.
     public void updateCarbonIntensity(double intensity, String source) {
@@ -280,7 +156,6 @@ public class LiveMonitorPanel extends JPanel {
             carbonEmissionsPanel.updateCarbonIntensity( intensity, source );
         });
     }
-
 
     /**
      * Configures the action used to restart EcoScan with administrator privileges.
@@ -327,8 +202,6 @@ public class LiveMonitorPanel extends JPanel {
 
         return card;
     }
-
-
 
     // Replaces the live monitoring interface with an explanatory message when the current environment is unsupported.
     public void showUnavailableState(LiveMonitorAvailability.Status status) {
@@ -379,7 +252,6 @@ public class LiveMonitorPanel extends JPanel {
         descriptionLabel.setFont(font(Font.PLAIN, 14));
         descriptionLabel.setForeground(TEXT_MUTED);
         descriptionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
 
         messageContent.add(titleLabel);
         messageContent.add(Box.createVerticalStrut(12));
@@ -436,93 +308,6 @@ public class LiveMonitorPanel extends JPanel {
         repaint();
     }
 
-
-    // Switches between side-by-side and vertically stacked graph layouts.
-    // Keeps the existing graph components and their recorded measurements.
-    private void toggleGraphLayout(JButton toggleButton) {
-
-        // Switch to the opposite layout.
-        sideBySideView = !sideBySideView;
-
-        if (sideBySideView) {
-
-            // Display both graphs horizontally.
-            graphsPanel.setLayout(new GridLayout(1, 2, 20, 0));
-
-            // Use a shorter container for the horizontal layout.
-            updateGraphHeight(300);
-
-            // Display the option to stack the graphs vertically.
-            toggleButton.setIcon(createGraphLayoutIcon(false));
-            toggleButton.setToolTipText("Stack Graphs");
-            toggleButton.getAccessibleContext().setAccessibleName("Stack Graphs");
-
-        } else {
-
-            // Display the graphs vertically.
-            graphsPanel.setLayout(new GridLayout(2, 1, 0, 20));
-
-            // Restore the original height for the stacked layout.
-            updateGraphHeight(520);
-
-            // Display the option to arrange graphs horizontally.
-            toggleButton.setIcon(createGraphLayoutIcon(true));
-            toggleButton.setToolTipText("Side-by-Side Graphs");
-            toggleButton.getAccessibleContext().setAccessibleName("Side-by-Side Graphs");
-        }
-
-        // Refresh the container without recreating its child components.
-        graphsPanel.revalidate();
-        graphsPanel.repaint();
-    }
-
-
-    // Creates an icon representing one of the two graph layouts.
-    // true = side-by-side layout; false = stacked layout.
-    private Icon createGraphLayoutIcon(boolean sideBySide) {
-
-        // Create a transparent 24x24 image.
-        BufferedImage image = new BufferedImage( 24, 24, BufferedImage.TYPE_INT_ARGB );
-
-        Graphics2D graphics = image.createGraphics();
-
-        try {
-            // Smooth the icon's edges.
-            graphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
-
-            // Match EcoScan's existing text colour.
-            graphics.setColor(TEXT_MAIN);
-
-            if (sideBySide) {
-                // Draw two vertical rectangles.
-                graphics.fillRoundRect(2, 4, 9, 16, 3, 3);
-                graphics.fillRoundRect(13, 4, 9, 16, 3, 3);
-
-            } else {
-                // Draw two horizontal rectangles.
-                graphics.fillRoundRect(3, 3, 18, 8, 3, 3);
-                graphics.fillRoundRect(3, 13, 18, 8, 3, 3);
-            }
-
-        } finally {
-            // Release the graphics resources.
-            graphics.dispose();
-        }
-
-        // Return the image as a Swing-compatible icon.
-        return new ImageIcon(image);
-    }
-
-
-
-    // Updates the graph container's dimensions for the selected layout.
-    private void updateGraphHeight(int height) {
-        // Ensure BoxLayout allocates the required vertical space.
-        graphsPanel.setPreferredSize(new Dimension(0, height));
-        graphsPanel.setMinimumSize(new Dimension(0, height));
-        graphsPanel.setMaximumSize( new Dimension(Integer.MAX_VALUE, height) );
-    }
-
     // Identifies that the Live Monitor is showing simulated macOS data.
     // The existing measurement cards and graphs remain visible.
     public void showDemoMode() {
@@ -536,17 +321,11 @@ public class LiveMonitorPanel extends JPanel {
     }
 
     /************************************* MAC ********************************/
-    // Displays permanent demonstration graph lines for a simulated snapshot.
-    // Both graphs use the same static CPU/GPU values as the measurement cards.
+    // Displays static CPU and GPU graphs for macOS demonstration mode.
     public void showDemoGraphs(LiveMonitorSnapshot snapshot) {
-
-        // Configure the CPU graph with simulated power.
-        cpuGraph.setDemoPower(snapshot.cpuPower());
-
-        // Configure the GPU graph with simulated power.
-        gpuGraph.setDemoPower(snapshot.gpuPower());
+        // Delegate the demonstration readings to the graph component.
+        powerGraphsContainer.showDemoGraphs(snapshot);
     }
-
 
     // Enables the static emissions comparison ruler for macOS.
     // Reuses the existing comparison panel and its painters.
@@ -554,7 +333,6 @@ public class LiveMonitorPanel extends JPanel {
         // Display the comparison without continuous emissions updates.
         emissionComparisonPanel.showDemoMode();
     }
-
 
     // Displays static, hypothetical carbon emissions for macOS Demo Mode.
     // Uses simulated power values without accumulating emissions over time.
@@ -578,12 +356,6 @@ public class LiveMonitorPanel extends JPanel {
         // Display the static values using the existing emissions component.
         carbonEmissionsPanel.updateEmissions( totalEmissions, emissionsPerSecond );
     }
-
-
-
-
-
-
 
     // Formats a power measurement to one decimal place.
     private String formatPower(double power) {
