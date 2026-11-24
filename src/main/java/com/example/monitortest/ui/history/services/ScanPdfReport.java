@@ -188,7 +188,7 @@ public final class ScanPdfReport {
 
 
     // Formats power in watts, or explains when it is missing.
-    private static String formatPower(double watts) {
+    public static String formatPower(double watts) {
         return isAvailable(watts) ? String.format(Locale.UK, "%.1f W", watts) : "Not available";
     }
 

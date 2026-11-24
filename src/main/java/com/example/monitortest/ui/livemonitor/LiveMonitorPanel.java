@@ -3,6 +3,7 @@ package com.example.monitortest.ui.livemonitor;
 import com.example.monitortest.hardware.demo.MacDemoConfig;
 import com.example.monitortest.hardware.monitoring.LiveMonitorSnapshot;
 import com.example.monitortest.ui.livemonitor.components.PowerGraphPanel;
+import com.example.monitortest.ui.livemonitor.components.PowerReadingsPanel;
 import com.example.monitortest.ui.loading.components.RoundedPanel;
 import com.example.monitortest.ui.loading.components.Spinner;
 import com.example.monitortest.ui.livemonitor.components.CarbonEmissionsPanel;
@@ -25,20 +26,9 @@ import static com.example.monitortest.ui.theme.UIUtility.font;
  */
 public class LiveMonitorPanel extends JPanel {
 
-    // Labels displaying the latest power measurements.
-    // Show the initial sensor retrieval state until the first snapshot arrives.
-    private final JLabel cpuPowerLabel = new JLabel("Initialising...");
-    private final JLabel gpuPowerLabel = new JLabel("Initialising...");
-    private final JLabel totalPowerLabel = new JLabel("Initialising...");
-
     // Graphs displaying recent CPU and GPU power consumption.
     private final PowerGraphPanel cpuGraph = new PowerGraphPanel(GREEN);
     private final PowerGraphPanel gpuGraph = new PowerGraphPanel(TEXT_MUTED);
-
-    // Spinners displayed while the initial sensor retrieval is running.
-    private final Spinner cpuSpinner = new Spinner();
-    private final Spinner gpuSpinner = new Spinner();
-    private final Spinner totalSpinner = new Spinner();
 
     // Displays the estimated emissions accumulated during monitoring.
     private final CarbonEmissionsPanel carbonEmissionsPanel = new CarbonEmissionsPanel();
@@ -49,6 +39,9 @@ public class LiveMonitorPanel extends JPanel {
     private JPanel graphsPanel;
     // Tracks whether the graphs are currently displayed side by side.
     private boolean sideBySideView = true;
+
+    // Owns the CPU, GPU and combined power measurement cards.
+    private final PowerReadingsPanel powerReadingsPanel = new PowerReadingsPanel();
 
     // Displays the page title and identifies macOS demonstration mode.
     private final JLabel heading = new JLabel("Live Monitor", SwingConstants.CENTER);
@@ -64,21 +57,6 @@ public class LiveMonitorPanel extends JPanel {
 
         heading.setFont(font(Font.BOLD, 26));
         heading.setForeground(TEXT_MAIN);
-
-        // Create a horizontal container for the three power cards.
-        JPanel readingsPanel = new JPanel(new GridLayout(1, 3, 20, 0));
-        readingsPanel.setOpaque(false);
-        readingsPanel.setBorder( BorderFactory.createEmptyBorder(30, 40, 20, 40) );
-
-        // Create the three measurement cards with their initialisation spinners.
-        readingsPanel.add(createPowerCard("CPU Power", cpuPowerLabel, cpuSpinner));
-        readingsPanel.add(createPowerCard("GPU Power", gpuPowerLabel, gpuSpinner));
-        readingsPanel.add(createPowerCard("Combined CPU + GPU", totalPowerLabel, totalSpinner));
-
-        // Start the animations while waiting for the first snapshot.
-        cpuSpinner.start();
-        gpuSpinner.start();
-        totalSpinner.start();
 
         /********************* GRAPHS ********************/
         // Create a container for both power graphs.
@@ -138,7 +116,8 @@ public class LiveMonitorPanel extends JPanel {
         summaryPanel.setLayout(new BoxLayout(summaryPanel, BoxLayout.Y_AXIS));
         summaryPanel.setOpaque(false);
 
-        summaryPanel.add(readingsPanel);
+        // Display the extracted power measurement component.
+        summaryPanel.add(powerReadingsPanel);
 
         // Match the horizontal spacing of the existing power cards.
         JPanel emissionsContainer = new JPanel(new BorderLayout());
@@ -263,36 +242,21 @@ public class LiveMonitorPanel extends JPanel {
 
     }
 
-
-    /**
-     * Updates the displayed CPU and GPU power measurements.
-     * Ensures all Swing components are updated on the Event Dispatch Thread.
-     */
+    // Updates the measurement cards and power graphs.
+    // The child component handles its own Swing thread safety.
     public void updatePowerReadings(LiveMonitorSnapshot snapshot) {
 
-        // Perform all interface updates on Swing's Event Dispatch Thread.
+        // Update the extracted CPU, GPU and combined power cards.
+        powerReadingsPanel.updateReadings(snapshot);
+
+        // Keep graph updates on Swing's Event Dispatch Thread.
         SwingUtilities.invokeLater(() -> {
-
-            // Update the displayed power measurements.
-            cpuPowerLabel.setText(formatPower(snapshot.cpuPower()));
-            gpuPowerLabel.setText(formatPower(snapshot.gpuPower()));
-            totalPowerLabel.setText(formatPower(snapshot.totalPower()));
-
-            // Add the latest measurements to the scrolling graphs.
+            // Add the latest readings to the existing graphs.
             cpuGraph.addReading(snapshot.cpuPower());
             gpuGraph.addReading(snapshot.gpuPower());
-
-            // Stop the loading animations after the first sensor retrieval.
-            cpuSpinner.stop();
-            gpuSpinner.stop();
-            totalSpinner.stop();
-
-            // Hide the loading indicators.
-            cpuSpinner.setVisible(false);
-            gpuSpinner.setVisible(false);
-            totalSpinner.setVisible(false);
         });
     }
+
 
 
     public void updateCarbonEmissions(double totalGrams, double averageGramsPerSecond) {
