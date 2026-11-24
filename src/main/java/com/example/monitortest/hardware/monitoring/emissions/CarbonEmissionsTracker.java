@@ -55,7 +55,10 @@ public class CarbonEmissionsTracker {
         double averagePower = (previousPower + currentPower) / 2.0;
 
         // Convert average power and elapsed time into estimated emissions.
-        double emissions = calculator.calculateEmissions( averagePower, durationSeconds );
+        double emissions = calculator.calculateEmissions(
+                averagePower,
+                durationSeconds
+        );
 
         totalEmissionsGrams += emissions;
         monitoredSeconds += durationSeconds;
