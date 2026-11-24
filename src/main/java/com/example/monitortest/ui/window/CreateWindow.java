@@ -7,6 +7,7 @@ import com.example.monitortest.hardware.monitoring.LiveMonitoringService;
 import com.example.monitortest.hardware.monitoring.MacLiveMonitorDemoProvider;
 import com.example.monitortest.hardware.detection.ScanHardware;
 
+import com.example.monitortest.hardware.monitoring.emissions.CarbonIntensityService;
 import com.example.monitortest.services.startup.ApplicationElevationManager;
 import com.example.monitortest.services.startup.ApplicationProcessManager;
 
@@ -220,17 +221,37 @@ public class CreateWindow {
 
         // Create the real monitoring service only on supported Windows systems.
         // macOS uses static demonstration data and does not require hardware sensors.
-        LiveMonitoringService monitoringService = monitoringStatus == LiveMonitorAvailability.Status.AVAILABLE ? new LiveMonitoringService(snapshot -> {
-            // Update the CPU/GPU cards and graphs.
-            liveMonitorPanel.updatePowerReadings(snapshot);
+        LiveMonitoringService monitoringService =
+                monitoringStatus ==
+                        LiveMonitorAvailability.Status.AVAILABLE ?
+                        new LiveMonitoringService(snapshot -> {
+                            // Update the CPU/GPU cards and graphs.
+                            liveMonitorPanel.updatePowerReadings(snapshot);
 
-            // Retrieve the emissions accumulated by the monitoring service.
-            CarbonEmissionsTracker tracker = monitoringRef[0].getEmissionsTracker();
+                            // Retrieve the emissions accumulated by the monitoring service.
+                            CarbonEmissionsTracker tracker = monitoringRef[0].getEmissionsTracker();
 
-            // Update the carbon emissions panel.
-            liveMonitorPanel.updateCarbonEmissions( tracker.getTotalEmissionsGrams(), tracker.getAverageEmissionsPerSecond() );
+                            // Update the carbon emissions panel.
+                            liveMonitorPanel.updateCarbonEmissions(
+                                    tracker.getTotalEmissionsGrams(),
+                                    tracker.getAverageEmissionsPerSecond()
+                            );
 
-        }) : null;
+                            // Retrieve the latest carbon intensity and its data source.
+                            // This reads the cached value without making another API request.
+                            CarbonIntensityService.IntensityReading reading = monitoringRef[0].getCurrentCarbonIntensity();
+
+                            // Convert the internal data source into a user-friendly label.
+                            String source = switch (reading.source()) {
+                                case API -> "NESO API";
+                                case FALLBACK -> "Offline fallback";
+                            };
+
+                            // Update the carbon intensity displayed on the Live Monitor page.
+                            // LiveMonitorPanel schedules the actual label update on Swing's EDT.
+                            liveMonitorPanel.updateCarbonIntensity( reading.gramsPerKwh(), source );
+
+                        }) : null;
 
         monitoringRef[0] = monitoringService;
 

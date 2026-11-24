@@ -130,4 +130,86 @@ class CarbonEmissionsTrackerTest {
         // Total duration = 60 seconds at 100 W.
         assertEquals( 0.3333333333, tracker.getTotalEmissionsGrams(), 0.000001 );
     }
+
+
+    // LIV-UT-051
+    // Verify that updating the tracker's carbon intensity changes
+    // future calculations without modifying previously calculated values.
+    @Test
+    @DisplayName("LIV-UT-051 - Updates carbon intensity for future calculations")
+    void updatesCarbonIntensityForFutureCalculations() {
+
+        // Create a calculator using EcoScan's original intensity.
+        CarbonEmissionsCalculator calculator = new CarbonEmissionsCalculator(200.0);
+
+        // Create a tracker that uses the same calculator.
+        CarbonEmissionsTracker tracker = new CarbonEmissionsTracker(calculator);
+
+        // Calculate emissions for 100 W over one hour.
+        // At 200 g/kWh, the expected result is 20 grams.
+        double firstPeriodEmissions = calculator.calculateEmissions(100.0, 3600.0);
+        assertEquals(20.0, firstPeriodEmissions, 0.001);
+
+        // Update the intensity through the tracker.
+        tracker.updateCarbonIntensity(125.0);
+
+        // Verify that the shared calculator received the new intensity.
+        assertEquals(125.0, calculator.getCarbonIntensity(), 0.001);
+
+        // Calculate emissions for another hour at the new intensity.
+        double secondPeriodEmissions = calculator.calculateEmissions(100.0, 3600.0);
+        assertEquals(12.5, secondPeriodEmissions, 0.001);
+
+        // Verify that the previously calculated amount is unchanged.
+        assertEquals(20.0, firstPeriodEmissions, 0.001);
+
+        // Combine the two periods without recalculating the first.
+        double combinedEmissions = firstPeriodEmissions + secondPeriodEmissions;
+        assertEquals(32.5, combinedEmissions, 0.001);
+    }
+
+
+    // LIV-UT-052
+    // Verify that changing carbon intensity affects future snapshot
+    // intervals without recalculating previously accumulated emissions.
+    @Test
+    @DisplayName("LIV-UT-052 - Preserves accumulated emissions after intensity update")
+    void preservesAccumulatedEmissionsAfterIntensityUpdate() {
+
+        // Create the calculator with EcoScan's original intensity.
+        CarbonEmissionsCalculator calculator = new CarbonEmissionsCalculator(200.0);
+
+        // Create a tracker to accumulate emissions across snapshots.
+        CarbonEmissionsTracker tracker = new CarbonEmissionsTracker(calculator);
+
+        // Simulate a constant 100 W device using CPU and GPU readings.
+        LiveMonitorSnapshot snapshot = new LiveMonitorSnapshot(60.0, 40.0);
+
+        // Establish the initial measurement at 1,000 milliseconds.
+        tracker.addSnapshot(snapshot, 1_000L);
+
+        // Record another snapshot one hour later.
+        tracker.addSnapshot(snapshot, 3_601_000L);
+
+        // Verify that the first hour accumulated 20 grams.
+        assertEquals( 20.0, tracker.getTotalEmissionsGrams(), 0.001 );
+
+        // Update the carbon intensity to simulate a new NESO reading.
+        tracker.updateCarbonIntensity(125.0);
+
+        // Verify the previous total remains unchanged immediately.
+        assertEquals( 20.0, tracker.getTotalEmissionsGrams(), 0.001 );
+
+        // Record a third snapshot one additional hour later.
+        tracker.addSnapshot(snapshot, 7_201_000L);
+
+        // Verify that the second hour adds 12.5 grams,
+        // giving a combined total of 32.5 grams.
+        assertEquals( 32.5, tracker.getTotalEmissionsGrams(), 0.001 );
+
+        // Verify the average across the two monitored hours.
+        assertEquals( 32.5 / 7200.0, tracker.getAverageEmissionsPerSecond(), 0.000001 );
+    }
+
+
 }
