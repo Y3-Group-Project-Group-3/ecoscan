@@ -2,10 +2,12 @@ package hardware.monitoring;
 
 import com.example.monitortest.hardware.monitoring.LiveMonitorSnapshot;
 import com.example.monitortest.hardware.monitoring.LiveMonitoringService;
+import com.example.monitortest.hardware.monitoring.emissions.CarbonIntensityService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.swing.*;
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -363,6 +365,272 @@ class LiveMonitoringServiceTest {
             service.awaitTermination(3, TimeUnit.SECONDS);
         }
     }
+
+
+    // LIV-UT-053
+    // Verify that a failed carbon intensity request can recover
+    // when a subsequent simulated API request succeeds.
+    @Test
+    @DisplayName("LIV-UT-053 - Recovers from fallback to API intensity")
+    void recoversFromFallbackToApiIntensity() throws Exception {
+
+        // Count simulated API requests.
+        AtomicInteger requests = new AtomicInteger();
+
+        // First request fails; the second succeeds.
+        CarbonIntensityService intensityService =
+                new CarbonIntensityService(() -> {
+                    if (requests.incrementAndGet() == 1) {
+                        throw new IOException("Simulated connection failure");
+                    }
+                    return 125.0;
+                });
+
+        // Create the monitoring service with simulated hardware.
+        LiveMonitoringService monitoringService =
+                new LiveMonitoringService(
+                        snapshot -> {},
+                        () -> new LiveMonitorSnapshot(60.0, 40.0),
+                        intensityService
+                );
+
+        try {
+            // Simulate the initial failed API request.
+            intensityService.refresh();
+
+            // Verify that the fallback is selected.
+            assertEquals( CarbonIntensityService.Source.FALLBACK, monitoringService.getCurrentCarbonIntensity().source() );
+            assertEquals( 200.0, monitoringService.getCurrentCarbonIntensity().gramsPerKwh(), 0.001 );
+
+            // Simulate the next successful API request.
+            intensityService.refresh();
+
+            // Verify that the service has recovered.
+            assertEquals( CarbonIntensityService.Source.API, monitoringService.getCurrentCarbonIntensity().source() );
+            assertEquals( 125.0, monitoringService.getCurrentCarbonIntensity().gramsPerKwh(), 0.001 );
+
+            // Verify that exactly two API requests occurred.
+            assertEquals(2, requests.get());
+
+        } finally {
+            // Release both background schedulers.
+            monitoringService.stop();
+            assertTrue( monitoringService.awaitTermination(5, TimeUnit.SECONDS) );
+        }
+    }
+
+
+    // LIV-UT-054
+    // Verify that the background scheduler retries a failed API request and automatically recovers when the next request succeeds.
+    @Test
+    @DisplayName("LIV-UT-054 - Automatically retries failed API requests and recovers")
+    void automaticallyRetriesAndRecoversFromApiFailure() throws InterruptedException {
+
+        // Count how many simulated API requests have occurred.
+        AtomicInteger requests = new AtomicInteger();
+
+        // Signal when the second API request has been reached.
+        CountDownLatch secondRequest = new CountDownLatch(1);
+
+        // Simulate a failed initial request followed by a successful retry.
+        CarbonIntensityService intensityService = new CarbonIntensityService(() -> {
+
+                    // Count the current request.
+                    int requestNumber = requests.incrementAndGet();
+
+                    // Simulate an unavailable internet connection.
+                    if (requestNumber == 1) {
+                        throw new IOException("Simulated connection failure");
+                    }
+
+                    // Signal that the scheduler automatically retried.
+                    secondRequest.countDown();
+
+                    // Simulate a successful NESO response.
+                    return 125.0;
+                });
+
+        // Create the monitoring service using simulated hardware and API data.
+        // Successful refreshes wait 5 seconds; failures retry after 50 ms.
+        LiveMonitoringService monitoringService =
+                new LiveMonitoringService(
+                        snapshot -> {},
+                        () -> new LiveMonitorSnapshot(60.0, 40.0),
+                        intensityService,
+                        5000,
+                        50
+                );
+
+        try {
+            // Start both background schedulers.
+            monitoringService.start();
+
+            // Verify that a second API request happens automatically.
+            assertTrue( secondRequest.await(5, TimeUnit.SECONDS), "The scheduler should retry after the initial API failure." );
+
+            // Allow the background worker to finish applying its result.
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+
+            while (monitoringService.getCurrentCarbonIntensity().source()
+                    != CarbonIntensityService.Source.API
+                    && System.nanoTime() < deadline) {
+                Thread.sleep(10);
+            }
+
+            // Retrieve the final carbon intensity reading.
+            CarbonIntensityService.IntensityReading reading = monitoringService.getCurrentCarbonIntensity();
+
+            // Verify that the successful retry restored API data.
+            assertEquals( CarbonIntensityService.Source.API, reading.source() );
+
+            // Verify that the recovered intensity was stored correctly.
+            assertEquals( 125.0, reading.gramsPerKwh(), 0.001 );
+
+            // Verify that the simulated provider was called twice.
+            assertEquals( 2, requests.get() );
+
+        } finally {
+
+            // Stop both schedulers even if an assertion fails.
+            monitoringService.stop();
+
+            // Verify that the monitoring service terminates safely.
+            assertTrue( monitoringService.awaitTermination(5, TimeUnit.SECONDS), "Both monitoring schedulers should terminate." );
+        }
+    }
+
+
+    // LIV-UT-055
+    // Verify that a recovered API reading is applied to the
+    // emissions tracker after the background scheduler retries.
+    @Test
+    @DisplayName("LIV-UT-055 - Applies recovered API intensity to emissions tracker")
+    void appliesRecoveredApiIntensityToTracker() throws InterruptedException {
+
+        // Count simulated API requests.
+        AtomicInteger requests = new AtomicInteger();
+
+        // Simulate an initial failure followed by a valid NESO reading.
+        CarbonIntensityService intensityService = new CarbonIntensityService(() -> {
+
+                    // Fail the first request to trigger fallback and retry.
+                    if (requests.incrementAndGet() == 1) {
+                        throw new IOException("Simulated connection failure");
+                    }
+
+                    // Return a valid intensity for subsequent requests.
+                    return 125.0;
+                });
+
+        // Create the monitoring service with simulated hardware readings.
+        // Use a short retry interval to keep the test fast.
+        LiveMonitoringService monitoringService =
+                new LiveMonitoringService(
+                        snapshot -> {},
+                        () -> new LiveMonitorSnapshot(60.0, 40.0),
+                        intensityService,
+                        5000,
+                        50
+                );
+
+        try {
+            // Verify that the tracker initially uses the fallback.
+            assertEquals( 200.0, monitoringService.getEmissionsTracker().getCarbonIntensity(), 0.001 );
+
+            // Start hardware monitoring and background API refreshes.
+            monitoringService.start();
+
+            // Allow up to five seconds for the scheduled retry to succeed.
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+
+            // Wait until the recovered value reaches the tracker.
+            while (monitoringService.getEmissionsTracker().getCarbonIntensity() != 125.0 && System.nanoTime() < deadline) {
+                Thread.sleep(10);
+            }
+
+            // Verify that the API recovery occurred.
+            assertEquals( CarbonIntensityService.Source.API, monitoringService.getCurrentCarbonIntensity().source() );
+
+            // Verify that the recovered intensity was applied to the tracker.
+            assertEquals( 125.0, monitoringService.getEmissionsTracker().getCarbonIntensity(), 0.001 );
+
+            // Verify that at least two API requests were performed.
+            assertTrue( requests.get() >= 2, "The scheduler should retry after the failed request." );
+
+        } finally {
+
+            // Shut down both background schedulers after the test.
+            monitoringService.stop();
+
+            // Verify that the monitoring service terminates cleanly.
+            assertTrue( monitoringService.awaitTermination(5, TimeUnit.SECONDS), "Both background schedulers should terminate." );
+        }
+    }
+
+
+    // LIV-UT-056
+    // Verify that stopping the monitoring service prevents
+    // any further scheduled carbon intensity API requests.
+    @Test
+    @DisplayName("LIV-UT-056 - Cancels carbon intensity retries after shutdown")
+    void cancelsCarbonIntensityRetriesAfterShutdown() throws InterruptedException {
+
+        // Track the number of simulated API requests.
+        AtomicInteger requests = new AtomicInteger();
+
+        // Signal when the initial API request has completed its failure.
+        CountDownLatch firstRequest = new CountDownLatch(1);
+
+        // Simulate an unavailable NESO API on every request.
+        CarbonIntensityService intensityService = new CarbonIntensityService(() -> {
+                    // Record the API request.
+                    requests.incrementAndGet();
+
+                    // Report that the first request has started.
+                    firstRequest.countDown();
+
+                    // Simulate an API connection failure.
+                    throw new IOException("Simulated API unavailable");
+                });
+
+        // Use simulated hardware and a short API retry interval.
+        LiveMonitoringService monitoringService =
+                new LiveMonitoringService(
+                        snapshot -> {},
+                        () -> new LiveMonitorSnapshot(60.0, 40.0),
+                        intensityService,
+                        5000,
+                        200
+                );
+
+        try {
+            // Begin hardware monitoring and API scheduling.
+            monitoringService.start();
+
+            // Verify that the initial API request was attempted.
+            assertTrue( firstRequest.await(5, TimeUnit.SECONDS), "The initial API request should execute." );
+
+            // Stop both schedulers before the next API retry.
+            monitoringService.stop();
+
+            // Verify both schedulers have terminated.
+            assertTrue( monitoringService.awaitTermination(5, TimeUnit.SECONDS), "Both schedulers should terminate after shutdown." );
+
+            // Store the number of API requests after shutdown.
+            int requestsAfterShutdown = requests.get();
+
+            // Wait beyond the configured 200 ms retry interval.
+            Thread.sleep(350);
+
+            // Confirm that no additional API requests were executed.
+            assertEquals( requestsAfterShutdown, requests.get(), "No API requests should occur after shutdown." );
+
+        } finally {
+            // Ensure both schedulers are stopped if an assertion fails.
+            monitoringService.stop();
+        }
+    }
+
 
 
 

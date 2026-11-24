@@ -16,10 +16,25 @@ import java.util.function.Supplier;
 // Continuously retrieves CPU and GPU power readings on a dedicated background thread.
 public class LiveMonitoringService {
 
-//    private final LiveHardwareReader reader;
+
+    // Refresh the NESO carbon intensity every 30 minutes
+    // when the previous API request was successful.
+    private static final long CARBON_REFRESH_MINUTES = 30;
+
+    // Retry after one minute when the API is unavailable.
+    // This allows EcoScan to recover when connectivity returns.
+    private static final long CARBON_RETRY_MINUTES = 1;
+
+
+    // Time between successful API refreshes, measured in milliseconds.
+    private final long carbonRefreshDelayMillis;
+
+    // Time before retrying a failed API request, measured in milliseconds.
+    private final long carbonRetryDelayMillis;
+
+
     // Supplies power snapshots from either real hardware or a test fixture.
     private final Supplier<LiveMonitorSnapshot> snapshotSupplier;
-
     private final ScheduledExecutorService scheduler;
 
     // Runs carbon intensity API requests independently of hardware polling.
@@ -30,52 +45,97 @@ public class LiveMonitoringService {
     // Prevent multiple monitoring tasks from being scheduled.
     private boolean started = false;
 
-    // Production constructor.
-    // Existing application code can continue creating the service as before.
-    public LiveMonitoringService(Consumer<LiveMonitorSnapshot> onSnapshot) {
-        // Use the real hardware reader during normal operation.
-        this(onSnapshot, new LiveHardwareReader()::readSnapshot);
+
+    // Production constructor: reads real hardware measurements and retrieves current electricity carbon intensity from NESO.
+    public LiveMonitoringService( Consumer<LiveMonitorSnapshot> onSnapshot ) {
+        // Use the real hardware reader and real NESO API service.
+        this( onSnapshot, new LiveHardwareReader()::readSnapshot, new CarbonIntensityService() );
     }
+
 
     // Package-private constructor used by integration tests.
     // Allows simulated snapshots without accessing physical hardware.
-    public LiveMonitoringService(Consumer<LiveMonitorSnapshot> onSnapshot, Supplier<LiveMonitorSnapshot> snapshotSupplier) {
-
-        // Store the callback and the selected snapshot source.
-        this.onSnapshot = onSnapshot;
-        this.snapshotSupplier = snapshotSupplier;
-
-        // Use one background worker to avoid overlapping sensor requests.
-        scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-
-            // Give the monitoring thread a recognisable name.
-            Thread thread = new Thread(r, "EcoScan-LiveMonitor");
-
-            // Allow the application to close without waiting on this thread.
-            thread.setDaemon(true);
-
-            return thread;
-        });
-
-
-        // Use a dedicated background thread for NESO API refreshes.
-        // Daemon mode prevents this worker from keeping the JVM running.
-        carbonIntensityScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread thread = new Thread(r, "EcoScan-CarbonIntensity");
-            thread.setDaemon(true);
-            return thread;
-        });
+    public LiveMonitoringService( Consumer<LiveMonitorSnapshot> onSnapshot, Supplier<LiveMonitorSnapshot> snapshotSupplier) {
+        // Delegate to the configurable constructor using a simulated
+        // NESO reading of 151 g/kWh.
+        this( onSnapshot, snapshotSupplier, new CarbonIntensityService(() -> 151.0) );
 
     }
+
+
+    // Configurable constructor used by automated integration tests.
+// Allows both hardware snapshots and carbon intensity responses
+// to be simulated independently.
+    public LiveMonitoringService(
+            Consumer<LiveMonitorSnapshot> onSnapshot,
+            Supplier<LiveMonitorSnapshot> snapshotSupplier,
+            CarbonIntensityService carbonIntensityService
+    ) {
+
+        // Delegate to the configurable constructor.
+        this(
+                onSnapshot,
+                snapshotSupplier,
+                carbonIntensityService,
+                TimeUnit.MINUTES.toMillis(CARBON_REFRESH_MINUTES),
+                TimeUnit.MINUTES.toMillis(CARBON_RETRY_MINUTES)
+        );
+    }
+
+    // Allows tests to configure shorter API refresh intervals.
+    // Both delays are measured in milliseconds.
+    public LiveMonitoringService(
+            Consumer<LiveMonitorSnapshot> onSnapshot,
+            Supplier<LiveMonitorSnapshot> snapshotSupplier,
+            CarbonIntensityService carbonIntensityService,
+            long refreshDelayMillis,
+            long retryDelayMillis
+    ) {
+
+        // Validate the supplied refresh intervals.
+        if (refreshDelayMillis <= 0 || retryDelayMillis <= 0) {
+            throw new IllegalArgumentException(
+                    "Carbon intensity refresh delays must be positive."
+            );
+        }
+
+        // Store the monitoring callback and data providers.
+        this.onSnapshot = java.util.Objects.requireNonNull(onSnapshot);
+        this.snapshotSupplier = java.util.Objects.requireNonNull(snapshotSupplier);
+        this.carbonIntensityService = java.util.Objects.requireNonNull(carbonIntensityService);
+
+        // Store the configurable refresh delays.
+        this.carbonRefreshDelayMillis = refreshDelayMillis;
+        this.carbonRetryDelayMillis = retryDelayMillis;
+
+        // Keep hardware polling on its dedicated background thread.
+        scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread thread = new Thread(r, "EcoScan-LiveMonitor");
+            thread.setDaemon(true);
+            return thread;
+        });
+
+        // Keep NESO requests separate from hardware polling.
+        carbonIntensityScheduler =
+                Executors.newSingleThreadScheduledExecutor(r -> {
+                    Thread thread = new Thread(r, "EcoScan-CarbonIntensity");
+                    thread.setDaemon(true);
+                    return thread;
+                });
+    }
+
 
 
     private final Consumer<LiveMonitorSnapshot> onSnapshot;
     // Track estimated emissions throughout the monitoring session.
     private final CarbonEmissionsTracker emissionsTracker = new CarbonEmissionsTracker(new CarbonEmissionsCalculator());
 
-    // Manages the current NESO carbon intensity and offline fallback.
-    // API refreshes will be scheduled separately from hardware monitoring.
-    private final CarbonIntensityService carbonIntensityService = new CarbonIntensityService();
+
+    // Manages the current carbon intensity and offline fallback.
+    // The service is supplied by the constructor so tests can use
+    // simulated API responses instead of real network requests.
+    private final CarbonIntensityService carbonIntensityService;
+
 
 
     // Applies the latest carbon intensity to future emissions calculations.
@@ -90,7 +150,45 @@ public class LiveMonitoringService {
         emissionsTracker.updateCarbonIntensity(reading.gramsPerKwh());
     }
 
+    // Refreshes the carbon intensity and schedules the next API request.
+    // Successful requests refresh every 30 minutes; failures retry after 1 minute.
+    // This method runs exclusively on the carbon intensity background scheduler.
+    private void refreshAndScheduleCarbonIntensity() {
 
+        try {
+            // Retrieve the latest NESO intensity or use the offline fallback.
+            carbonIntensityService.refresh();
+
+            // Apply the selected intensity to future emissions calculations.
+            applyCurrentCarbonIntensity();
+
+            // Read the result of the refresh.
+            CarbonIntensityService.IntensityReading reading = carbonIntensityService.getCurrentReading();
+
+            // Report the updated value and source for integration testing.
+            System.out.printf( "Carbon intensity updated: %.1f g/kWh (Source: %s)%n", reading.gramsPerKwh(), reading.source() );
+
+            // Choose the next refresh delay based on the API result.
+            // Successful requests use the normal interval.
+            // Failed requests use the shorter retry interval.
+            long delayMillis = reading.source() == CarbonIntensityService.Source.API ? carbonRefreshDelayMillis : carbonRetryDelayMillis;
+
+            // Avoid scheduling another refresh after monitoring stops.
+            if (!carbonIntensityScheduler.isShutdown()) {
+                // Schedule the next request using the selected delay.
+                // The scheduler runs only one carbon intensity task at a time.
+                carbonIntensityScheduler.schedule( this::refreshAndScheduleCarbonIntensity, delayMillis, TimeUnit.MILLISECONDS );
+            }
+
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+
+            // Shutdown can occur between checking the scheduler and scheduling.
+            // Ignore this expected condition when EcoScan is closing.
+            if (!carbonIntensityScheduler.isShutdown()) {
+                System.err.println( "Carbon intensity scheduling failed: " + exception.getMessage() );
+            }
+        }
+    }
 
     // Starts periodic hardware power monitoring.
     public void start() {
@@ -99,32 +197,9 @@ public class LiveMonitoringService {
         if (started) { return; }
         started = true;
 
-
-        // Retrieve carbon intensity immediately, then refresh every 30 minutes.
-        // This runs on a separate worker and cannot block hardware polling.
-        carbonIntensityScheduler.scheduleWithFixedDelay(() -> {
-
-            // Retrieve and validate the latest NESO reading.
-            // Failures are handled internally using the offline fallback.
-            carbonIntensityService.refresh();
-
-            // Apply the selected intensity to future emissions calculations.
-            applyCurrentCarbonIntensity();
-
-
-            // Retrieve the reading that was applied to the emissions tracker.
-            CarbonIntensityService.IntensityReading reading = carbonIntensityService.getCurrentReading();
-
-            // Report the intensity and its source for integration testing.
-            System.out.printf(
-                    "Carbon intensity updated: %.1f g/kWh (Source: %s)%n",
-                    reading.gramsPerKwh(),
-                    reading.source()
-            );
-
-
-        }, 0, 30, TimeUnit.MINUTES);
-
+        // Start the first carbon intensity request immediately.
+        // The refresh method schedules subsequent requests dynamically.
+        carbonIntensityScheduler.schedule( this::refreshAndScheduleCarbonIntensity, 0, TimeUnit.SECONDS );
 
         // Run immediately, then wait two seconds after each completed reading.
         scheduler.scheduleWithFixedDelay(() -> {
@@ -185,9 +260,11 @@ public class LiveMonitoringService {
         // Allow any currently running retrieval to finish naturally.
         scheduler.shutdown();
 
-        // Stop scheduling new carbon intensity requests.
-        // An active HTTP request is allowed to finish within its configured timeout.
-        carbonIntensityScheduler.shutdown();
+
+        // Cancel pending carbon intensity retries and interrupt an active
+        // HTTP request so it cannot delay application shutdown.
+        carbonIntensityScheduler.shutdownNow();
+
 
     }
 

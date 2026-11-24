@@ -15,11 +15,13 @@ public class CarbonIntensityService {
         FALLBACK
     }
 
-    // Allows tests to simulate API responses without internet access.
+    // Represents a source of carbon intensity measurements.
+    // Allows real API retrieval or simulated responses during testing.
     @FunctionalInterface
     public interface IntensityProvider {
         double fetch() throws IOException, InterruptedException;
     }
+
 
     // Store the value and its source together for consistent reads.
     public record IntensityReading(double gramsPerKwh, Source source) {}
@@ -34,10 +36,12 @@ public class CarbonIntensityService {
         this(new CarbonIntensityApiClient()::fetchCurrentCarbonIntensity);
     }
 
-    // Package-private constructor: inject simulated responses in tests.
+    // Allows a custom intensity provider to be supplied.
+    // Used by automated tests to avoid real network requests.
     public CarbonIntensityService(IntensityProvider provider) {
         this.provider = java.util.Objects.requireNonNull(provider);
     }
+
 
     // Retrieve the latest intensity from NESO.
     // Call this method on a background thread, never Swing's EDT.

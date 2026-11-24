@@ -91,4 +91,12 @@ public class CarbonEmissionsTracker {
         calculator.setCarbonIntensity(intensity);
     }
 
+    // Returns the carbon intensity currently used by the tracker.
+    // Synchronization ensures the value is read safely while background API updates or emissions calculations are running.
+    public synchronized double getCarbonIntensity() {
+        // Retrieve the current intensity from the shared calculator.
+        return calculator.getCarbonIntensity();
+    }
+
+
 }
