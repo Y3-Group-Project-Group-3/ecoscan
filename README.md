@@ -1,4 +1,5 @@
 >> The following is AI generated. It was prompted and edited by Chris Dunne and is accurate to the project.
+>> It's also not final, there's a few things left to be completed.
 
 # EcoScan
 
